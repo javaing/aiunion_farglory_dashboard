@@ -33,7 +33,7 @@ DisplayMode currentMode = DisplayMode.punch ;
 const Color borderColor = Color.fromARGB(255, 224, 224, 224);
 Color normalBackground = const Color.fromARGB(255, 16, 16, 16);
 Color enterCountColor = const Color.fromARGB(255, 0, 51, 204);
-Color leaveCountColor = const Color.fromARGB(255, 0, 153, 51);
+Color leaveCountColor = const Color.fromARGB(255, 0, 102, 51);
 Color resideCountColor = const Color.fromARGB(255, 204, 51, 0);
 Color pieChartOrange = const Color.fromARGB(255, 255, 153, 0);
 
@@ -102,6 +102,8 @@ class _TableScreenState extends State<TableScreen> {
     heightRowBody = MediaQuery.of(context).size.height * 0.33;
     heightRowBottom = MediaQuery.of(context).size.height * 0.22;
 
+    _timer.cancel();
+
     // return Scaffold(
     //   body: Padding(
     //     padding: const EdgeInsets.fromLTRB(30,0,30,0),
@@ -116,48 +118,152 @@ class _TableScreenState extends State<TableScreen> {
     //   ),
     // );
 
-
+    //test long time repaint
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.fromLTRB(30,0,30,0),
-        child: Container(
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    //demoType = (demoType+1) % 4;
-                  });
-                },
-                child: getCombination(demoType),
-              ),
-            ],
-          ),
+        child: Column(
+          children: [
+            getRowTop(context, heightRowTop),
+            getRowTop2(),
+            getRadarRow(),
+            getRowBottom()
+          ],
         ),
       ),
     );
 
+
+    // return Scaffold(
+    //   body: Padding(
+    //     padding: const EdgeInsets.fromLTRB(30,0,30,0),
+    //     child: Container(
+    //       child: Column(
+    //         children: [
+    //           GestureDetector(
+    //             onTap: () {
+    //               setState(() {
+    //                 demoType = (demoType+1) % 4;
+    //               });
+    //             },
+    //             child: getCombination(0),
+    //           ),
+    //         ],
+    //       ),
+    //     ),
+    //   ),
+    // );
+
+  }
+
+
+
+  final List<ChartData> chartData = [
+    ChartData('進場四次', 10),
+    ChartData('進場三次', 60),
+    ChartData('進場兩次', 100),
+    ChartData('進場一次', 180),
+  ];
+
+  Widget getRadarRow() {
+    return Row(children: [
+      normalBorderLeftBottom(Row(children: [
+        getRadia(),
+        getRadarLenged(),
+      ],)
+      ),
+      normalBorderLeftBottomRight(Row(children: [
+        getColumnChart(),
+        getColumnLenged(),
+      ]),
+      )
+    ],);
   }
 
   Widget getRadia() {
-    final List<ChartData> chartData = [
-      ChartData('David', 25),
-      ChartData('Steve', 38),
-      ChartData('Jack', 34),
-      ChartData('Others', 52)
-    ];
+    return Container(
+        color: normalBackground,
+        width: MediaQuery.of(context).size.width * 0.25,
+        height: heightRowBody,
+        child: SfCircularChart(
+            series: <CircularSeries>[
+              // Renders radial bar chart
+              RadialBarSeries<ChartData, String>(
+                  dataSource: chartData,
+                  xValueMapper: (ChartData data, _) => data.text,
+                  yValueMapper: (ChartData data, _) => data.y,
+                  cornerStyle: CornerStyle.bothCurve,
+                  innerRadius: '30%' //圓心佔比
+              )
+            ]
+        )
+    );
+  }
 
+  Widget smallCircle(Color cc) {
+    return Container(
+      height: 8.0,
+      width: 8.0,
+      decoration: BoxDecoration(
+        color: cc,
+        shape: BoxShape.circle,
+      ),
+      margin: const EdgeInsets.only(top: 15.0, right: 15.0),
+    );
+  }
+
+  Widget getRadarLenged() {
+    List<String> items = [];
+    chartData.forEach((element) {
+      items.add("${element.text} ${element.y}人");
+    });
+    print("art getRadarLenged size=${items.length}");
+    return
+      Container(
+          color: normalBackground,
+          width: MediaQuery.of(context).size.width * 0.22,
+          height: heightRowBody,
+          padding: const EdgeInsets.fromLTRB(20, 0,0,0),
+          child: Center(child:
+          ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    smallCircle(Colors.white),
+                    whiteText(items[index], 24)
+                  ],
+                ),
+              );
+            },
+          ),
+          )
+      );
+  }
+
+  final List<ResideChartData> resideData = [
+    ResideChartData(8, 88),
+    ResideChartData(10, 102),
+    ResideChartData(12, 20),
+    ResideChartData(14, 102),
+  ];
+
+  Widget getColumnChart() {
     return Center(
         child: Container(
-          color: normalBackground,
-          height: heightRowBody,
-            child: SfCircularChart(
-                series: <CircularSeries>[
-                  // Renders radial bar chart
-                  RadialBarSeries<ChartData, String>(
-                      dataSource: chartData,
-                      xValueMapper: (ChartData data, _) => data.text,
-                      yValueMapper: (ChartData data, _) => data.y
+            color: normalBackground,
+            width: MediaQuery.of(context).size.width * 0.235,
+            height: heightRowBody,
+            child: SfCartesianChart(
+                series: <ChartSeries<ResideChartData, int>>[
+                  ColumnSeries<ResideChartData, int>(
+                      color: resideCountColor,
+                      dataSource: resideData,
+                      xValueMapper: (ResideChartData data, _) => data.x,
+                      yValueMapper: (ResideChartData data, _) => data.y
                   )
                 ]
             )
@@ -165,20 +271,71 @@ class _TableScreenState extends State<TableScreen> {
     );
   }
 
+  String getReasyRead(int oclock) {
+    String str = "$oclock點"; //點中午上午下午
+    if(oclock==12) {
+      str = "中午$oclock點";
+    } else if(oclock<12) {
+      str = "上午$oclock點";
+    } else {
+      str = "下午$oclock點";
+    }
+    return str;
+  }
+
+  Widget getColumnLenged() {
+    List<String> items = [];
+    resideData.forEach((element) {
+      items.add("${element.y}人  ${getReasyRead(element.x)}");
+    });
+    print("art getRadarLenged size=${items.length}");
+
+    Widget ww =  ListView.builder(
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              smallCircle(Colors.white),
+              whiteText(items[index], 25)
+            ],
+          ),
+        );
+      },
+    );
+
+    return
+      Container(
+          color: normalBackground,
+          width: MediaQuery.of(context).size.width * 0.24,
+          height: heightRowBody,
+          padding: EdgeInsets.fromLTRB(30, 0,0,0),
+          child: ww,
+          // Column(
+          //   children: [
+          //     centerTextSetHeight(leftRow1Title[2], 22),
+          //     ww
+          // ],)
+      );
+  }
+
+
   Widget getCombination(int type) {
 
     Widget wig;
     switch(type) {
-      // case 0:
-      //   wig = Column(
-      //     children: [
-      //       getRowTop(context, heightRowTop),
-      //       getRowTop2(),
-      //       getRadia(),
-      //       getRowBottom()
-      //     ],
-      //   );
-      //   break;
+      case 0:
+        wig = Column(
+          children: [
+            getRowTop(context, heightRowTop),
+            getRowTop2(),
+            getRadarRow(),
+            getRowBottom()
+          ],
+        );
+        break;
 
       case 1:
         wig = Column(
@@ -588,23 +745,15 @@ class ProfileWidget extends StatelessWidget {
         Positioned(
           top: 2,
           right: 10,
-          child: Container(
-            width: 30,
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(
+          child: Center(child: Container(
+              width: 26,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
                 color: tagColor,
-                width: 3.0,
+                borderRadius: BorderRadius.circular(5.0),
               ),
-              borderRadius: BorderRadius.circular(5.0),
-            ),
-            child: Center( child:Text(
-              profile.action,
-              style: TextStyle(
-                color: tagColor,
-              )),
-            ),
+              child: whiteText(profile.action,16)
+          ),
           ),
         ),
       ],
@@ -712,7 +861,7 @@ Widget getRowTop(BuildContext ctx, double hh) {
             decoration: BoxDecoration(
               color: normalBackground,
             ),
-            child: Image.asset('images/weather1.png', width: 50, height: hh, ),
+            child: Image.asset('images/weather1.png', width: 60, height: hh, ),
           ),
 
         ],)
@@ -725,7 +874,7 @@ Widget getRowTop(BuildContext ctx, double hh) {
       normalBorderTopLeft(
           addTextBackGround(
               SizedBox(
-                width: 860,
+                width: 863,
                 height: hh,
                 child: MarqueeWidget(
                   direction: Axis.horizontal,
@@ -752,4 +901,10 @@ class ChartData {
   ChartData(this.text, this.y,);
   final String text;
   final num y;
+}
+
+class ResideChartData {
+  ResideChartData(this.x, this.y);
+  final int x;
+  final int y;
 }
