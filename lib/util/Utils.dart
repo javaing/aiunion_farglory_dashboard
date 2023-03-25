@@ -33,6 +33,14 @@ String getformatNow() {
   return formatDateTime(now);
 }
 
+String formatDateTimeDashBoard(DateTime now) {
+  String name = getLocaleWeekDay(now.weekday);
+  return DateFormat('yyyy/MM/dd hh:mm:s')
+      .format(now)
+      .replaceAll(" ", " \n$name ");
+}
+
+
 Image getUrlImage(String imagePath) {
   return Image.network(
     imagePath,

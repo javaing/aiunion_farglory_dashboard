@@ -6,13 +6,13 @@ import '../util/Utils.dart';
 
 //final List<String> headerInfo = ['GPT-4掀起AI界高潮，ChatGPT之父卻怕了：我設了一個終止開關    敬禮！張育成獲經典賽最佳一壘手    BLACKPINK七月再來台？「主辦方員工」洩消息',
 //  '            26°  大致晴朗'];
-final String headerNews = 'GPT-4掀起AI界高潮，ChatGPT之父卻怕了：我設了一個終止開關    敬禮！張育成獲經典賽最佳一壘手    BLACKPINK七月再來台？「主辦方員工」洩消息';
+final String headerNews = '進行高空作業前，一定要確認安全掛勾是否扣上     進入狹窄的空間前，進入狹窄的空間前，    進入工地戴安全帽（安全帽區域）     確實配戴背負式安全帶（磨損的安全線束）';
 final String headerWeather = '26°\n大致晴朗';
-final List<String> leftRow1Title = ['進場人數','出場人數','現場人數'];
+final List<String> leftRow1Title = ['進場人次','出場人次','現場人數'];
 //List<String> leftRow1Count = ["99","0","99"];
 int leaveCount = 0;
-const String enterStr = '進\n場';
-const String leaveStr = '出\n場';
+const String enterStr = '進場';
+const String leaveStr = '出場';
 
 final List<String> workTypeTitle = ['點工', '板模', '水泥', '排水', '電氣', '吊臂', '砂石'];
 List<int> workTypeCount = [15, 8, 13, 8, 5, 2, 8];
@@ -32,21 +32,32 @@ List<double> vendorCount2 = [40, 20, 20, 10, 5, 5, 0, 0, 0, 0];
 List<String> workerImages = ['worker1.png', 'worker2.png', 'worker3.png', 'worker4.png', 'worker5.png'];
 List<String> workerNames = ['姜才藝','黃文柏','蘇銳思','沈立誠','徐涵暢','萬泰清','孫鵬翼','史俊雄','湯嘉石','秦承運','李文成','夏陽舒','袁經義','盧樂湛','謝俊材','段雨星','崔俊哲',];
 List<Profile> profiles1 = [
-  Profile(name: '陳 * 榮', profession: rightRowTitle[0], imageUrl: workerImages[0], ),
-  Profile(name: '林 * 華', profession: rightRowTitle[1], imageUrl: workerImages[1], ),
-  Profile(name: '黃 * 林', profession: rightRowTitle[2], imageUrl: workerImages[2], ),
+  Profile(name: '陳 * 榮', profession: rightRowTitle[0], imageUrl: workerImages[0], action: enterStr),
+  Profile(name: '林 * 華', profession: rightRowTitle[1], imageUrl: workerImages[1], action: enterStr ),
+  Profile(name: '黃 * 林', profession: rightRowTitle[2], imageUrl: workerImages[2], action: enterStr),
 ];
 List<Profile> profiles2 = [
-  Profile(name: '黃 * 林', profession: rightRowTitle[3], imageUrl: workerImages[2], ),
-  Profile(name: '張 * 勇', profession: rightRowTitle[4], imageUrl: workerImages[3], ),
-  Profile(name: '陳 * 榮', profession: rightRowTitle[5], imageUrl: workerImages[4]),
+  Profile(name: '黃 * 林', profession: rightRowTitle[3], imageUrl: workerImages[2], action: leaveStr ),
+  Profile(name: '張 * 勇', profession: rightRowTitle[4], imageUrl: workerImages[3], action: leaveStr ),
+  Profile(name: '陳 * 榮', profession: rightRowTitle[5], imageUrl: workerImages[4], action: leaveStr ),
 
+];
+List<Profile> profilesPool = [
+  Profile(name: '陳 * 榮', profession: rightRowTitle[0], imageUrl: workerImages[0], action: enterStr),
+  Profile(name: '林 * 華', profession: rightRowTitle[1], imageUrl: workerImages[1], action: enterStr),
+  Profile(name: '黃 * 林', profession: rightRowTitle[2], imageUrl: workerImages[2], action: enterStr),
+  Profile(name: '陳 * 榮', profession: rightRowTitle[3], imageUrl: workerImages[3], action: enterStr),
+  Profile(name: '林 * 華', profession: rightRowTitle[4], imageUrl: workerImages[4], action: enterStr),
+  Profile(name: '陳 * 榮', profession: rightRowTitle[5], imageUrl: workerImages[0], action: leaveStr),
+  Profile(name: '林 * 華', profession: rightRowTitle[1], imageUrl: workerImages[1], action: leaveStr),
+];
+List<Profile> profiles = [
 ];
 final int LIMIT_LIST_PROFILE = 3;
 
 class TableScreenViewModel {
   TableScreenViewModel() {
-    print('art 0321 view model init');
+    //print('art 0321 view model init');
     MQTTService _myService = getIt<MQTTService>();
     _myService.setCallback(cb);
   }
@@ -82,7 +93,7 @@ class TableScreenViewModel {
   Profile genProfile(String actionStr) {
     String name = randomListItem(workerNames).replaceRange(1, 2, ' * ');
     String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
-    return Profile(name: name, profession: vendor, imageUrl: randomListItem(workerImages),);
+    return Profile(name: name, profession: vendor, imageUrl: randomListItem(workerImages), action: actionStr);
   }
 
 }

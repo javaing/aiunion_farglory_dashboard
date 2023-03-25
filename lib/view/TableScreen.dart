@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../util/Utils.dart';
 import '../viewmodel/TableScreenViewModel.dart';
 import 'package:pie_chart/pie_chart.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 
 import 'TableScreenVideo.dart';
 
@@ -29,11 +30,11 @@ const double VENDOR_MANPOWER_WIDTH = 80.0;
 const double Top2_TEXT_SIZE = 40.0;
 const double Top2_NUMBER_SIZE = 60.0;
 DisplayMode currentMode = DisplayMode.punch ;
-const Color normalBackground = Color.fromARGB(255, 224, 224, 224);
-Color textBackground = const Color.fromARGB(255, 16, 16, 16);
-Color row2Field1Background = const Color.fromARGB(255, 0, 51, 204);
-Color row2Field2Background = const Color.fromARGB(255, 0, 153, 51);
-Color row2Field3Background = const Color.fromARGB(255, 255, 102, 0);
+const Color borderColor = Color.fromARGB(255, 224, 224, 224);
+Color normalBackground = const Color.fromARGB(255, 16, 16, 16);
+Color enterCountColor = const Color.fromARGB(255, 0, 51, 204);
+Color leaveCountColor = const Color.fromARGB(255, 0, 153, 51);
+Color resideCountColor = const Color.fromARGB(255, 204, 51, 0);
 Color pieChartOrange = const Color.fromARGB(255, 255, 153, 0);
 
 Color pieChart1 = const Color.fromARGB(255, 255, 255, 0);
@@ -47,7 +48,7 @@ Color pieChart7 = const Color.fromARGB(255, 128, 0, 128);
 Color pieChart8 = const Color.fromARGB(255, 128, 128, 0);
 Color pieChart9 = const Color.fromARGB(255, 0, 128, 128);
 Color pieChart10 = const Color.fromARGB(255, 0, 0, 128);
-const double BORER_WIDTH = 6.0;
+const double BORER_WIDTH = 3.0;
 
 class _TableScreenState extends State<TableScreen> {
   late String _timeString;
@@ -67,23 +68,18 @@ class _TableScreenState extends State<TableScreen> {
 
   }
 
+
+  int profileCount = 0;
   void _getTime() {
     //in setState() UI才會更新
     setState(() {
       _timeString = getformatNow();
+
+      if(profileCount<profilesPool.length) {
+        profiles.add(profilesPool[profileCount]);
+        profileCount++;
+      }
     });
-  }
-
-  String formatDateTime(DateTime now) {
-    String name = getLocaleWeekDay(now.weekday);
-    return DateFormat('yyyy/MM/dd hh:mm:s')
-        .format(now)
-        .replaceAll(" ", " \n$name ");
-  }
-
-  String getformatNow() {
-    final DateTime now = DateTime.now();
-    return formatDateTime(now);
   }
 
   @override
@@ -97,48 +93,169 @@ class _TableScreenState extends State<TableScreen> {
   late double heightRowBody;
   late double heightRowBottom;
   late double widthThirdOne;
+  int demoType = 0;
 
   @override
   Widget build(BuildContext context) {
     heightRowTop = MediaQuery.of(context).size.height * 0.1;
     heightRowTop2 = MediaQuery.of(context).size.height * 0.5;
     heightRowBody = MediaQuery.of(context).size.height * 0.33;
-    heightRowBottom = MediaQuery.of(context).size.height * 0.2;
+    heightRowBottom = MediaQuery.of(context).size.height * 0.22;
+
+    // return Scaffold(
+    //   body: Padding(
+    //     padding: const EdgeInsets.fromLTRB(30,0,30,0),
+    //     child: Column(
+    //       children: [
+    //         getRowTop(context, heightRowTop),
+    //         getRowTop2(),
+    //         getRowBodyNew(),
+    //         getRowBottom(),
+    //       ],
+    //     ),
+    //   ),
+    // );
+
 
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text(' '),
-      // ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(30,0,30,0),
-        child: Column(
+        child: Container(
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    //demoType = (demoType+1) % 4;
+                  });
+                },
+                child: getCombination(demoType),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+  }
+
+  Widget getRadia() {
+    final List<ChartData> chartData = [
+      ChartData('David', 25),
+      ChartData('Steve', 38),
+      ChartData('Jack', 34),
+      ChartData('Others', 52)
+    ];
+
+    return Center(
+        child: Container(
+          color: normalBackground,
+          height: heightRowBody,
+            child: SfCircularChart(
+                series: <CircularSeries>[
+                  // Renders radial bar chart
+                  RadialBarSeries<ChartData, String>(
+                      dataSource: chartData,
+                      xValueMapper: (ChartData data, _) => data.text,
+                      yValueMapper: (ChartData data, _) => data.y
+                  )
+                ]
+            )
+        )
+    );
+  }
+
+  Widget getCombination(int type) {
+
+    Widget wig;
+    switch(type) {
+      // case 0:
+      //   wig = Column(
+      //     children: [
+      //       getRowTop(context, heightRowTop),
+      //       getRowTop2(),
+      //       getRadia(),
+      //       getRowBottom()
+      //     ],
+      //   );
+      //   break;
+
+      case 1:
+        wig = Column(
+          children: [
+            getRowTop(context, heightRowTop),
+          ],
+        );
+        break;
+
+      case 2:
+        wig = Column(
+          children: [
+            getRowTop(context, heightRowTop),
+          ],
+        );
+        break;
+
+      case 3:
+        wig = Column(
+          children: [
+            getRowTop(context, heightRowTop),
+          ],
+        );
+        break;
+
+      default:
+        wig = Column(
           children: [
             getRowTop(context, heightRowTop),
             getRowTop2(),
             getRowBodyNew(),
-            getRowBottom(),
+            getRowBottom()
           ],
-        ),
-      ),
-    );
+        );
+    }
+
+    return wig;
   }
 
   Widget getRowTop2() {
-    List<Color> fieldColors = [row2Field1Background , row2Field2Background,row2Field3Background];
+    List<Color> fieldColors = [enterCountColor , leaveCountColor,resideCountColor];
     var sum = vendorCount2.reduce((value, element) => value + element).toInt();
     List<int> leftRow1Count = [ sum, leaveCount, sum-leaveCount];
 
     return Table(
         border: TableBorder.all(
-          color: normalBackground,
+          color: borderColor,
           width: BORER_WIDTH,
         ),
         children: [
-          genCellTextColor(leftRow1Title, fieldColors, heightRowTop2*0.2, Top2_TEXT_SIZE),
-          genCellTextColor(toStringList(leftRow1Count), fieldColors, heightRowTop2*0.42, Top2_NUMBER_SIZE )
+          genTableRowColor(leftRow1Title, fieldColors, heightRowTop2*0.2, Top2_TEXT_SIZE),
+          genTableRowColor(toStringList(leftRow1Count), fieldColors, heightRowTop2*0.42, Top2_NUMBER_SIZE )
         ]
     );
 
+  }
+
+  Widget getRowBody() {
+    double hh = heightRowBody / 5;
+
+    //List<String> vendorTitle2 = ['承包商A', '承包商B', '承包商C', '承包商D', '承包商E', '承包商F', '承包商G', '承包商H', '承包商I', '承包商J'];
+    //List<double> vendorCount2 = [40, 20, 20, 10, 5, 5, 0, 0, 0, 0];
+
+
+    return Table(
+        border: TableBorder.all(
+          color: borderColor,
+          width: BORER_WIDTH,
+        ),
+        children: [
+          genTableRow(leftRow1Title, hh),
+        ]
+    );
+
+    // return normalBorderLeftBottomRight(
+    //      gen(dataMap)
+    // );
   }
 
 
@@ -159,7 +276,7 @@ class _TableScreenState extends State<TableScreen> {
 
     final colorList = <Color>[
       pieChartOrange,
-      row2Field2Background
+      leaveCountColor
     ];
 
     return normalBorderLeftBottom(
@@ -175,7 +292,7 @@ class _TableScreenState extends State<TableScreen> {
   Widget makePie(Map<String, double> dataMap, List<Color> colorList) {
     return Container(
       padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
-      color: textBackground,
+      color: normalBackground,
       child: SizedBox(
         height: heightRowBody,
         child: PieChart(
@@ -230,14 +347,14 @@ class _TableScreenState extends State<TableScreen> {
     Widget profileListView = ListView.builder(
       //shrinkWrap: true, //just set this property
       scrollDirection: Axis.horizontal,
-      itemCount: profiles1.length,
+      itemCount: profiles.length,
       itemBuilder: (BuildContext context, int index) {
-        Profile profile = profiles1[index];
-        return ProfileWidget(profile: profile);
+        Profile pp = profiles[index];
+        return ProfileWidget(profile: pp);
       },
     );
 
-    return normalBorderLeftBottom(
+    return normalBorderLeftBottomRight(
         addTextBackGround(
             SizedBox(
               height: heightRowBottom,
@@ -270,7 +387,7 @@ class _TableScreenState extends State<TableScreen> {
     Widget w1 = normalBorderLeftBottom(textByCustom(
         60,
         heightRowBottom,
-        row2Field3Background,
+        resideCountColor,
         enterStr,
         30
     ));
@@ -278,7 +395,7 @@ class _TableScreenState extends State<TableScreen> {
     Widget w3 = normalBorderLeftBottom(textByCustom(
         60,
         heightRowBottom,
-        row2Field2Background,
+        leaveCountColor,
         leaveStr,
         30
     ));
@@ -400,7 +517,7 @@ class _TableScreenState extends State<TableScreen> {
     );
   }
 
-  TableRow genCellText(List<String> list, double hh) {
+  TableRow genTableRow(List<String> list, double hh) {
     return TableRow(
       children: List.generate(
         list.length,
@@ -411,7 +528,7 @@ class _TableScreenState extends State<TableScreen> {
     );
   }
 
-  TableRow genCellTextColor(List<String> list, List<Color> myColors , double hh, double size) {
+  TableRow genTableRowColor(List<String> list, List<Color> myColors , double hh, double size) {
     return TableRow(
       children: List.generate(
         list.length,
@@ -444,28 +561,55 @@ class ProfileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 160,
-      padding: const EdgeInsets.all(4),
-      child: Column(
-        children: [
-          CircleAvatar(
-            radius: 45,
-            backgroundImage: getImage(profile.imageUrl),
+
+    Color tagColor = enterCountColor;
+    if(profile.action == leaveStr) {
+      tagColor = leaveCountColor;
+    }
+
+    return Stack(
+      children: [
+        Container(
+          width: 160,
+          padding: const EdgeInsets.fromLTRB(0,10, 0,0),
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: 45,
+                backgroundImage: getImage(profile.imageUrl),
+              ),
+              SizedBox(height: 4,),
+              whiteText( "姓名:${profile.name}", 15),
+              whiteText("單位:${profile.profession}", 15),
+            ],
           ),
-          whiteText( "姓名:${profile.name}", 15),
-          whiteText("單位:${profile.profession}", 15),
-          //SizedBox(width: 54),
-          // Column(
-          //   crossAxisAlignment: CrossAxisAlignment.start,
-          //   children: [
-          //     Text("姓名:" + profile.name, style: TextStyle(fontSize: 14)),
-          //     Text("單位:" + profile.profession, style: TextStyle(fontSize: 14)),
-          //   ],
-          // ),
-        ],
-      ),
+        ),
+        // The tag in the top-right corner
+        Positioned(
+          top: 2,
+          right: 10,
+          child: Container(
+            width: 30,
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(
+                color: tagColor,
+                width: 3.0,
+              ),
+              borderRadius: BorderRadius.circular(5.0),
+            ),
+            child: Center( child:Text(
+              profile.action,
+              style: TextStyle(
+                color: tagColor,
+              )),
+            ),
+          ),
+        ),
+      ],
     );
+
   }
 }
 
@@ -479,7 +623,7 @@ Widget whiteText(String txt, double size) {
 
 Widget addTextBackGround(Widget w) {
   return Container(
-    color: textBackground,
+    color: normalBackground,
     child: Align(
       alignment: Alignment.bottomCenter,
       child:  w,
@@ -491,8 +635,8 @@ Widget normalBorderTopLeft(Widget w) {
   return Container(
     decoration: const BoxDecoration(
       border: Border(
-        top: BorderSide(width: BORER_WIDTH, color: normalBackground),
-        left: BorderSide(width: BORER_WIDTH, color: normalBackground),
+        top: BorderSide(width: BORER_WIDTH, color: borderColor),
+        left: BorderSide(width: BORER_WIDTH, color: borderColor),
       ),
     ),
     child: w,
@@ -503,9 +647,9 @@ Widget normalBorderTopLeftRight(Widget w) {
   return Container(
     decoration: const BoxDecoration(
       border: Border(
-        top: BorderSide(width: BORER_WIDTH, color: normalBackground),
-        left: BorderSide(width: BORER_WIDTH, color: normalBackground),
-        right: BorderSide(width: BORER_WIDTH, color: normalBackground),
+        top: BorderSide(width: BORER_WIDTH, color: borderColor),
+        left: BorderSide(width: BORER_WIDTH, color: borderColor),
+        right: BorderSide(width: BORER_WIDTH, color: borderColor),
       ),
     ),
     child: w,
@@ -516,9 +660,9 @@ Widget normalBorderLeftBottomRight(Widget w) {
   return Container(
     decoration: const BoxDecoration(
       border: Border(
-        right: BorderSide(width: BORER_WIDTH, color: normalBackground),
-        left: BorderSide(width: BORER_WIDTH, color: normalBackground),
-        bottom: BorderSide(width: BORER_WIDTH, color: normalBackground),
+        right: BorderSide(width: BORER_WIDTH, color: borderColor),
+        left: BorderSide(width: BORER_WIDTH, color: borderColor),
+        bottom: BorderSide(width: BORER_WIDTH, color: borderColor),
       ),
     ),
     child: w,
@@ -529,8 +673,8 @@ Widget normalBorderLeftBottom(Widget w) {
   return Container(
     decoration: const BoxDecoration(
       border: Border(
-        left: BorderSide(width: BORER_WIDTH, color: normalBackground),
-        bottom: BorderSide(width: BORER_WIDTH, color: normalBackground),
+        left: BorderSide(width: BORER_WIDTH, color: borderColor),
+        bottom: BorderSide(width: BORER_WIDTH, color: borderColor),
       ),
     ),
     child: w,
@@ -540,7 +684,7 @@ Widget normalBorderLeftBottom(Widget w) {
 Widget centerTextSetHeight(String txt, double hh) {
   return Container(
     padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-    color: textBackground,
+    color: normalBackground,
     child: Align(
       alignment: Alignment.bottomCenter,
       child: SizedBox(
@@ -557,7 +701,7 @@ Widget centerTextSetHeight(String txt, double hh) {
 
 Widget getRowTop(BuildContext ctx, double hh) {
   String str1 = headerNews;
-  String str2 = formatDateTime(DateTime.now());
+  String str2 = formatDateTimeDashBoard(DateTime.now());
 
   Widget w = Row(children: [
     normalBorderTopLeft(centerTextSetHeight(str2, hh)),
@@ -566,7 +710,7 @@ Widget getRowTop(BuildContext ctx, double hh) {
           centerTextSetHeight(headerWeather, hh),
           Container(
             decoration: BoxDecoration(
-              color: textBackground,
+              color: normalBackground,
             ),
             child: Image.asset('images/weather1.png', width: 50, height: hh, ),
           ),
@@ -581,7 +725,7 @@ Widget getRowTop(BuildContext ctx, double hh) {
       normalBorderTopLeft(
           addTextBackGround(
               SizedBox(
-                width: 810,
+                width: 860,
                 height: hh,
                 child: MarqueeWidget(
                   direction: Axis.horizontal,
@@ -602,4 +746,10 @@ Widget getRowTop(BuildContext ctx, double hh) {
 
 
     ]);
+}
+
+class ChartData {
+  ChartData(this.text, this.y,);
+  final String text;
+  final num y;
 }
