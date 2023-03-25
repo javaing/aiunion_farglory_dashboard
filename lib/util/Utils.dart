@@ -1,0 +1,70 @@
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+void showMsg(BuildContext context,String msg) {
+  showDialog(
+      context: context,
+      builder: (BuildContext context){
+        return AlertDialog(
+          elevation: 4,
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8.0))),
+          content: Text(style: const TextStyle(fontSize: 25), msg),
+          actions: <Widget>[
+            TextButton(
+              child: const Text(style: TextStyle(fontSize: 25),"OK"),
+              onPressed: (){
+                Navigator.of(context).pop();
+              },)
+          ],
+        );
+      }
+  );
+}
+
+String formatDateTime(DateTime dateTime) {
+  return DateFormat('yyyy/MM/dd hh:mm:s').format(dateTime);
+}
+
+String getformatNow() {
+  final DateTime now = DateTime.now();
+  return formatDateTime(now);
+}
+
+Image getUrlImage(String imagePath) {
+  return Image.network(
+    imagePath,
+    fit: BoxFit.cover,
+    height: 300, // set your height
+    width: 300, // and width here
+  );
+}
+
+Image getAssetImage(String name) {
+  return Image.asset(
+    'assets/$name',
+    width: 300,
+    height: 300,
+    fit: BoxFit.contain,
+  );
+}
+
+String getLocaleWeekDay(int weekday) {
+  List<String> name = ['', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六','星期日'];
+  return name[weekday % name.length];
+}
+
+List<String> toStringList(List<int> intList) {
+  List<String> myList = [];
+  for (var element in intList) {
+    myList.add(element.toString());
+  }
+  return myList;
+}
+
+T randomListItem<T>(List<T> lst) {
+  Random rnd = Random();
+  return lst[rnd.nextInt(lst.length)];
+}
