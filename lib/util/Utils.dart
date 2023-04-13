@@ -51,10 +51,14 @@ Image getUrlImage(String imagePath) {
 }
 
 Image getAssetImage(String name) {
+  return getAssetImageSize(name, 300);
+}
+
+Image getAssetImageSize(String name, double size) {
   return Image.asset(
-    'assets/$name',
-    width: 300,
-    height: 300,
+    'images/$name',
+    width: size,
+    height: size,
     fit: BoxFit.contain,
   );
 }

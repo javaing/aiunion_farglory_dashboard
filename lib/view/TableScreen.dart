@@ -1,15 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../Constants.dart';
 import '../datamodel/Profile.dart';
 import '../util/MarqueeWidget.dart';
-import 'package:intl/intl.dart';
 
 import '../util/Utils.dart';
 import '../viewmodel/TableScreenViewModel.dart';
-import 'package:pie_chart/pie_chart.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
 
+
+import 'EnviromentTable.dart';
+import 'ProfileWidget.dart';
 import 'TableScreenVideo.dart';
 
 class TableScreen extends StatefulWidget {
@@ -29,26 +30,8 @@ const double VENDOR_NAME_WIDTH = 150.0;
 const double VENDOR_MANPOWER_WIDTH = 80.0;
 const double Top2_TEXT_SIZE = 40.0;
 const double Top2_NUMBER_SIZE = 60.0;
-DisplayMode currentMode = DisplayMode.punch ;
-const Color borderColor = Color.fromARGB(255, 224, 224, 224);
-Color normalBackground = const Color.fromARGB(255, 16, 16, 16);
-Color enterCountColor = const Color.fromARGB(255, 0, 51, 204);
-Color leaveCountColor = const Color.fromARGB(255, 0, 102, 51);
-Color resideCountColor = const Color.fromARGB(255, 204, 51, 0);
-Color pieChartOrange = const Color.fromARGB(255, 255, 153, 0);
 
-Color pieChart1 = const Color.fromARGB(255, 255, 255, 0);
-Color pieChart2 = const Color.fromARGB(255, 0, 39, 204);
-Color pieChart3 = const Color.fromARGB(255, 255, 39, 153);
-Color pieChart4 = const Color.fromARGB(255, 0, 153, 39);
-Color pieChart5 = const Color.fromARGB(255, 0, 255, 255);
-
-Color pieChart6 = const Color.fromARGB(255, 0, 128, 0);
-Color pieChart7 = const Color.fromARGB(255, 128, 0, 128);
-Color pieChart8 = const Color.fromARGB(255, 128, 128, 0);
-Color pieChart9 = const Color.fromARGB(255, 0, 128, 128);
-Color pieChart10 = const Color.fromARGB(255, 0, 0, 128);
-const double BORER_WIDTH = 3.0;
+DisplayMode currentMode = DisplayMode.punch ; //差勤或清場
 
 class _TableScreenState extends State<TableScreen> {
   late String _timeString;
@@ -66,6 +49,13 @@ class _TableScreenState extends State<TableScreen> {
 
     TableScreenViewModel viewModel = TableScreenViewModel();
 
+
+    // if(profileCount<profilesPool.length) {
+    //   profiles.add(profilesPool[profileCount]);
+    //   profileCount++;
+    // }
+    profiles.addAll(profilesPool);
+    profileCount = profiles.length;
   }
 
 
@@ -74,11 +64,6 @@ class _TableScreenState extends State<TableScreen> {
     //in setState() UI才會更新
     setState(() {
       _timeString = getformatNow();
-
-      if(profileCount<profilesPool.length) {
-        profiles.add(profilesPool[profileCount]);
-        profileCount++;
-      }
     });
   }
 
@@ -89,7 +74,7 @@ class _TableScreenState extends State<TableScreen> {
   }
 
   late double heightRowTop;
-  late double heightRowTop2;
+  //late double heightRowTop2;
   late double heightRowBody;
   late double heightRowBottom;
   late double widthThirdOne;
@@ -98,227 +83,34 @@ class _TableScreenState extends State<TableScreen> {
   @override
   Widget build(BuildContext context) {
     heightRowTop = MediaQuery.of(context).size.height * 0.1;
-    heightRowTop2 = MediaQuery.of(context).size.height * 0.5;
+    //heightRowTop2 = MediaQuery.of(context).size.height * 0.5;
     heightRowBody = MediaQuery.of(context).size.height * 0.33;
-    heightRowBottom = MediaQuery.of(context).size.height * 0.22;
+    heightRowBottom = MediaQuery.of(context).size.height * 0.36;
 
-    _timer.cancel();
-
-    // return Scaffold(
-    //   body: Padding(
-    //     padding: const EdgeInsets.fromLTRB(30,0,30,0),
-    //     child: Column(
-    //       children: [
-    //         getRowTop(context, heightRowTop),
-    //         getRowTop2(),
-    //         getRowBodyNew(),
-    //         getRowBottom(),
-    //       ],
-    //     ),
-    //   ),
-    // );
-
-    //test long time repaint
+    //_timer.cancel();
+    //normalBorderLeftBottomRight(w)
     return Scaffold(
-      body: Padding(
+      body:
+      Container(
         padding: const EdgeInsets.fromLTRB(30,0,30,0),
+        decoration: const BoxDecoration(
+          border: Border(
+            right: BorderSide(width: BORER_WIDTH, color: borderColor),
+            top: BorderSide(width: BORER_WIDTH, color: borderColor),
+            left: BorderSide(width: BORER_WIDTH, color: borderColor),
+            bottom: BorderSide(width: BORER_WIDTH, color: borderColor),
+          ),
+        ),
         child: Column(
           children: [
             getRowTop(context, heightRowTop),
-            getRowTop2(),
-            getRadarRow(),
-            getRowBottom()
+            getRowBody(),
+            getRowBottom(),
           ],
         ),
       ),
     );
 
-
-    // return Scaffold(
-    //   body: Padding(
-    //     padding: const EdgeInsets.fromLTRB(30,0,30,0),
-    //     child: Container(
-    //       child: Column(
-    //         children: [
-    //           GestureDetector(
-    //             onTap: () {
-    //               setState(() {
-    //                 demoType = (demoType+1) % 4;
-    //               });
-    //             },
-    //             child: getCombination(0),
-    //           ),
-    //         ],
-    //       ),
-    //     ),
-    //   ),
-    // );
-
-  }
-
-
-
-  final List<ChartData> chartData = [
-    ChartData('進場四次', 10),
-    ChartData('進場三次', 60),
-    ChartData('進場兩次', 100),
-    ChartData('進場一次', 180),
-  ];
-
-  Widget getRadarRow() {
-    return Row(children: [
-      normalBorderLeftBottom(Row(children: [
-        getRadia(),
-        getRadarLenged(),
-      ],)
-      ),
-      normalBorderLeftBottomRight(Row(children: [
-        getColumnChart(),
-        getColumnLenged(),
-      ]),
-      )
-    ],);
-  }
-
-  Widget getRadia() {
-    return Container(
-        color: normalBackground,
-        width: MediaQuery.of(context).size.width * 0.25,
-        height: heightRowBody,
-        child: SfCircularChart(
-            series: <CircularSeries>[
-              // Renders radial bar chart
-              RadialBarSeries<ChartData, String>(
-                  dataSource: chartData,
-                  xValueMapper: (ChartData data, _) => data.text,
-                  yValueMapper: (ChartData data, _) => data.y,
-                  cornerStyle: CornerStyle.bothCurve,
-                  innerRadius: '30%' //圓心佔比
-              )
-            ]
-        )
-    );
-  }
-
-  Widget smallCircle(Color cc) {
-    return Container(
-      height: 8.0,
-      width: 8.0,
-      decoration: BoxDecoration(
-        color: cc,
-        shape: BoxShape.circle,
-      ),
-      margin: const EdgeInsets.only(top: 15.0, right: 15.0),
-    );
-  }
-
-  Widget getRadarLenged() {
-    List<String> items = [];
-    chartData.forEach((element) {
-      items.add("${element.text} ${element.y}人");
-    });
-    print("art getRadarLenged size=${items.length}");
-    return
-      Container(
-          color: normalBackground,
-          width: MediaQuery.of(context).size.width * 0.22,
-          height: heightRowBody,
-          padding: const EdgeInsets.fromLTRB(20, 0,0,0),
-          child: Center(child:
-          ListView.builder(
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    smallCircle(Colors.white),
-                    whiteText(items[index], 24)
-                  ],
-                ),
-              );
-            },
-          ),
-          )
-      );
-  }
-
-  final List<ResideChartData> resideData = [
-    ResideChartData(8, 88),
-    ResideChartData(10, 102),
-    ResideChartData(12, 20),
-    ResideChartData(14, 102),
-  ];
-
-  Widget getColumnChart() {
-    return Center(
-        child: Container(
-            color: normalBackground,
-            width: MediaQuery.of(context).size.width * 0.235,
-            height: heightRowBody,
-            child: SfCartesianChart(
-                series: <ChartSeries<ResideChartData, int>>[
-                  ColumnSeries<ResideChartData, int>(
-                      color: resideCountColor,
-                      dataSource: resideData,
-                      xValueMapper: (ResideChartData data, _) => data.x,
-                      yValueMapper: (ResideChartData data, _) => data.y
-                  )
-                ]
-            )
-        )
-    );
-  }
-
-  String getReasyRead(int oclock) {
-    String str = "$oclock點"; //點中午上午下午
-    if(oclock==12) {
-      str = "中午$oclock點";
-    } else if(oclock<12) {
-      str = "上午$oclock點";
-    } else {
-      str = "下午$oclock點";
-    }
-    return str;
-  }
-
-  Widget getColumnLenged() {
-    List<String> items = [];
-    resideData.forEach((element) {
-      items.add("${element.y}人  ${getReasyRead(element.x)}");
-    });
-    print("art getRadarLenged size=${items.length}");
-
-    Widget ww =  ListView.builder(
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              smallCircle(Colors.white),
-              whiteText(items[index], 25)
-            ],
-          ),
-        );
-      },
-    );
-
-    return
-      Container(
-          color: normalBackground,
-          width: MediaQuery.of(context).size.width * 0.24,
-          height: heightRowBody,
-          padding: EdgeInsets.fromLTRB(30, 0,0,0),
-          child: ww,
-          // Column(
-          //   children: [
-          //     centerTextSetHeight(leftRow1Title[2], 22),
-          //     ww
-          // ],)
-      );
   }
 
 
@@ -330,8 +122,7 @@ class _TableScreenState extends State<TableScreen> {
         wig = Column(
           children: [
             getRowTop(context, heightRowTop),
-            getRowTop2(),
-            getRadarRow(),
+            getBigNumberRow(),
             getRowBottom()
           ],
         );
@@ -365,8 +156,8 @@ class _TableScreenState extends State<TableScreen> {
         wig = Column(
           children: [
             getRowTop(context, heightRowTop),
-            getRowTop2(),
-            getRowBodyNew(),
+            getBigNumberRow(),
+            //getRowBodyNew(),
             getRowBottom()
           ],
         );
@@ -375,10 +166,10 @@ class _TableScreenState extends State<TableScreen> {
     return wig;
   }
 
-  Widget getRowTop2() {
+  Widget getBigNumberRow() {
     List<Color> fieldColors = [enterCountColor , leaveCountColor,resideCountColor];
-    var sum = vendorCount2.reduce((value, element) => value + element).toInt();
-    List<int> leftRow1Count = [ sum, leaveCount, sum-leaveCount];
+    var sum = vendorCount2.reduce((value, element) => value + element);
+    List<int> leftRow1Count = [ sum.toInt(), leaveCount, (sum-leaveCount).toInt()];
 
     return Table(
         border: TableBorder.all(
@@ -386,103 +177,66 @@ class _TableScreenState extends State<TableScreen> {
           width: BORER_WIDTH,
         ),
         children: [
-          genTableRowColor(leftRow1Title, fieldColors, heightRowTop2*0.2, Top2_TEXT_SIZE),
-          genTableRowColor(toStringList(leftRow1Count), fieldColors, heightRowTop2*0.42, Top2_NUMBER_SIZE )
+          genTableRowWithColor(leftRow1Title, fieldColors, heightRowBody*0.2, Top2_TEXT_SIZE),
+          genTableRowWithColor(toStringList(leftRow1Count), fieldColors, heightRowBody*0.42, Top2_NUMBER_SIZE )
         ]
     );
 
+  }
+
+  Widget getMiddleLeft(double h) {
+    double rowHeight = heightRowBody / 5;
+
+    List<List<String>> dataList = List.generate(4, (index) =>
+    [vendorTitle2[index], vendorCount2[index].toInt().toString(), vendorTitle2[index+4], vendorCount2[index+4].toInt().toString(),],) ;
+    Widget tab = EnviromentTable(height: rowHeight, data: dataList, fontSize: 28,);
+
+    return normalBorderLeftBottom( Container(color: normalBackground,
+        height: h,
+        child: Column(
+          children: [
+            getBigNumberRow(),
+            const SizedBox(height: 10,),
+            tab
+          ],
+        )));
   }
 
   Widget getRowBody() {
-    double hh = heightRowBody / 5;
+    double h = MediaQuery.of(context).size.height * 0.52;
+    //double h = heightRowBody;
 
-    //List<String> vendorTitle2 = ['承包商A', '承包商B', '承包商C', '承包商D', '承包商E', '承包商F', '承包商G', '承包商H', '承包商I', '承包商J'];
-    //List<double> vendorCount2 = [40, 20, 20, 10, 5, 5, 0, 0, 0, 0];
-
-
-    return Table(
-        border: TableBorder.all(
-          color: borderColor,
-          width: BORER_WIDTH,
-        ),
-        children: [
-          genTableRow(leftRow1Title, hh),
-        ]
-    );
-
-    // return normalBorderLeftBottomRight(
-    //      gen(dataMap)
-    // );
-  }
-
-
-  Widget getRowBodyNew() {
     //左右
-    return Row(children: [
-      Expanded(flex: 1, child: getRow2LeftNew()),
-      Expanded(flex: 2, child: getRow2RightNew()),
-    ]);
-  }
-
-  Widget getRow2LeftNew() {
-    var sum = vendorCount2.reduce((value, element) => value + element);
-    Map<String, double> dataMap = {
-      leftRow1Title[2]: (sum-leaveCount).toDouble(),
-      leftRow1Title[1]: leaveCount.toDouble(),
-    };
-
-    final colorList = <Color>[
-      pieChartOrange,
-      leaveCountColor
-    ];
-
-    return normalBorderLeftBottom(
-        makePie(appendNumberMap( dataMap), colorList)
+    return SizedBox(
+      height: h,
+      child: Row(children: [
+        Expanded(flex: 2, child: getMiddleLeft(h)),
+        Expanded(flex: 1, child: getMiddleRight(h)),
+      ]),
     );
+
   }
 
-  Map<String, double> appendNumberMap(Map<String, double> dataMap) {
-    List<String> newKey = dataMap.keys.map((name) => "$name (${dataMap[name]?.toInt().toString()})" ).toList();
-    return Map.fromIterables(newKey, dataMap.values);
-  }
 
-  Widget makePie(Map<String, double> dataMap, List<Color> colorList) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(0, 5, 0, 5),
-      color: normalBackground,
-      child: SizedBox(
-        height: heightRowBody,
-        child: PieChart(
-          dataMap: dataMap,
-          colorList: colorList,
-          legendOptions: const LegendOptions(
-            legendTextStyle: TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-            ),
-          ),
-          chartValuesOptions: const ChartValuesOptions(
-            showChartValueBackground: true,
-            showChartValuesInPercentage: true,
-            decimalPlaces: 0,
-          ),
-        ),
-      ),
-    );
-  }
+  //環境檢測
+  Widget getMiddleRight(double h) {
+    List<List<String>> dataList = List.generate(environTitle.length, (index) =>
+    //[environTitle[index], environCount[index]]) ;
+    [environTitle[index], environCount[index], environColor[index]]) ;
+    double hh = 40;
 
-  Widget getRow2RightNew() {
+    return normalBorder(
+    Container(color: normalBackground,
+        height: h,
+        padding: const EdgeInsets.only(left:20, bottom: 0, right: 0, top:0),
+        child: Column(
+      children: [
+        textSetHeightBold2('環境資訊', 55, 200),
+        EnviromentTable(height: hh, data: dataList, fontSize: 24,),
+      ],
+    )
+    ));
 
-    Map<String, double> dataMap = Map.fromIterables(vendorTitle2, vendorCount2);
-
-    final colorList = <Color>[
-      pieChart1, pieChart2, pieChart3, pieChart4, pieChart5,
-      pieChart6, pieChart7, pieChart8, pieChart9, pieChart10,
-    ];
-
-    return normalBorderLeftBottomRight(
-        makePie( appendNumberMap(dataMap), colorList)
-    );
   }
 
 
@@ -501,6 +255,9 @@ class _TableScreenState extends State<TableScreen> {
   }
 
   Widget getRowBottom() {
+    print("art 0413 profiles size=${profiles.length}");
+
+
     Widget profileListView = ListView.builder(
       //shrinkWrap: true, //just set this property
       scrollDirection: Axis.horizontal,
@@ -513,74 +270,83 @@ class _TableScreenState extends State<TableScreen> {
 
     return normalBorderLeftBottomRight(
         addTextBackGround(
-            SizedBox(
-              height: heightRowBottom,
-              child: profileListView,
-            )
+          SizedBox(
+           height: heightRowBottom,
+           child: profileListView,
+          )
         )
     );
   }
 
-  Widget getRoBottomNew() {
-    Widget profileListView = ListView.builder(
-      //shrinkWrap: true, //just set this property
-      scrollDirection: Axis.horizontal,
-      itemCount: profiles1.length,
-      itemBuilder: (BuildContext context, int index) {
-        Profile profile = profiles1[index];
-        return ProfileWidget(profile: profile);
-      },
+  Widget normalBorder(Widget w) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: borderColor, width: BORER_WIDTH,),
+      ),
+      child: w,
     );
-
-    Widget profileListView2 = ListView.builder(
-      scrollDirection: Axis.horizontal,
-      itemCount: profiles2.length,
-      itemBuilder: (BuildContext context, int index) {
-        Profile pp = profiles2[index];
-        return ProfileWidget(profile: pp);
-      },
-    );
-
-    Widget w1 = normalBorderLeftBottom(textByCustom(
-        60,
-        heightRowBottom,
-        resideCountColor,
-        enterStr,
-        30
-    ));
-
-    Widget w3 = normalBorderLeftBottom(textByCustom(
-        60,
-        heightRowBottom,
-        leaveCountColor,
-        leaveStr,
-        30
-    ));
-
-    Widget w2 = normalBorderLeftBottom(
-        addTextBackGround(
-            SizedBox(
-              height: heightRowBottom,
-              width: 535,
-              child: profileListView,
-            )
-        )
-    );
-
-    Widget w4 = normalBorderLeftBottomRight(
-        addTextBackGround(
-            SizedBox(
-              height: heightRowBottom,
-              width: 535,
-              child: profileListView2,
-            )
-        )
-    );
-
-    return  Row(children: [
-      w1,w2,w3, w4
-    ],);
   }
+
+  // Widget getRoBottomNew() {
+  //   Widget profileListView = ListView.builder(
+  //     //shrinkWrap: true, //just set this property
+  //     scrollDirection: Axis.horizontal,
+  //     itemCount: profiles1.length,
+  //     itemBuilder: (BuildContext context, int index) {
+  //       Profile profile = profiles1[index];
+  //       return ProfileWidget(profile: profile);
+  //     },
+  //   );
+  //
+  //   Widget profileListView2 = ListView.builder(
+  //     scrollDirection: Axis.horizontal,
+  //     itemCount: profiles2.length,
+  //     itemBuilder: (BuildContext context, int index) {
+  //       Profile pp = profiles2[index];
+  //       return ProfileWidget(profile: pp);
+  //     },
+  //   );
+  //
+  //   Widget w1 = normalBorderLeftBottom(textByCustom(
+  //       60,
+  //       heightRowBottom,
+  //       resideCountColor,
+  //       enterStr,
+  //       30
+  //   ));
+  //
+  //   Widget w3 = normalBorderLeftBottom(textByCustom(
+  //       60,
+  //       heightRowBottom,
+  //       leaveCountColor,
+  //       leaveStr,
+  //       30
+  //   ));
+  //
+  //   Widget w2 = normalBorderLeftBottom(
+  //       addTextBackGround(
+  //           SizedBox(
+  //             height: heightRowBottom,
+  //             width: 535,
+  //             child: profileListView,
+  //           )
+  //       )
+  //   );
+  //
+  //   Widget w4 = normalBorderLeftBottomRight(
+  //       addTextBackGround(
+  //           SizedBox(
+  //             height: heightRowBottom,
+  //             width: 535,
+  //             child: profileListView2,
+  //           )
+  //       )
+  //   );
+  //
+  //   return  Row(children: [
+  //     w1,w2,w3, w4
+  //   ],);
+  // }
 
   Widget textSetHeight(String txt, double hh) {
     return SizedBox(
@@ -595,6 +361,11 @@ class _TableScreenState extends State<TableScreen> {
 
 
   Widget centerTextTop2(String txt, double hh, double size) {
+    // if(txt.compareTo('0')==0) {
+    //   print("art 0413 bingo! centerTextTop2=$txt");
+    //   txt = " ";
+    // }
+
     TextStyle myStyle = const TextStyle(
         fontSize: 35.0,
         color: Colors.white
@@ -641,15 +412,16 @@ class _TableScreenState extends State<TableScreen> {
       width: wid,
       height: hh,
       child: Align(
-        alignment: Alignment.centerLeft,
+        alignment: Alignment.center,
         // Align however you like (i.e .centerRight, centerLeft)
         child: Padding(
-          padding: const EdgeInsets.only(left:5, bottom: 0, right: 0, top:0), //apply padding to some sides only
+          padding: const EdgeInsets.only(left:0, bottom: 0, right: 0, top:0), //apply padding to some sides only
           child: Text(
             txt,
             style: const TextStyle(
+              color: Colors.white,
               fontSize: 22,
-              //fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
@@ -685,7 +457,7 @@ class _TableScreenState extends State<TableScreen> {
     );
   }
 
-  TableRow genTableRowColor(List<String> list, List<Color> myColors , double hh, double size) {
+  TableRow genTableRowWithColor(List<String> list, List<Color> myColors , double hh, double size) {
     return TableRow(
       children: List.generate(
         list.length,
@@ -703,78 +475,12 @@ class _TableScreenState extends State<TableScreen> {
 }
 
 
-class ProfileWidget extends StatelessWidget {
-  final Profile profile;
-
-  const ProfileWidget({super.key, required this.profile});
-
-  ImageProvider getImage(String path) {
-    if(path.contains("/")) {
-      return NetworkImage(path);
-    } else {
-      return Image.asset('images/$path').image;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-
-    Color tagColor = enterCountColor;
-    if(profile.action == leaveStr) {
-      tagColor = leaveCountColor;
-    }
-
-    return Stack(
-      children: [
-        Container(
-          width: 160,
-          padding: const EdgeInsets.fromLTRB(0,10, 0,0),
-          child: Column(
-            children: [
-              CircleAvatar(
-                radius: 45,
-                backgroundImage: getImage(profile.imageUrl),
-              ),
-              SizedBox(height: 4,),
-              whiteText( "姓名:${profile.name}", 15),
-              whiteText("單位:${profile.profession}", 15),
-            ],
-          ),
-        ),
-        // The tag in the top-right corner
-        Positioned(
-          top: 2,
-          right: 10,
-          child: Center(child: Container(
-              width: 26,
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: tagColor,
-                borderRadius: BorderRadius.circular(5.0),
-              ),
-              child: whiteText(profile.action,16)
-          ),
-          ),
-        ),
-      ],
-    );
-
-  }
-}
-
-Widget whiteText(String txt, double size) {
-  return Center(child: Text(txt,
-    style: TextStyle(
-      fontSize: size,
-      color: Colors.white,
-    ),));
-}
 
 Widget addTextBackGround(Widget w) {
   return Container(
     color: normalBackground,
     child: Align(
-      alignment: Alignment.bottomCenter,
+      alignment: Alignment.center,
       child:  w,
     ),
   );
@@ -817,6 +523,29 @@ Widget normalBorderLeftBottomRight(Widget w) {
     child: w,
   );
 }
+
+Widget normalBorderLeft(Widget w) {
+  return Container(
+    decoration: const BoxDecoration(
+      border: Border(
+        left: BorderSide(width: BORER_WIDTH, color: borderColor),
+      ),
+    ),
+    child: w,
+  );
+}
+
+Widget normalBorderRight(Widget w) {
+  return Container(
+    decoration: const BoxDecoration(
+      border: Border(
+        right: BorderSide(width: BORER_WIDTH, color: borderColor),
+      ),
+    ),
+    child: w,
+  );
+}
+
 
 Widget normalBorderLeftBottom(Widget w) {
   return Container(
@@ -874,7 +603,7 @@ Widget getRowTop(BuildContext ctx, double hh) {
       normalBorderTopLeft(
           addTextBackGround(
               SizedBox(
-                width: 863,
+                width: 853,
                 height: hh,
                 child: MarqueeWidget(
                   direction: Axis.horizontal,
@@ -895,16 +624,4 @@ Widget getRowTop(BuildContext ctx, double hh) {
 
 
     ]);
-}
-
-class ChartData {
-  ChartData(this.text, this.y,);
-  final String text;
-  final num y;
-}
-
-class ResideChartData {
-  ResideChartData(this.x, this.y);
-  final int x;
-  final int y;
 }
