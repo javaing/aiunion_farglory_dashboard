@@ -24,6 +24,7 @@ mixin _$FarGloryMsg {
   String? get action => throw _privateConstructorUsedError;
   String? get company => throw _privateConstructorUsedError;
   String? get worktype => throw _privateConstructorUsedError;
+  String? get imgUrl => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -37,7 +38,12 @@ abstract class $FarGloryMsgCopyWith<$Res> {
           FarGloryMsg value, $Res Function(FarGloryMsg) then) =
       _$FarGloryMsgCopyWithImpl<$Res, FarGloryMsg>;
   @useResult
-  $Res call({String? id, String? action, String? company, String? worktype});
+  $Res call(
+      {String? id,
+      String? action,
+      String? company,
+      String? worktype,
+      String? imgUrl});
 }
 
 /// @nodoc
@@ -57,6 +63,7 @@ class _$FarGloryMsgCopyWithImpl<$Res, $Val extends FarGloryMsg>
     Object? action = freezed,
     Object? company = freezed,
     Object? worktype = freezed,
+    Object? imgUrl = freezed,
   }) {
     return _then(_value.copyWith(
       id: freezed == id
@@ -75,6 +82,10 @@ class _$FarGloryMsgCopyWithImpl<$Res, $Val extends FarGloryMsg>
           ? _value.worktype
           : worktype // ignore: cast_nullable_to_non_nullable
               as String?,
+      imgUrl: freezed == imgUrl
+          ? _value.imgUrl
+          : imgUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -87,7 +98,12 @@ abstract class _$$_FarGloryMsgCopyWith<$Res>
       __$$_FarGloryMsgCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String? id, String? action, String? company, String? worktype});
+  $Res call(
+      {String? id,
+      String? action,
+      String? company,
+      String? worktype,
+      String? imgUrl});
 }
 
 /// @nodoc
@@ -105,6 +121,7 @@ class __$$_FarGloryMsgCopyWithImpl<$Res>
     Object? action = freezed,
     Object? company = freezed,
     Object? worktype = freezed,
+    Object? imgUrl = freezed,
   }) {
     return _then(_$_FarGloryMsg(
       id: freezed == id
@@ -123,6 +140,10 @@ class __$$_FarGloryMsgCopyWithImpl<$Res>
           ? _value.worktype
           : worktype // ignore: cast_nullable_to_non_nullable
               as String?,
+      imgUrl: freezed == imgUrl
+          ? _value.imgUrl
+          : imgUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -130,7 +151,8 @@ class __$$_FarGloryMsgCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$_FarGloryMsg implements _FarGloryMsg {
-  const _$_FarGloryMsg({this.id, this.action, this.company, this.worktype});
+  const _$_FarGloryMsg(
+      {this.id, this.action, this.company, this.worktype, this.imgUrl});
 
   factory _$_FarGloryMsg.fromJson(Map<String, dynamic> json) =>
       _$$_FarGloryMsgFromJson(json);
@@ -143,10 +165,12 @@ class _$_FarGloryMsg implements _FarGloryMsg {
   final String? company;
   @override
   final String? worktype;
+  @override
+  final String? imgUrl;
 
   @override
   String toString() {
-    return 'FarGloryMsg(id: $id, action: $action, company: $company, worktype: $worktype)';
+    return 'FarGloryMsg(id: $id, action: $action, company: $company, worktype: $worktype, imgUrl: $imgUrl)';
   }
 
   @override
@@ -158,12 +182,14 @@ class _$_FarGloryMsg implements _FarGloryMsg {
             (identical(other.action, action) || other.action == action) &&
             (identical(other.company, company) || other.company == company) &&
             (identical(other.worktype, worktype) ||
-                other.worktype == worktype));
+                other.worktype == worktype) &&
+            (identical(other.imgUrl, imgUrl) || other.imgUrl == imgUrl));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, action, company, worktype);
+  int get hashCode =>
+      Object.hash(runtimeType, id, action, company, worktype, imgUrl);
 
   @JsonKey(ignore: true)
   @override
@@ -184,7 +210,8 @@ abstract class _FarGloryMsg implements FarGloryMsg {
       {final String? id,
       final String? action,
       final String? company,
-      final String? worktype}) = _$_FarGloryMsg;
+      final String? worktype,
+      final String? imgUrl}) = _$_FarGloryMsg;
 
   factory _FarGloryMsg.fromJson(Map<String, dynamic> json) =
       _$_FarGloryMsg.fromJson;
@@ -197,6 +224,8 @@ abstract class _FarGloryMsg implements FarGloryMsg {
   String? get company;
   @override
   String? get worktype;
+  @override
+  String? get imgUrl;
   @override
   @JsonKey(ignore: true)
   _$$_FarGloryMsgCopyWith<_$_FarGloryMsg> get copyWith =>

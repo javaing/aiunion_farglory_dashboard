@@ -20,24 +20,17 @@ class TableScreen extends StatefulWidget {
   State<TableScreen> createState() => _TableScreenState();
 }
 
-enum DisplayMode {
-  punch,
-  working,
-}
-
 const int VENDOR_COLUMN_LIMIT = 4;
 const double VENDOR_NAME_WIDTH = 150.0;
 const double VENDOR_MANPOWER_WIDTH = 80.0;
 const double Top2_TEXT_SIZE = 40.0;
 const double Top2_NUMBER_SIZE = 60.0;
 
-DisplayMode currentMode = DisplayMode.punch ; //差勤或清場
-
 class _TableScreenState extends State<TableScreen> {
   late String _timeString;
   late Timer _timer;
   late String aa = headerNews;
-
+  //DisplayMode currentMode = DisplayMode.punch ; //差勤或清場
 
   @override
   void initState() {
@@ -49,22 +42,20 @@ class _TableScreenState extends State<TableScreen> {
 
     TableScreenViewModel viewModel = TableScreenViewModel();
 
-
-    // if(profileCount<profilesPool.length) {
-    //   profiles.add(profilesPool[profileCount]);
-    //   profileCount++;
-    // }
-    profiles.addAll(profilesPool);
-    profileCount = profiles.length;
   }
 
-
-  int profileCount = 0;
+  //int profileCount = 0;
   void _getTime() {
     //in setState() UI才會更新
     setState(() {
       _timeString = getformatNow();
     });
+
+    profiles.clear();
+    profiles.addAll(profilesPool);
+    if(profiles.length > LIMIT_LIST_PROFILE) {
+      profiles.removeRange(0, profiles.length-LIMIT_LIST_PROFILE);
+    }
   }
 
   @override
@@ -74,7 +65,6 @@ class _TableScreenState extends State<TableScreen> {
   }
 
   late double heightRowTop;
-  //late double heightRowTop2;
   late double heightRowBody;
   late double heightRowBottom;
   late double widthThirdOne;
@@ -83,84 +73,44 @@ class _TableScreenState extends State<TableScreen> {
   @override
   Widget build(BuildContext context) {
     heightRowTop = MediaQuery.of(context).size.height * 0.1;
-    //heightRowTop2 = MediaQuery.of(context).size.height * 0.5;
     heightRowBody = MediaQuery.of(context).size.height * 0.33;
     heightRowBottom = MediaQuery.of(context).size.height * 0.36;
 
-    //_timer.cancel();
-    //normalBorderLeftBottomRight(w)
     return Scaffold(
-      body:
-      Container(
+      body: Container(
         padding: const EdgeInsets.fromLTRB(30,0,30,0),
-        decoration: const BoxDecoration(
-          border: Border(
-            right: BorderSide(width: BORER_WIDTH, color: borderColor),
-            top: BorderSide(width: BORER_WIDTH, color: borderColor),
-            left: BorderSide(width: BORER_WIDTH, color: borderColor),
-            bottom: BorderSide(width: BORER_WIDTH, color: borderColor),
-          ),
+        decoration: BoxDecoration(
+          border: Border.all(width: BORER_WIDTH, color: borderColor),
         ),
-        child: Column(
-          children: [
-            getRowTop(context, heightRowTop),
-            getRowBody(),
-            getRowBottom(),
-          ],
-        ),
+        child: getCombination(context, currentMode),
       ),
     );
 
   }
 
 
-  Widget getCombination(int type) {
+  Widget getCombination(BuildContext context, DisplayMode mode) {
 
     Widget wig;
-    switch(type) {
-      case 0:
+    switch(mode) {
+      case DisplayMode.punch:
         wig = Column(
           children: [
             getRowTop(context, heightRowTop),
-            getBigNumberRow(),
-            getRowBottom()
+            getRowBody(context),
+            getRowBottom(),
           ],
         );
         break;
 
-      case 1:
+      case DisplayMode.clearup:
         wig = Column(
           children: [
             getRowTop(context, heightRowTop),
+            getClearModeBody(context),
           ],
         );
         break;
-
-      case 2:
-        wig = Column(
-          children: [
-            getRowTop(context, heightRowTop),
-          ],
-        );
-        break;
-
-      case 3:
-        wig = Column(
-          children: [
-            getRowTop(context, heightRowTop),
-          ],
-        );
-        break;
-
-      default:
-        wig = Column(
-          children: [
-            getRowTop(context, heightRowTop),
-            getBigNumberRow(),
-            //getRowBodyNew(),
-            getRowBottom()
-          ],
-        );
     }
 
     return wig;
@@ -184,11 +134,48 @@ class _TableScreenState extends State<TableScreen> {
 
   }
 
+  Widget getClearuTitle() {
+    List<Color> fieldColors = [enterCountColor , leaveCountColor, resideCountColor];
+    var sum = vendorCount2.reduce((value, element) => value + element);
+    leaveCount = sum.toInt() - profilesRemain.length;
+    List<int> leftRow1Count = [ sum.toInt(), leaveCount,  profilesRemain.length];
+
+    return Table(
+        border: TableBorder.all(
+          color: borderColor,
+          width: BORER_WIDTH,
+        ),
+        children: [
+          genTableRowWithColor(clearupTitle, fieldColors, heightRowBody*0.2, Top2_TEXT_SIZE),
+          genTableRowWithColor(toStringList(leftRow1Count), fieldColors, heightRowBody*0.42, Top2_NUMBER_SIZE )
+        ]
+    );
+
+  }
+
+  Widget getClearModeBody(BuildContext context) {
+    Widget w = Column(
+      children: [
+        getClearuTitle(),
+        const SizedBox(height: 10,),
+        getClearUpBottom()
+      ],
+    );
+
+    return GestureDetector(
+      onTap: () {
+        currentMode = DisplayMode.punch;
+      },
+      child: w,
+    );
+  }
+
   Widget getMiddleLeft(double h) {
     double rowHeight = heightRowBody / 5;
 
     List<List<String>> dataList = List.generate(4, (index) =>
-    [vendorTitle2[index], vendorCount2[index].toInt().toString(), vendorTitle2[index+4], vendorCount2[index+4].toInt().toString(),],) ;
+    [vendorTitle2[index], vendorCount2[index].toInt().toString(), vendorTitle2[index+4], vendorCount2[index+4].toInt().toString(),]
+    ) ;
     Widget tab = EnviromentTable(height: rowHeight, data: dataList, fontSize: 28,);
 
     return normalBorderLeftBottom( Container(color: normalBackground,
@@ -202,7 +189,7 @@ class _TableScreenState extends State<TableScreen> {
         )));
   }
 
-  Widget getRowBody() {
+  Widget getRowBody(BuildContext context) {
     double h = MediaQuery.of(context).size.height * 0.52;
     //double h = heightRowBody;
 
@@ -211,7 +198,7 @@ class _TableScreenState extends State<TableScreen> {
       height: h,
       child: Row(children: [
         Expanded(flex: 2, child: getMiddleLeft(h)),
-        Expanded(flex: 1, child: getMiddleRight(h)),
+        Expanded(flex: 1, child: getMiddleRight(context, h)),
       ]),
     );
 
@@ -219,13 +206,13 @@ class _TableScreenState extends State<TableScreen> {
 
 
   //環境檢測
-  Widget getMiddleRight(double h) {
+  Widget getMiddleRight(BuildContext context, double h) {
     List<List<String>> dataList = List.generate(environTitle.length, (index) =>
     //[environTitle[index], environCount[index]]) ;
     [environTitle[index], environCount[index], environColor[index]]) ;
     double hh = 40;
 
-    return normalBorder(
+    Widget w = normalBorder(
     Container(color: normalBackground,
         height: h,
         padding: const EdgeInsets.only(left:20, bottom: 0, right: 0, top:0),
@@ -236,6 +223,14 @@ class _TableScreenState extends State<TableScreen> {
       ],
     )
     ));
+
+    return GestureDetector(
+      onTap: () {
+        currentMode = DisplayMode.clearup;
+      },
+      child: w,
+    );
+
 
   }
 
@@ -255,8 +250,7 @@ class _TableScreenState extends State<TableScreen> {
   }
 
   Widget getRowBottom() {
-    print("art 0413 profiles size=${profiles.length}");
-
+    print("art 0414 getRowBottom() size=${profiles.length}");
 
     Widget profileListView = ListView.builder(
       //shrinkWrap: true, //just set this property
@@ -274,6 +268,27 @@ class _TableScreenState extends State<TableScreen> {
            height: heightRowBottom,
            child: profileListView,
           )
+        )
+    );
+  }
+
+  Widget getClearUpBottom() {
+    Widget w = ListView.builder(
+      //shrinkWrap: true, //just set this property
+      scrollDirection: Axis.horizontal,
+      itemCount: profilesRemain.length,
+      itemBuilder: (BuildContext context, int index) {
+        Profile pp = profilesRemain[index];
+        return ProfileWidget(profile: pp);
+      },
+    );
+
+    return normalBorderLeftBottomRight(
+        addTextBackGround(
+            SizedBox(
+              height: heightRowBottom,
+              child: w,
+            )
         )
     );
   }
@@ -593,7 +608,7 @@ Widget getRowTop(BuildContext ctx, double hh) {
             child: Image.asset('images/weather1.png', width: 60, height: hh, ),
           ),
 
-        ],)
+      ],)
 
     ),
   ],);

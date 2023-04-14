@@ -19,6 +19,7 @@ class FarGloryMsg with _$FarGloryMsg {
     String? action,
     String? company,
     String? worktype,
+    String? imgUrl,
   }) = _FarGloryMsg;
 
   factory FarGloryMsg.fromJson(Map<String, dynamic> json) => _$FarGloryMsgFromJson(json);

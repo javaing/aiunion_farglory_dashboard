@@ -39,6 +39,9 @@ class EnviromentTable extends StatelessWidget {
   }
 
   Widget centerTextSetHeightBold(String txt) {
+    if(txt.compareTo('0')==0) {
+      txt = " ";
+    }
     switch(txt) {
       case 'red':
         return smallCircle(Colors.red);

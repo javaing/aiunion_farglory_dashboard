@@ -12,6 +12,7 @@ _$_FarGloryMsg _$$_FarGloryMsgFromJson(Map<String, dynamic> json) =>
       action: json['action'] as String?,
       company: json['company'] as String?,
       worktype: json['worktype'] as String?,
+      imgUrl: json['imgUrl'] as String?,
     );
 
 Map<String, dynamic> _$$_FarGloryMsgToJson(_$_FarGloryMsg instance) =>
@@ -20,4 +21,5 @@ Map<String, dynamic> _$$_FarGloryMsgToJson(_$_FarGloryMsg instance) =>
       'action': instance.action,
       'company': instance.company,
       'worktype': instance.worktype,
+      'imgUrl': instance.imgUrl,
     };

@@ -534,9 +534,9 @@ class _TableScreenState extends State<TableScreen> {
 
     Widget profileListView2 = ListView.builder(
       scrollDirection: Axis.horizontal,
-      itemCount: profiles2.length,
+      itemCount: profilesRemain.length,
       itemBuilder: (BuildContext context, int index) {
-        Profile pp = profiles2[index];
+        Profile pp = profilesRemain[index];
         return ProfileWidget(profile: pp);
       },
     );

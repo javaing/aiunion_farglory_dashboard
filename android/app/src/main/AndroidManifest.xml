@@ -42,5 +42,17 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+       <!-- 開機的時候就啟動應用程式 -->
+       <receiver
+           android:enabled="true"
+           android:exported="true"
+           android:name=".BootBroadcastReceiver" >
+           <intent-filter
+               android:priority="2147483647">
+               <action android:name="android.intent.action.BOOT_COMPLETED" />
+               <category android:name="android.intent.category.HOME" />
+           </intent-filter>
+       </receiver>
     </application>
 </manifest>
