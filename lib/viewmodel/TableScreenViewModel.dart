@@ -123,6 +123,8 @@ class TableScreenViewModel {
     // if(profiles2.length > LIMIT_LIST_PROFILE) {
     //   profiles2.removeRange(0, profiles2.length-LIMIT_LIST_PROFILE);
     // }
+    var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
+    leaveCount = filtered1.length;
   }
 
   Profile genProfile(String actionStr) {

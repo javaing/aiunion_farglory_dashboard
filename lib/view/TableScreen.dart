@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:far_glory_construction_gashboard/util/UIUtil.dart';
 import 'package:flutter/material.dart';
 import '../Constants.dart';
 import '../datamodel/Profile.dart';
@@ -42,6 +43,8 @@ class _TableScreenState extends State<TableScreen> {
 
     TableScreenViewModel viewModel = TableScreenViewModel();
 
+    var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
+    leaveCount = filtered1.length;
   }
 
   //int profileCount = 0;
@@ -106,8 +109,9 @@ class _TableScreenState extends State<TableScreen> {
       case DisplayMode.clearup:
         wig = Column(
           children: [
-            getRowTop(context, heightRowTop),
+            //getRowTop(context, heightRowTop),
             getClearModeBody(context),
+            getRowBottom(),
           ],
         );
         break;
@@ -140,7 +144,7 @@ class _TableScreenState extends State<TableScreen> {
     leaveCount = sum.toInt() - profilesRemain.length;
     List<int> leftRow1Count = [ sum.toInt(), leaveCount,  profilesRemain.length];
 
-    return Table(
+    Widget title =  Table(
         border: TableBorder.all(
           color: borderColor,
           width: BORER_WIDTH,
@@ -151,6 +155,29 @@ class _TableScreenState extends State<TableScreen> {
         ]
     );
 
+    String str2 = formatTimeDashBoard(DateTime.now());
+    double hh = heightRowBody*(0.2+0.42) ;
+    Widget timeText = Container(
+      padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+      color: resideCountColor,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: SizedBox(
+          height: hh,
+          child: Center(
+            child: colorText(str2, 35, Colors.white),
+          ),
+        ),
+
+      ),
+    );
+
+
+    return Row(children: [
+      Expanded(flex: 3, child: title),
+      Expanded(flex: 1, child: timeText),
+    ],);
+
   }
 
   Widget getClearModeBody(BuildContext context) {
@@ -158,16 +185,18 @@ class _TableScreenState extends State<TableScreen> {
       children: [
         getClearuTitle(),
         const SizedBox(height: 10,),
-        getClearUpBottom()
+        getClearUpAvatar()
       ],
     );
 
-    return GestureDetector(
-      onTap: () {
-        currentMode = DisplayMode.punch;
-      },
-      child: w,
-    );
+    // return GestureDetector(
+    //   onTap: () {
+    //     currentMode = DisplayMode.punch;
+    //   },
+    //   child: w,
+    // );
+
+    return w;
   }
 
   Widget getMiddleLeft(double h) {
@@ -272,23 +301,23 @@ class _TableScreenState extends State<TableScreen> {
     );
   }
 
-  Widget getClearUpBottom() {
+  Widget getClearUpAvatar() {
     Widget w = ListView.builder(
       //shrinkWrap: true, //just set this property
       scrollDirection: Axis.horizontal,
       itemCount: profilesRemain.length,
       itemBuilder: (BuildContext context, int index) {
         Profile pp = profilesRemain[index];
-        return ProfileWidget(profile: pp);
+        return ClearUpProfile(profile: pp);
       },
     );
 
     return normalBorderLeftBottomRight(
         addTextBackGround(
-            SizedBox(
-              height: heightRowBottom,
-              child: w,
-            )
+          SizedBox(
+            height: heightRowBottom,
+            child: w,
+          )
         )
     );
   }
@@ -575,6 +604,24 @@ Widget normalBorderLeftBottom(Widget w) {
 }
 
 Widget centerTextSetHeight(String txt, double hh) {
+  // return Container(
+  //   padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+  //   color: normalBackground,
+  //   child: Align(
+  //     alignment: Alignment.bottomCenter,
+  //     child: SizedBox(
+  //       height: hh,
+  //       child: Center(
+  //         child: whiteText(txt,22),
+  //       ),
+  //     ),
+  //
+  //   ),
+  // );
+  return centerTextSetHeightSize(txt, hh, 22);
+}
+
+Widget centerTextSetHeightSize(String txt, double hh, double fontSize) {
   return Container(
     padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
     color: normalBackground,
@@ -583,7 +630,7 @@ Widget centerTextSetHeight(String txt, double hh) {
       child: SizedBox(
         height: hh,
         child: Center(
-          child: whiteText(txt,22),
+          child: whiteText(txt, fontSize),
         ),
       ),
 
@@ -591,6 +638,7 @@ Widget centerTextSetHeight(String txt, double hh) {
   );
 
 }
+
 
 Widget getRowTop(BuildContext ctx, double hh) {
   String str1 = headerNews;

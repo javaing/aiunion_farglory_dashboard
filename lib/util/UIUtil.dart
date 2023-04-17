@@ -12,3 +12,11 @@ Widget smallCircle(Color cc) {
     margin: const EdgeInsets.only(top: 15.0, right: 15.0),
   );
 }
+
+Widget colorText(String txt, double size, Color cc) {
+  return Center(child: Text(txt,
+    style: TextStyle(
+      fontSize: size,
+      color: cc,
+    ),));
+}

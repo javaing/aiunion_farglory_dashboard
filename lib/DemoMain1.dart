@@ -1,4 +1,5 @@
 import 'package:far_glory_construction_gashboard/Constants.dart';
+import 'package:far_glory_construction_gashboard/view/Setting.dart';
 import 'package:far_glory_construction_gashboard/view/TableScreen.dart';
 
 import '../service/notification_service.dart';
@@ -113,11 +114,14 @@ class _SwitchState extends State<FunctionItem> {
                     break;
                   case 1:
                     //showMsg(context, "此功能製作中");
-                    showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                      return ImageViewDialog(path: 'aidesk_spec.jpg');
-                    });
+                    // showDialog(
+                    //     context: context,
+                    //     builder: (BuildContext context) {
+                    //   return ImageViewDialog(path: 'aidesk_spec.jpg');
+                    // });
+                    Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => Setting()),
+                    );
                     break;
 
                 }

@@ -40,6 +40,13 @@ String formatDateTimeDashBoard(DateTime now) {
       .replaceAll(" ", " \n$name ");
 }
 
+String formatTimeDashBoard(DateTime now) {
+  String name = getLocaleWeekDay(now.weekday);
+  return DateFormat(' hh:mm:s')
+      .format(now)
+      .replaceAll(" ", " \n$name ");
+}
+
 
 Image getUrlImage(String imagePath) {
   return Image.network(

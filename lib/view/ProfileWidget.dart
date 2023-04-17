@@ -20,9 +20,6 @@ class ProfileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if(currentMode == DisplayMode.clearup) {
-      return getClearUpProfile();
-    }
     return getEnterProfile();
   }
 
@@ -37,18 +34,7 @@ class ProfileWidget extends StatelessWidget {
     );
   }
 
-  Widget getClearUpProfile() {
-    return Container(
-      width: 210,
-      padding: const EdgeInsets.fromLTRB(0,10, 0,0),
-      child: getAvatar(),
-    );
-  }
-
   Widget getAvatar() {
-    if(currentMode == DisplayMode.clearup) {
-      return avatarClearUp();
-    }
     if(profile.action==leaveStr) {
       return avatarW();
     } else {
@@ -68,9 +54,7 @@ class ProfileWidget extends StatelessWidget {
   }
 
   Widget getCheckList() {
-
     if(profile.action==leaveStr) {
-
       return Column(children: [
         enterOrLeaveTag(),
         const SizedBox(height: 10,),
@@ -85,7 +69,6 @@ class ProfileWidget extends StatelessWidget {
       ]
       );
     }
-
   }
 
   Widget enterOrLeaveTag() {
@@ -105,13 +88,13 @@ class ProfileWidget extends StatelessWidget {
   }
 
 
-  ImageProvider getImage(String path) {
-    if(path.contains("/")) {
-      return NetworkImage(path);
-    } else {
-      return Image.asset('images/$path').image;
-    }
-  }
+  // ImageProvider getImage(String path) {
+  //   if(path.contains("/")) {
+  //     return NetworkImage(path);
+  //   } else {
+  //     return Image.asset('images/$path').image;
+  //   }
+  // }
 
   Widget avatarW() {
     return Column(
@@ -124,6 +107,40 @@ class ProfileWidget extends StatelessWidget {
         whiteText( "姓名:${profile.name}", 15),
         whiteText("單位:${profile.profession}", 15),
       ],
+    );
+  }
+
+
+
+  Widget getCheckResult(List<bool> boolList) {
+    return Column(children: [
+      Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[0] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[0]), 30)],),
+      const SizedBox(height: 5,),
+      Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[1] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[1]), 30)],),
+      const SizedBox(height: 5,),
+      Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[2] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[2]), 30)],),
+    ],);
+
+  }
+
+}
+
+
+class ClearUpProfile extends StatelessWidget {
+  final Profile profile;
+
+  ClearUpProfile({super.key, required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return getClearUpProfile();
+  }
+
+  Widget getClearUpProfile() {
+    return Container(
+      width: 210,
+      padding: const EdgeInsets.fromLTRB(0,10, 0,0),
+      child: avatarClearUp(),
     );
   }
 
@@ -141,19 +158,15 @@ class ProfileWidget extends StatelessWidget {
     );
   }
 
-  Widget getCheckResult(List<bool> boolList) {
 
-    return Column(children: [
-      Row(children: [const SizedBox(width: 20,) , getAssetImageSize('check1.png' ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[0]), 30)],),
-      const SizedBox(height: 5,),
-      Row(children: [const SizedBox(width: 20,) , getAssetImageSize('check2.png' ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[1]), 30)],),
-      const SizedBox(height: 5,),
-      Row(children: [const SizedBox(width: 20,) , getAssetImageSize('check3.png' ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[2]), 30)],),
-    ],);
+}
 
+ImageProvider getImage(String path) {
+  if(path.contains("/")) {
+    return NetworkImage(path);
+  } else {
+    return Image.asset('images/$path').image;
   }
-
-
 }
 
 Widget whiteText(String txt, double size) {
