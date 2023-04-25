@@ -1,3 +1,6 @@
+import 'dart:convert' as convert;
+import 'dart:convert';
+
 import '../datamodel/FarGloryMsg.dart';
 import '../datamodel/Profile.dart';
 import '../service/mqtt_service.dart';
@@ -19,7 +22,7 @@ final List<String> workTypeTitle = ['點工', '板模', '水泥', '排水', '電
 List<int> workTypeCount = [15, 8, 13, 8, 5, 2, 8];
 
 
-
+const Utf8Codec utf8 = Utf8Codec();
 
 
 final List<String> environTitle = ['PM2.5', 'PM10', '紫外線指數', "噪音", "濕度", "溫度", "風速"];
@@ -39,28 +42,28 @@ List<String> workerImages = ['worker1.png', 'worker2.png', 'worker3.png', 'worke
 List<String> workerNames = ['姜才藝','黃文柏','蘇銳思','沈立誠','徐涵暢','萬泰清','孫鵬翼','史俊雄','湯嘉石','秦承運','李文成','夏陽舒','袁經義','盧樂湛','謝俊材','段雨星','崔俊哲',];
 List<bool> boolList = [true, true, true, true]; //酒測 工地帽 背心 效期內,非黑名單
 List<bool> boolListDrink = [false, true, true, true];
-List<bool> boolListHat = [true, false, true, true];
+//List<bool> boolListHat = [true, false, true, true];
 List<bool> boolListBlack = [true, true, true, false];
 
 List<Profile> profiles1 = [
-  Profile(name: '陳 * 榮', profession: rightRowTitle[0], imageUrl: workerImages[0], action: enterStr, boolList: boolList),
-  Profile(name: '林 * 華', profession: rightRowTitle[1], imageUrl: workerImages[1], action: enterStr, boolList: boolList ),
-  Profile(name: '黃 * 林', profession: rightRowTitle[2], imageUrl: workerImages[2], action: enterStr, boolList: boolList),
+  Profile(name: '陳 * 榮', profession: rightRowTitle[0], imageUrl: workerImages[0], action: enterStr, boolList: boolList, faceId: '0'),
+  Profile(name: '林 * 華', profession: rightRowTitle[1], imageUrl: workerImages[1], action: enterStr, boolList: boolList , faceId: '0'),
+  Profile(name: '黃 * 林', profession: rightRowTitle[2], imageUrl: workerImages[2], action: enterStr, boolList: boolList, faceId: '0'),
 ];
 List<Profile> profilesRemain = [
-  Profile(name: '黃 * 林', profession: rightRowTitle[3], imageUrl: workerImages[2], action: leaveStr, boolList: boolList ),
-  Profile(name: '張 * 勇', profession: rightRowTitle[4], imageUrl: workerImages[3], action: leaveStr, boolList: boolList ),
-  Profile(name: '陳 * 榮', profession: rightRowTitle[5], imageUrl: workerImages[4], action: leaveStr, boolList: boolList ),
-  Profile(name: '陳 * 榮', profession: rightRowTitle[0], imageUrl: workerImages[0], action: enterStr, boolList: boolList),
-  Profile(name: '孫 * 翼', profession: rightRowTitle[1], imageUrl: workerImages[1], action: enterStr, boolList: boolList),
+  Profile(name: '黃 * 林', profession: rightRowTitle[3], imageUrl: workerImages[2], action: leaveStr, boolList: boolList, faceId: '0' ),
+  Profile(name: '張 * 勇', profession: rightRowTitle[4], imageUrl: workerImages[3], action: leaveStr, boolList: boolList , faceId: '0'),
+  Profile(name: '陳 * 榮', profession: rightRowTitle[5], imageUrl: workerImages[4], action: leaveStr, boolList: boolList , faceId: '0'),
+  Profile(name: '陳 * 榮', profession: rightRowTitle[0], imageUrl: workerImages[0], action: enterStr, boolList: boolList, faceId: '0'),
+  Profile(name: '孫 * 翼', profession: rightRowTitle[1], imageUrl: workerImages[1], action: enterStr, boolList: boolList, faceId: '0'),
 ];
 List<Profile> profilesPool = [
-  Profile(name: '陳 * 榮', profession: rightRowTitle[0], imageUrl: workerImages[0], action: enterStr, boolList: boolList),
-  Profile(name: '林 * 華', profession: rightRowTitle[1], imageUrl: workerImages[1], action: enterStr, boolList: boolListDrink),
+  Profile(name: '陳 * 榮', profession: rightRowTitle[0], imageUrl: workerImages[0], action: enterStr, boolList: boolList, faceId: '0'),
+  Profile(name: '林 * 華', profession: rightRowTitle[1], imageUrl: workerImages[1], action: enterStr, boolList: boolListDrink, faceId: '0'),
   //Profile(name: '黃 * 林', profession: rightRowTitle[2], imageUrl: workerImages[2], action: enterStr),
   // Profile(name: '陳 * 榮', profession: rightRowTitle[3], imageUrl: workerImages[3], action: enterStr),
-  Profile(name: '林 * 華', profession: rightRowTitle[4], imageUrl: workerImages[4], action: enterStr, boolList: boolListBlack),
-   Profile(name: '陳 * 榮', profession: rightRowTitle[5], imageUrl: workerImages[0], action: leaveStr, boolList: boolList),
+  //Profile(name: '林 * 華', profession: rightRowTitle[4], imageUrl: workerImages[4], action: enterStr, boolList: boolListBlack),
+   //Profile(name: '陳 * 榮', profession: rightRowTitle[5], imageUrl: workerImages[0], action: leaveStr, boolList: boolList),
   //Profile(name: '林 * 華', profession: rightRowTitle[1], imageUrl: workerImages[1], action: leaveStr),
 ];
 List<Profile> profiles = [
@@ -73,6 +76,15 @@ enum DisplayMode {
 }
 DisplayMode currentMode = DisplayMode.punch ; //差勤或清場
 
+
+extension BoolParsing on String {
+  bool parseBool() {
+    print("art 0419 check=" + this.toLowerCase());
+    return this.toLowerCase() == 'true';
+  }
+}
+
+
 class TableScreenViewModel {
   TableScreenViewModel() {
     //print('art 0321 view model init');
@@ -82,21 +94,38 @@ class TableScreenViewModel {
 
   cb(FarGloryMsg msg) {
     //showMsg(context, action);
-    print('art 0413 view model msg.imgUrl=' + (msg.imgUrl ?? ' ') );
-    Profile p = genProfile(enterStr);
-    if(msg.imgUrl!=null) {
-      p.imageUrl = msg.imgUrl!;
-    }
-    if(profilesPool.length==4) {
-      p.boolList = boolListHat;
-    }
+    //print('art 0413 view model msg.imgUrl=' + (msg.imgUrl ?? ' ') );
+    Profile p = genProfile(msg);
+    p.boolList = null;
+    // if(msg.imgUrl!=null) {
+    //   p.imageUrl = msg.imgUrl!;
+    // }
+    // if(profilesPool.length==3) {
+    //   p.boolList = boolListHat;
+    // }
 
     if(currentMode == DisplayMode.clearup) {
       leaveCount = leaveCount+1;
       profilesRemain.removeLast();
     } else {
       switch(msg.action) {
+        case "helmet":
+        // Update the age of each person in the list
+          for (int i = profilesPool.length-1; i >=0 ; i--) {
+            if(profilesPool[i].faceId == p.faceId && msg.company!=null) {
+              profilesPool[i].boolList= [true, msg.company!.parseBool(), msg.worktype!.parseBool(), true];
+              break;
+            }
+          }
+          break;
         case "enter":
+          //demo avoid dummy
+          if(profilesPool.last.faceId==p.faceId) {
+            print("art 0425 emo avoid dummy");
+            return;
+          }
+
+
           vendorCount2[0] = vendorCount2[0]+1;
           //profiles1.add(p);
           profilesPool.add(p);
@@ -127,10 +156,28 @@ class TableScreenViewModel {
     leaveCount = filtered1.length;
   }
 
-  Profile genProfile(String actionStr) {
-    String name = randomListItem(workerNames).replaceRange(1, 2, ' * ');
+  static String base64Decode(String data){
+    List<int> bytes = convert.base64Decode(data);
+    // 網上找的很多都是String.fromCharCodes，這個中文會亂碼
+    //String txt1 = String.fromCharCodes(bytes);
+    String result = convert.utf8.decode(bytes);
+    return result;
+  }
+
+  Profile genProfile(FarGloryMsg msg) {
+    String actionStr = enterStr;
+    if(msg.action=="leave") {
+      actionStr = leaveStr;
+    }
+    String myName;
+    if(msg.name==null || msg.name!.isEmpty) {
+      myName = randomListItem(workerNames);
+    } else {
+      myName = utf8.decode(msg.name!.codeUnits);
+    }
+    String name = myName.replaceRange(1, 2, ' * ');
     String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
-    return Profile(name: name, profession: vendor, imageUrl: randomListItem(workerImages), action: actionStr,  boolList: boolList);
+    return Profile(name: name, profession: vendor, imageUrl:msg.imgUrl!, action: actionStr,  boolList: boolList, faceId: msg.id);
   }
 
 }

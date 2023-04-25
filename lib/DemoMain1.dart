@@ -89,7 +89,7 @@ class FunctionItem extends StatefulWidget {
 
 class _SwitchState extends State<FunctionItem> {
   var functionName = [
-    "TableScreen",
+    "智慧工安儀表板",
     'Setting',
   ];
 
@@ -127,7 +127,7 @@ class _SwitchState extends State<FunctionItem> {
                 }
 
                 },
-              child: Text(style: TextStyle(fontSize: 25), functionName[widget.index])),
+              child: Text(style: const TextStyle(fontSize: 25), functionName[widget.index])),
     );
 
   }

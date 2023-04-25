@@ -1,10 +1,10 @@
 
 import 'dart:ui';
 
-String MQTT_SERVER = "192.168.0.107";
+String MQTT_SERVER = "192.168.0.109";
 final int MQTT_PORT = 1883;
-//final String MQTT_TOPIC = "farglory";
-final String MQTT_TOPIC = "aidesk";
+final String MQTT_TOPIC = "farglory";
+//final String MQTT_TOPIC = "aidesk";
 
 
 const Color borderColor = Color.fromARGB(255, 224, 224, 224);

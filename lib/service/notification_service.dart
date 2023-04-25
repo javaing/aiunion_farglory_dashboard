@@ -23,7 +23,7 @@ class NotificationService {
   Future<void> initNotifications() async {
     //print('initNotifications() called');
 
-    var initSettingsAndroid = const AndroidInitializationSettings('@drawable/denied'); //png cant read, xml drawable ok, but dont know why
+    var initSettingsAndroid = const AndroidInitializationSettings('@drawable/ic_launcher'); //png cant read, xml drawable ok, but dont know why
     var initSettingsIOS = const DarwinInitializationSettings();
     var initSettings =
     InitializationSettings(android: initSettingsAndroid, iOS: initSettingsIOS);

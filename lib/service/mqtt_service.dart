@@ -40,7 +40,7 @@ class MQTTService extends AbstractService {
           publishMessage.payload.message);
 
       final notifyMsg = farGloryMsgFromJson(jsonStr);
-      final action = notifyMsg.action ?? "action";
+      //final action = notifyMsg.action ?? "action";
       //final imageUrl =  HttpService.baseUrl + (firstMsg?.photo ?? "");
       print('art mqtt =:${jsonStr}');
       doAction(notifyMsg);
@@ -50,8 +50,10 @@ class MQTTService extends AbstractService {
   Future<void> doAction(FarGloryMsg msg) async {
     //showMsg(context, action);
     //print('art 0320 ${msg.action!}');
-    if(callback!=null)
+    if(callback!=null) {
       callback(msg);
-    notificationService.showNotification(1, 2);
+    }
+    if(msg.action=="helmet")
+      notificationService.showNotification(1, 2);
   }
 }

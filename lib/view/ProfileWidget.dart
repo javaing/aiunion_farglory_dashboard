@@ -23,14 +23,30 @@ class ProfileWidget extends StatelessWidget {
     return getEnterProfile();
   }
 
+  double width720p = 250;
+  double width1080p = 340;
+  double avatarSize720p = 60;
+  double avatarSize1080p = 100;
+  double font720p = 15;
+  double font1080p = 28;
+
+
   Widget getEnterProfile() {
-    return Container(
-      width: 250,
-      padding: const EdgeInsets.fromLTRB(0,10, 0,0),
-      child: Row(children: [
+
+    Widget w = Row(
+      children: [
         getAvatar(),
         getCheckList()
-      ], ),
+      ], );
+
+    // Widget p = Padding(
+    //   padding: EdgeInsets.only(top: 10.0, left: 10.0),
+    //   child: w);
+
+    return Container(
+      width: width1080p,
+      padding: const EdgeInsets.fromLTRB(10,20, 0,0),
+      child: w,
     );
   }
 
@@ -54,21 +70,19 @@ class ProfileWidget extends StatelessWidget {
   }
 
   Widget getCheckList() {
-    if(profile.action==leaveStr) {
-      return Column(children: [
-        enterOrLeaveTag(),
-        const SizedBox(height: 10,),
-        getCheckResult(profile.boolList),
-      ]);
-
+    Widget check;
+    if(profile.boolList==null) {
+      check = getCheckInit();
     } else {
-      return Column(children: [
-        enterOrLeaveTag(),
-        const SizedBox(height: 10,),
-        getCheckResult(profile.boolList),
-      ]
-      );
+      check = getCheckResult(profile.boolList!);
     }
+
+    return Column(children: [
+      enterOrLeaveTag(),
+      const SizedBox(height: 10,),
+      check,
+    ]
+    );
   }
 
   Widget enterOrLeaveTag() {
@@ -100,24 +114,42 @@ class ProfileWidget extends StatelessWidget {
     return Column(
       children: [
         CircleAvatar(
-          radius: 60,
+          radius: avatarSize1080p,
           backgroundImage: getImage(profile.imageUrl),
         ),
         SizedBox(height: 4,),
-        whiteText( "姓名:${profile.name}", 15),
-        whiteText("單位:${profile.profession}", 15),
+        whiteText( "姓名:${profile.name}", font1080p),
+        whiteText("單位:${profile.profession}", font1080p),
       ],
     );
   }
 
+  Widget getCheckInit() {
+    //print("art 0420 CheckResult [boolList]=" + boolList.toString());
+    return Column(children: [
+      //酒精
+      Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[0] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[0]), 30)],),
+      const SizedBox(height: 5,),
+      //工地帽
+      Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[1] ,30), const SizedBox(width: 10,) ,  const SizedBox(width: 30,)],),
+      const SizedBox(height: 5,),
+      //背心
+      Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[2] ,30), const SizedBox(width: 10,) ,  const SizedBox(width: 30,)],),
+    ],);
+
+  }
 
 
   Widget getCheckResult(List<bool> boolList) {
+    //print("art 0420 CheckResult [boolList]=" + boolList.toString());
     return Column(children: [
+      //酒精
       Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[0] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[0]), 30)],),
       const SizedBox(height: 5,),
+      //工地帽
       Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[1] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[1]), 30)],),
       const SizedBox(height: 5,),
+      //背心
       Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[2] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[2]), 30)],),
     ],);
 

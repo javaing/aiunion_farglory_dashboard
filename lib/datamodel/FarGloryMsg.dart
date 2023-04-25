@@ -15,6 +15,7 @@ String farGloryMsgToJson(FarGloryMsg data) => json.encode(data.toJson());
 @freezed
 class FarGloryMsg with _$FarGloryMsg {
   const factory FarGloryMsg({
+    String? name,
     String? id,
     String? action,
     String? company,

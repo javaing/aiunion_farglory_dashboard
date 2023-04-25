@@ -63,7 +63,7 @@ class EnviromentTable extends StatelessWidget {
               child: Text(
                 txt,
                 style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    //fontWeight: FontWeight.bold,
                     fontSize: fontSize,
                     color: Colors.white
                 ),

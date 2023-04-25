@@ -71,6 +71,7 @@ class _TableScreenState extends State<TableScreen> {
   late double heightRowBody;
   late double heightRowBottom;
   late double widthThirdOne;
+  late double myWidth;
   int demoType = 0;
 
   @override
@@ -78,6 +79,7 @@ class _TableScreenState extends State<TableScreen> {
     heightRowTop = MediaQuery.of(context).size.height * 0.1;
     heightRowBody = MediaQuery.of(context).size.height * 0.33;
     heightRowBottom = MediaQuery.of(context).size.height * 0.36;
+    myWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       body: Container(
@@ -205,7 +207,7 @@ class _TableScreenState extends State<TableScreen> {
     List<List<String>> dataList = List.generate(4, (index) =>
     [vendorTitle2[index], vendorCount2[index].toInt().toString(), vendorTitle2[index+4], vendorCount2[index+4].toInt().toString(),]
     ) ;
-    Widget tab = EnviromentTable(height: rowHeight, data: dataList, fontSize: 28,);
+    Widget tab = EnviromentTable(height: rowHeight, data: dataList, fontSize: 36,);
 
     return normalBorderLeftBottom( Container(color: normalBackground,
         height: h,
@@ -239,7 +241,7 @@ class _TableScreenState extends State<TableScreen> {
     List<List<String>> dataList = List.generate(environTitle.length, (index) =>
     //[environTitle[index], environCount[index]]) ;
     [environTitle[index], environCount[index], environColor[index]]) ;
-    double hh = 40;
+    double hh = 40*1.8;
 
     Widget w = normalBorder(
     Container(color: normalBackground,
@@ -248,7 +250,7 @@ class _TableScreenState extends State<TableScreen> {
         child: Column(
       children: [
         textSetHeightBold2('環境資訊', 55, 200),
-        EnviromentTable(height: hh, data: dataList, fontSize: 24,),
+        EnviromentTable(height: hh, data: dataList, fontSize: 32,),
       ],
     )
     ));
@@ -279,7 +281,7 @@ class _TableScreenState extends State<TableScreen> {
   }
 
   Widget getRowBottom() {
-    print("art 0414 getRowBottom() size=${profiles.length}");
+    //print("art 0414 getRowBottom() size=${profiles.length}");
 
     Widget profileListView = ListView.builder(
       //shrinkWrap: true, //just set this property
@@ -291,13 +293,17 @@ class _TableScreenState extends State<TableScreen> {
       },
     );
 
-    return normalBorderLeftBottomRight(
-        addTextBackGround(
-          SizedBox(
-           height: heightRowBottom,
-           child: profileListView,
-          )
-        )
+    // Widget w = Padding(
+    //     padding: const EdgeInsets.only(top: 10.0, left: 10.0),
+    //     child: profileListView);
+
+        return normalBorderLeftBottomRight(
+            addTextBackGround(
+                SizedBox(
+                  height: heightRowBottom,
+                  child: profileListView,
+                )
+            )
     );
   }
 
@@ -464,7 +470,7 @@ class _TableScreenState extends State<TableScreen> {
             txt,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 22,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -618,7 +624,8 @@ Widget centerTextSetHeight(String txt, double hh) {
   //
   //   ),
   // );
-  return centerTextSetHeightSize(txt, hh, 22);
+  //return centerTextSetHeightSize(txt, hh, 22); 720p
+  return centerTextSetHeightSize(txt, hh, 26); //1080p
 }
 
 Widget centerTextSetHeightSize(String txt, double hh, double fontSize) {
@@ -644,8 +651,16 @@ Widget getRowTop(BuildContext ctx, double hh) {
   String str1 = headerNews;
   String str2 = formatDateTimeDashBoard(DateTime.now());
 
+  double myWidth = MediaQuery.of(ctx).size.width;
+  double mqueeWidth = myWidth * 0.75;
+  double timeWidth = myWidth * 0.1;
+  double weatherWidth = myWidth * 0.05;
+
   Widget w = Row(children: [
-    normalBorderTopLeft(centerTextSetHeight(str2, hh)),
+    normalBorderTopLeft(
+      SizedBox(child: centerTextSetHeight(str2, hh),width: timeWidth)
+
+    ),
     normalBorderTopLeftRight(
         Row(children: [
           centerTextSetHeight(headerWeather, hh),
@@ -653,7 +668,7 @@ Widget getRowTop(BuildContext ctx, double hh) {
             decoration: BoxDecoration(
               color: normalBackground,
             ),
-            child: Image.asset('images/weather1.png', width: 60, height: hh, ),
+            child: Image.asset('images/weather1.png', width: weatherWidth, height: hh, ),
           ),
 
       ],)
@@ -661,12 +676,13 @@ Widget getRowTop(BuildContext ctx, double hh) {
     ),
   ],);
 
+
   return
     Row(children: [
       normalBorderTopLeft(
           addTextBackGround(
               SizedBox(
-                width: 853,
+                width: mqueeWidth,
                 height: hh,
                 child: MarqueeWidget(
                   direction: Axis.horizontal,

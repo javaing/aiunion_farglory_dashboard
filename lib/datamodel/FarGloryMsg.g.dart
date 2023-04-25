@@ -8,6 +8,7 @@ part of 'FarGloryMsg.dart';
 
 _$_FarGloryMsg _$$_FarGloryMsgFromJson(Map<String, dynamic> json) =>
     _$_FarGloryMsg(
+      name: json['name'] as String?,
       id: json['id'] as String?,
       action: json['action'] as String?,
       company: json['company'] as String?,
@@ -17,6 +18,7 @@ _$_FarGloryMsg _$$_FarGloryMsgFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$_FarGloryMsgToJson(_$_FarGloryMsg instance) =>
     <String, dynamic>{
+      'name': instance.name,
       'id': instance.id,
       'action': instance.action,
       'company': instance.company,

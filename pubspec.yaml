@@ -39,6 +39,9 @@ dependencies:
   freezed_annotation: ^2.2.0
   video_player: ^2.6.0
   syncfusion_flutter_charts: ^21.1.35
+  intl: any
+  flutter_localizations:
+    sdk: flutter
 
 
 dev_dependencies:
@@ -46,7 +49,6 @@ dev_dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.2
-  intl: ^0.18.0
   dio: ^5.0.0
   freezed: ^2.3.2
   pmvvm: ^4.0.1

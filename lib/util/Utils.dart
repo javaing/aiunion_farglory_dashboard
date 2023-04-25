@@ -16,7 +16,8 @@ void showMsg(BuildContext context,String msg) {
             TextButton(
               child: const Text(style: TextStyle(fontSize: 25),"OK"),
               onPressed: (){
-                Navigator.of(context).pop();
+                //Navigator.of(context).pop();
+                Navigator.pop(context,true);
               },)
           ],
         );

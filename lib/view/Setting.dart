@@ -2,6 +2,7 @@ import 'package:far_glory_construction_gashboard/service/mqtt_service.dart';
 import 'package:flutter/material.dart';
 
 import '../Constants.dart';
+import '../util/Utils.dart';
 
 void main() {
   runApp(Setting());
@@ -32,15 +33,23 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
 
   void _handleTap() {
     String inputText = _controller.text;
-    print('User input: $inputText');
+    //print('User input: $inputText');
     // You can add any other logic you want to execute on button tap here.
     MQTT_SERVER = inputText;
     MQTTService();
+    showMsg(_context, "Save OK");
+    //Navigator.pop(context,true);
+    //Navigator.of(context).pop();
+
+
+
   }
 
+  late BuildContext _context;
 
   @override
   Widget build(BuildContext context) {
+    _context = context;
     return Scaffold(
       appBar: AppBar(
         title: Text('Setting'),
@@ -50,26 +59,26 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
         child: Row(
           //mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            const Text(
               'MQTT Host:',
               style: TextStyle(fontSize: 24),
             ),
-            SizedBox(width: 20),
+            const SizedBox(width: 20),
             Flexible(
               child: TextField(
                 controller: _controller,
                 decoration: InputDecoration(
                   labelText: (MQTT_SERVER),
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
               ),
             ),
-            SizedBox(width: 20),
+            const SizedBox(width: 20),
             ElevatedButton(
               onPressed: _handleTap,
               child: const Text('Save'),
             ),
-            SizedBox(width: 36),
+            const SizedBox(width: 36),
           ],
         ),
       ),

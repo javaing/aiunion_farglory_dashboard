@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 class HttpService {
   late Dio _dio;
 
-  static final baseUrl = "http://192.168.0.107";
+  static final baseUrl = "http://192.168.0.109";
 
   HttpService() {
     _dio = Dio(BaseOptions(
