@@ -72,7 +72,7 @@ late StompClient stomp;
 final dio = Dio();
 
 
-void askFaceDetail(String id) async {
+void askFaceDetail(String id, String action) async {
   final response = await dio.get("http://$WS_SERVER/api/faces/$id");
   //print(response);
 
@@ -80,7 +80,8 @@ void askFaceDetail(String id) async {
   Result? face = apiFaces.result;
   if(face!=null) {
     updateProfile(face);
-    updateVendorCount(face);
+    if(action=="enter")
+      updateVendorCount(face);
   }
 }
 
@@ -195,7 +196,11 @@ class TableScreenViewModel {
     String setting = prefs.getString(PREF_KEY_IN_DEVICEIDS)??"";
     List<String> ids = setting.split(",");
     ids.forEach((element) {addSubscribe(element);});
-    addSubscribe('30'); //for test in 109
+    if(WS_SERVER == '192.168.0.109') {
+      addSubscribe('30'); //for test in 109
+      addLeaveSubscribe('31');
+    }
+
 
     setting = prefs.getString(PREF_KEY_OUT_DEVICEIDS)??"";
     ids = setting.split(",");
@@ -241,17 +246,15 @@ class TableScreenViewModel {
             profilesPool.removeRange(0, profilesPool.length-LIMIT_LIST_PROFILE);
           }
 
-          askFaceDetail(p.faceId!);
+          askFaceDetail(p.faceId!, action);
           profilesPool.add(p);
           profilesRemain.add(p);
           break;
 
         case "leave":
+          askFaceDetail(p.faceId!, action);
           leaveCount = leaveCount+1;
-          //vendorCount2[0] = vendorCount2[0]-1;
-          //Profile p = genProfile(leaveStr);
           p.action = leaveStr;
-          //profiles2.add(p);
           profilesPool.add(p);
           Profile find = profilesRemain.where((element) => element.faceId==p.faceId).first;
           profilesRemain.remove(find);
