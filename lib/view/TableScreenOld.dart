@@ -64,7 +64,7 @@ class _TableScreenState extends State<TableScreen> {
     _timer =
         Timer.periodic(const Duration(seconds: 1), (Timer t) => _getTime());
 
-    TableScreenViewModel viewModel = TableScreenViewModel();
+    //TableScreenViewModel viewModel = TableScreenViewModel();
 
   }
 
@@ -97,6 +97,8 @@ class _TableScreenState extends State<TableScreen> {
 
   @override
   Widget build(BuildContext context) {
+    TableScreenViewModel viewModel = TableScreenViewModel(context);
+
     heightRowTop = MediaQuery.of(context).size.height * 0.1;
     heightRowTop2 = MediaQuery.of(context).size.height * 0.5;
     heightRowBody = MediaQuery.of(context).size.height * 0.33;
@@ -525,9 +527,9 @@ class _TableScreenState extends State<TableScreen> {
     Widget profileListView = ListView.builder(
       //shrinkWrap: true, //just set this property
       scrollDirection: Axis.horizontal,
-      itemCount: profiles1.length,
+      itemCount: profiles.length,
       itemBuilder: (BuildContext context, int index) {
-        Profile profile = profiles1[index];
+        Profile profile = profiles[index];
         return ProfileWidget(profile: profile);
       },
     );

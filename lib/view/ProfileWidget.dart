@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../Constants.dart';
@@ -194,7 +196,10 @@ class ClearUpProfile extends StatelessWidget {
 }
 
 ImageProvider getImage(String path) {
-  if(path.contains("/")) {
+  if(path.length>500) {
+    return Image.memory(base64Decode(path)).image;
+  }
+  else if(path.contains("/")) {
     return NetworkImage(path);
   } else {
     return Image.asset('images/$path').image;

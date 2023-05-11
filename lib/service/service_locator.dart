@@ -1,4 +1,5 @@
-import 'AbstractService.dart';
+
+
 import 'mqtt_service.dart';
 import 'package:get_it/get_it.dart';
 
@@ -6,7 +7,8 @@ import 'package:get_it/get_it.dart';
 final getIt = GetIt.instance;
 
 //all services new in here
-setupServiceLocator() {
+setupService() {
   print('---------------------- setupServiceLocator ------------------------');
   getIt.registerLazySingleton<MQTTService>(() => MQTTService());
+  //getIt.registerLazySingleton<WebSocket_Service>(() => WebSocket_Service());
 }

@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 void showMsg(BuildContext context,String msg) {
   showDialog(
@@ -32,6 +34,11 @@ String formatDateTime(DateTime dateTime) {
 String getformatNow() {
   final DateTime now = DateTime.now();
   return formatDateTime(now);
+}
+
+String getHHMM() {
+  final DateTime now = DateTime.now();
+  return DateFormat('hh:mm').format(now);
 }
 
 String formatDateTimeDashBoard(DateTime now) {

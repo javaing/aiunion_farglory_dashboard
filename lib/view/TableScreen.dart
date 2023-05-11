@@ -1,15 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:far_glory_construction_gashboard/util/UIUtil.dart';
+import 'package:far_glory_construction_gashboard/view/Setting.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../Constants.dart';
 import '../datamodel/Profile.dart';
+import '../datamodel/WebSocketFace.dart';
 import '../util/MarqueeWidget.dart';
-
 import '../util/Utils.dart';
 import '../viewmodel/TableScreenViewModel.dart';
-
-
 import 'EnviromentTable.dart';
 import 'ProfileWidget.dart';
 import 'TableScreenVideo.dart';
@@ -29,22 +31,44 @@ const double Top2_NUMBER_SIZE = 60.0;
 
 class _TableScreenState extends State<TableScreen> {
   late String _timeString;
-  late Timer _timer;
+  late Timer _timerSecond;
+  late Timer _timerMinute;
   late String aa = headerNews;
-  //DisplayMode currentMode = DisplayMode.punch ; //差勤或清場
+  String clearTime = "";
+  String resetTime = "";
+
 
   @override
   void initState() {
     super.initState();
+    loadPref();
 
     _timeString = formatDateTime(DateTime.now());
-    _timer =
+    _timerSecond =
         Timer.periodic(const Duration(seconds: 1), (Timer t) => _getTime());
+    _timerMinute =
+        Timer.periodic(const Duration(minutes: 1), (Timer t) => _getMinutes());
 
-    TableScreenViewModel viewModel = TableScreenViewModel();
+    // TableScreenViewModel viewModel = TableScreenViewModel();
+    //
+    // var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
+    // leaveCount = filtered1.length;
+  }
 
-    var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
-    leaveCount = filtered1.length;
+
+  void loadPref() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      WS_SERVER = prefs.getString(PREF_KEY_WS_SERVER)!;
+      clearTime = prefs.getString(PREF_KEY_CLEARUP_TIME)!;
+      resetTime = prefs.getString(PREF_KEY_RESET_TIME)!;
+      //clearTime = "11:50";
+      //resetTime = "12:50";
+      //print("art 0511 loadPref OK WS_SERVER="+ WS_SERVER);
+      viewModel = TableScreenViewModel(context);
+    });
+
   }
 
   //int profileCount = 0;
@@ -61,10 +85,33 @@ class _TableScreenState extends State<TableScreen> {
     }
   }
 
+  void _getMinutes() {
+    setState(() {
+      String hhmm = getHHMM();
+      print("art hhmm=$hhmm clearTime=$clearTime resetTime=$resetTime");
+      if(hhmm == clearTime) {
+        currentMode = DisplayMode.clearup;
+      } else if(hhmm == resetTime){
+        currentMode = DisplayMode.punch;
+        for (int i = 0; i <vendorTitle2.length ; i++) {
+          vendorTitle2[i]=DEFAULT_VENDOR_NAME;
+        }
+        for (int i = 0; i <vendorCount2.length ; i++) {
+          vendorCount2[i] = 0;
+        }
+        profilesPool.clear();
+        leaveCount = 0;
+      }
+    });
+  }
+
   @override
   void deactivate() {
+    print("art 0509 deactivate()");
     super.deactivate();
-    _timer.cancel();
+    viewModel.deactivate();
+    _timerSecond.cancel();
+    _timerMinute.cancel();
   }
 
   late double heightRowTop;
@@ -73,13 +120,20 @@ class _TableScreenState extends State<TableScreen> {
   late double widthThirdOne;
   late double myWidth;
   int demoType = 0;
+  late TableScreenViewModel viewModel;
 
   @override
   Widget build(BuildContext context) {
+
+    var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
+    leaveCount = filtered1.length;
+
     heightRowTop = MediaQuery.of(context).size.height * 0.1;
     heightRowBody = MediaQuery.of(context).size.height * 0.33;
     heightRowBottom = MediaQuery.of(context).size.height * 0.36;
     myWidth = MediaQuery.of(context).size.width;
+
+
 
     return Scaffold(
       body: Container(
@@ -92,6 +146,8 @@ class _TableScreenState extends State<TableScreen> {
     );
 
   }
+
+
 
 
   Widget getCombination(BuildContext context, DisplayMode mode) {
@@ -293,6 +349,11 @@ class _TableScreenState extends State<TableScreen> {
       },
     );
 
+    Widget p = Padding(
+        padding: EdgeInsets.only(top: 24.0, left: 15.0),
+        child: profileListView
+    );
+
     // Widget w = Padding(
     //     padding: const EdgeInsets.only(top: 10.0, left: 10.0),
     //     child: profileListView);
@@ -301,7 +362,7 @@ class _TableScreenState extends State<TableScreen> {
             addTextBackGround(
                 SizedBox(
                   height: heightRowBottom,
-                  child: profileListView,
+                  child: p,
                 )
             )
     );
@@ -526,6 +587,7 @@ class _TableScreenState extends State<TableScreen> {
 
 
 
+
 Widget addTextBackGround(Widget w) {
   return Container(
     color: normalBackground,
@@ -535,6 +597,17 @@ Widget addTextBackGround(Widget w) {
     ),
   );
 }
+
+Widget addTextBackGroundT(Widget w) {
+  return Container(
+    color: Colors.greenAccent,
+    child: Align(
+      alignment: Alignment.center,
+      child:  w,
+    ),
+  );
+}
+
 
 Widget normalBorderTopLeft(Widget w) {
   return Container(
@@ -568,6 +641,19 @@ Widget normalBorderLeftBottomRight(Widget w) {
         right: BorderSide(width: BORER_WIDTH, color: borderColor),
         left: BorderSide(width: BORER_WIDTH, color: borderColor),
         bottom: BorderSide(width: BORER_WIDTH, color: borderColor),
+      ),
+    ),
+    child: w,
+  );
+}
+
+Widget normalBorderLeftBottomRightT(Widget w) {
+  return Container(
+    decoration: const BoxDecoration(
+      border: Border(
+        right: BorderSide(width: BORER_WIDTH, color: Colors.yellow),
+        left: BorderSide(width: BORER_WIDTH, color: Colors.yellow),
+        bottom: BorderSide(width: BORER_WIDTH, color: Colors.yellow),
       ),
     ),
     child: w,
@@ -676,20 +762,31 @@ Widget getRowTop(BuildContext ctx, double hh) {
     ),
   ],);
 
+ Widget maquee = normalBorderTopLeft(
+     addTextBackGround(
+         SizedBox(
+           width: mqueeWidth,
+           height: hh,
+           child: MarqueeWidget(
+             direction: Axis.horizontal,
+             child: whiteText(str1,  54),
+           ),
+         )
+     )
+ );
+
+
 
   return
     Row(children: [
-      normalBorderTopLeft(
-          addTextBackGround(
-              SizedBox(
-                width: mqueeWidth,
-                height: hh,
-                child: MarqueeWidget(
-                  direction: Axis.horizontal,
-                  child: whiteText(str1,  54),
-                ),
-              )
-          )
+      GestureDetector(
+        onTap: () {
+          //showDialog(context: ctx, builder: (BuildContext context) => setDevicesDialog(context));
+          Navigator.push(ctx,
+            MaterialPageRoute(builder: (context) =>  Setting()),
+          );
+        },
+        child: maquee,
       ),
 
       GestureDetector(
@@ -703,4 +800,33 @@ Widget getRowTop(BuildContext ctx, double hh) {
 
 
     ]);
+}
+
+Dialog setDevicesDialog(BuildContext ctx) {
+  return Dialog(
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)), //this right here
+    child: Container(
+      height: 300.0,
+      width: 300.0,
+
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Padding(
+            padding:  EdgeInsets.all(10.0),
+            child: Text('進場裝置', ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(10.0),
+            child: Text('出場裝置', style: TextStyle(color: Colors.red),),
+          ),
+          Padding(padding: EdgeInsets.only(top: 50.0)),
+          TextButton(onPressed: () {
+            Navigator.of(ctx).pop();
+          },
+              child: Text(' OK ', style: TextStyle(color: Colors.purple, fontSize: 18.0),))
+        ],
+      ),
+    ),
+  );
 }

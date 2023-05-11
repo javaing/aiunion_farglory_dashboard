@@ -1,11 +1,19 @@
 import 'dart:convert' as convert;
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
+
+import '../Constants.dart';
+import '../datamodel/FacesDetail.dart';
 import '../datamodel/FarGloryMsg.dart';
 import '../datamodel/Profile.dart';
-import '../service/mqtt_service.dart';
-import '../service/service_locator.dart';
+import '../datamodel/WebSocketFace.dart';
 import '../util/Utils.dart';
+import 'package:stomp_dart_client/stomp.dart';
+import 'package:stomp_dart_client/stomp_config.dart';
+import 'package:stomp_dart_client/stomp_frame.dart';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 //final List<String> headerInfo = ['GPT-4掀起AI界高潮，ChatGPT之父卻怕了：我設了一個終止開關    敬禮！張育成獲經典賽最佳一壘手    BLACKPINK七月再來台？「主辦方員工」洩消息',
 //  '            26°  大致晴朗'];
@@ -19,11 +27,10 @@ const String enterStr = '進場';
 const String leaveStr = '出場';
 
 final List<String> workTypeTitle = ['點工', '板模', '水泥', '排水', '電氣', '吊臂', '砂石'];
-List<int> workTypeCount = [15, 8, 13, 8, 5, 2, 8];
+List<int> workTypeCount = [0, 0, 0, 0, 0, 0, 0];
 
 
 const Utf8Codec utf8 = Utf8Codec();
-
 
 final List<String> environTitle = ['PM2.5', 'PM10', '紫外線指數', "噪音", "濕度", "溫度", "風速"];
 List<String> environCount = ["21", "66", "6", "86 db", "75%", "27度C", "4.4m/s"];
@@ -31,9 +38,9 @@ List<String> environColor = ["yellow", "green", "red", "green", "green", "green"
 
 // List<String> vendorTitle = ['榮工處', '華雄營造', '大林組', '三重埔營造', '大肚營造', '金豪營造'];
 // List<int> vendorCount = [9, 20, 20, 20, 20, 10];
-
-List<String> vendorTitle2 = ['承包商A', '承包商B', '承包商C', '承包商D', '承包商E', '承包商F', '承包商G', '承包商H', '', ''];
-List<double> vendorCount2 = [40, 20, 20, 10, 5, 5, 5, 5, 0, 0];
+final String DEFAULT_VENDOR_NAME = '承包商';
+List<String> vendorTitle2 = ['承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '', ''];
+List<double> vendorCount2 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
  final List<String> rightRowTitle = ['廠商A', '廠商B', '廠商C', '廠商D', '廠商E', '廠商F', '廠商G','廠商H'];
 // List<int> rightRowCount = [7, 8, 5, 6, 15, 35, 3, 5];
@@ -45,26 +52,12 @@ List<bool> boolListDrink = [false, true, true, true];
 //List<bool> boolListHat = [true, false, true, true];
 List<bool> boolListBlack = [true, true, true, false];
 
-List<Profile> profiles1 = [
-  Profile(name: '陳 * 榮', profession: rightRowTitle[0], imageUrl: workerImages[0], action: enterStr, boolList: boolList, faceId: '0'),
-  Profile(name: '林 * 華', profession: rightRowTitle[1], imageUrl: workerImages[1], action: enterStr, boolList: boolList , faceId: '0'),
-  Profile(name: '黃 * 林', profession: rightRowTitle[2], imageUrl: workerImages[2], action: enterStr, boolList: boolList, faceId: '0'),
-];
+
 List<Profile> profilesRemain = [
-  Profile(name: '黃 * 林', profession: rightRowTitle[3], imageUrl: workerImages[2], action: leaveStr, boolList: boolList, faceId: '0' ),
-  Profile(name: '張 * 勇', profession: rightRowTitle[4], imageUrl: workerImages[3], action: leaveStr, boolList: boolList , faceId: '0'),
-  Profile(name: '陳 * 榮', profession: rightRowTitle[5], imageUrl: workerImages[4], action: leaveStr, boolList: boolList , faceId: '0'),
-  Profile(name: '陳 * 榮', profession: rightRowTitle[0], imageUrl: workerImages[0], action: enterStr, boolList: boolList, faceId: '0'),
-  Profile(name: '孫 * 翼', profession: rightRowTitle[1], imageUrl: workerImages[1], action: enterStr, boolList: boolList, faceId: '0'),
+  //Profile(name: '黃 * 林', profession: rightRowTitle[3], imageUrl: workerImages[2], action: leaveStr, boolList: boolList, faceId: '0' ),
 ];
 List<Profile> profilesPool = [
-  Profile(name: '陳 * 榮', profession: rightRowTitle[0], imageUrl: workerImages[0], action: enterStr, boolList: boolList, faceId: '0'),
-  Profile(name: '林 * 華', profession: rightRowTitle[1], imageUrl: workerImages[1], action: enterStr, boolList: boolListDrink, faceId: '0'),
-  //Profile(name: '黃 * 林', profession: rightRowTitle[2], imageUrl: workerImages[2], action: enterStr),
-  // Profile(name: '陳 * 榮', profession: rightRowTitle[3], imageUrl: workerImages[3], action: enterStr),
-  //Profile(name: '林 * 華', profession: rightRowTitle[4], imageUrl: workerImages[4], action: enterStr, boolList: boolListBlack),
-   //Profile(name: '陳 * 榮', profession: rightRowTitle[5], imageUrl: workerImages[0], action: leaveStr, boolList: boolList),
-  //Profile(name: '林 * 華', profession: rightRowTitle[1], imageUrl: workerImages[1], action: leaveStr),
+  //Profile(name: '陳 * 榮', profession: rightRowTitle[0], imageUrl: workerImages[0], action: leaveStr, boolList: boolList, faceId: '0'),
 ];
 List<Profile> profiles = [
 ];
@@ -75,6 +68,56 @@ enum DisplayMode {
   clearup,
 }
 DisplayMode currentMode = DisplayMode.punch ; //差勤或清場
+late StompClient stomp;
+final dio = Dio();
+
+
+void askFaceDetail(String id) async {
+  final response = await dio.get("http://$WS_SERVER/api/faces/$id");
+  //print(response);
+
+  FacesDetail apiFaces = facesDetailFromJson(response.toString());
+  Result? face = apiFaces.result;
+  if(face!=null) {
+    updateProfile(face);
+    updateVendorCount(face);
+  }
+}
+
+void updateProfile(Result face) {
+  String company = face.company?? "" ;
+  String title = face.title ?? "";
+  int autoid = face.autoid ?? 0;
+
+  Profile pp = profilesPool.where((element) => int.parse( element.faceId! ) == autoid).last;
+  if(pp!=null) pp.profession = "$company-$title";
+}
+
+void updateVendorCount(Result face) {
+  //vendorDefault
+  String company = face.company?? "" ;
+  if(vendorTitle2.contains(company)) {
+    for (int i = 0; i <vendorTitle2.length ; i++) {
+      print("art find company  name=" + vendorTitle2[i]);
+      if(vendorTitle2[i]==company) {
+        vendorCount2[i] = vendorCount2[i]+1;
+        break;
+      }
+    }
+  } else {
+    //find first no default name
+    for (int i = 0; i <vendorTitle2.length ; i++) {
+      print("art find first no default name=" + vendorTitle2[i]);
+      if(vendorTitle2[i]==DEFAULT_VENDOR_NAME) {
+        vendorTitle2[i]=company;
+        vendorCount2[i] = vendorCount2[i]+1;
+        break;
+      }
+    }
+  }
+
+}
+
 
 
 extension BoolParsing on String {
@@ -86,49 +129,121 @@ extension BoolParsing on String {
 
 
 class TableScreenViewModel {
-  TableScreenViewModel() {
-    //print('art 0321 view model init');
-    MQTTService _myService = getIt<MQTTService>();
-    _myService.setCallback(cb);
+  
+  TableScreenViewModel(BuildContext ctx) {
+    var webSocketUrl = "ws://" + WS_SERVER + ":" + WS_PORT.toString() + WS_TOPIC;
+    print('art WebSocket url=' + webSocketUrl);
+
+    stomp = StompClient(
+        config: StompConfig(
+          url: webSocketUrl,
+          onConnect: onConnectCallback1,
+          onWebSocketError: (e) => //showMsg(ctx, e.toString())
+          print('art onWebSocketError e=' + e.toString()),
+          onStompError: (d) => print('art error stomp'),
+          onDisconnect: (f) => print('art disconnected'),
+          onDebugMessage: (f) => print('art debug ' + f),
+        )
+    );
+    stomp.activate();
+
+  }
+  
+  deactivate() {
+    stomp.deactivate();
+  }
+
+  void addSubscribe(String deviceID) {
+    stomp.subscribe(destination: "/topic/capture/$deviceID", headers: {}, callback: (frame) {
+
+      WebSocketFace face=  webSocketFaceFromJson(frame.body.toString());
+      //print("art face " + face.name! + ", " + face.type_id! + "");
+      if(face.enabled!=null && face.enabled!) {
+        if( isDuplicate(face) ) {
+          print("art face 去重 " + face.name! + " , id=" + face.face_id.toString());
+          //webSocketToPool(face, "leave"); //for test
+          return;
+        }
+
+        webSocketToPool(face, "enter");
+      }
+
+    });
+  }
+
+  bool isDuplicate(WebSocketFace face) {
+    print("art isDuplicate currentMode=" + currentMode.name);
+    return profilesPool.length>0 && isSameFace(profilesPool.last, face) && (currentMode == DisplayMode.punch);
+  }
+
+  void addLeaveSubscribe(String deviceID) {
+    stomp.subscribe(destination: "/topic/capture/$deviceID", headers: {}, callback: (frame) {
+
+      WebSocketFace face=  webSocketFaceFromJson(frame.body.toString());
+      //print("art face " + face.name! + ", " + face.type_id! + "");
+      if(face.enabled!=null && face.enabled!) {
+        webSocketToPool(face, "leave");
+      }
+
+    });
+  }
+
+
+  Future<void> onConnectCallback1(StompFrame connectFrame) async {
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String setting = prefs.getString(PREF_KEY_IN_DEVICEIDS)??"";
+    List<String> ids = setting.split(",");
+    ids.forEach((element) {addSubscribe(element);});
+    addSubscribe('30'); //for test in 109
+
+    setting = prefs.getString(PREF_KEY_OUT_DEVICEIDS)??"";
+    ids = setting.split(",");
+    ids.forEach((element) {addLeaveSubscribe(element);});
+
+  }
+
+  webSocketToPool(WebSocketFace face, String action) {
+    Profile p = genProfile2(face, action);
+    p.boolList = null;
+    addToPool(p, action);
+  }
+
+  bool isSameFace(Profile profile, WebSocketFace face) {
+    return int.parse(profile.faceId!) == face.face_id && profilesPool.last.action == enterStr;
   }
 
   cb(FarGloryMsg msg) {
-    //showMsg(context, action);
-    //print('art 0413 view model msg.imgUrl=' + (msg.imgUrl ?? ' ') );
     Profile p = genProfile(msg);
     p.boolList = null;
-    // if(msg.imgUrl!=null) {
-    //   p.imageUrl = msg.imgUrl!;
-    // }
-    // if(profilesPool.length==3) {
-    //   p.boolList = boolListHat;
-    // }
 
+    addToPool(p, msg.action!);
+  }
+
+  void addToPool(Profile p, String action) {
     if(currentMode == DisplayMode.clearup) {
       leaveCount = leaveCount+1;
-      profilesRemain.removeLast();
+      if(profilesRemain.length>0)
+        profilesRemain.removeLast();
     } else {
-      switch(msg.action) {
+      switch(action) {
         case "helmet":
         // Update the age of each person in the list
-          for (int i = profilesPool.length-1; i >=0 ; i--) {
-            if(profilesPool[i].faceId == p.faceId && msg.company!=null) {
-              profilesPool[i].boolList= [true, msg.company!.parseBool(), msg.worktype!.parseBool(), true];
-              break;
-            }
-          }
+        //   for (int i = profilesPool.length-1; i >=0 ; i--) {
+        //     if(profilesPool[i].faceId == p.faceId && msg.company!=null) {
+        //       profilesPool[i].boolList= [true, msg.company!.parseBool(), msg.worktype!.parseBool(), true];
+        //       break;
+        //     }
+        //   }
           break;
         case "enter":
-          //demo avoid dummy
-          if(profilesPool.last.faceId==p.faceId) {
-            print("art 0425 emo avoid dummy");
-            return;
+          if(profilesPool.length>LIMIT_LIST_PROFILE) {
+            profilesPool.removeRange(0, profilesPool.length-LIMIT_LIST_PROFILE);
           }
 
-
-          vendorCount2[0] = vendorCount2[0]+1;
-          //profiles1.add(p);
+          askFaceDetail(p.faceId!);
           profilesPool.add(p);
+          profilesRemain.add(p);
           break;
 
         case "leave":
@@ -138,6 +253,8 @@ class TableScreenViewModel {
           p.action = leaveStr;
           //profiles2.add(p);
           profilesPool.add(p);
+          Profile find = profilesRemain.where((element) => element.faceId==p.faceId).first;
+          profilesRemain.remove(find);
           break;
 
         default:
@@ -145,13 +262,6 @@ class TableScreenViewModel {
       }
     }
 
-
-    // if(profiles1.length > LIMIT_LIST_PROFILE) {
-    //   profiles1.removeRange(0, profiles1.length-LIMIT_LIST_PROFILE);
-    // }
-    // if(profiles2.length > LIMIT_LIST_PROFILE) {
-    //   profiles2.removeRange(0, profiles2.length-LIMIT_LIST_PROFILE);
-    // }
     var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
     leaveCount = filtered1.length;
   }
@@ -178,6 +288,29 @@ class TableScreenViewModel {
     String name = myName.replaceRange(1, 2, ' * ');
     String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
     return Profile(name: name, profession: vendor, imageUrl:msg.imgUrl!, action: actionStr,  boolList: boolList, faceId: msg.id);
+  }
+
+  Profile genProfile2(WebSocketFace msg, String action) {
+    //轉成好讀
+    String actionStr = enterStr;
+    if(action=="leave") {
+      actionStr = leaveStr;
+    }
+
+    String myName;
+    if(msg.name==null || msg.name!.isEmpty) {
+      myName = randomListItem(workerNames);
+    } else {
+      //myName = utf8.decode(msg.name!.codeUnits);
+      myName = msg.name!;
+    }
+    String name = myName.replaceRange(1, 2, ' * ');
+    String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
+    String faceId = msg.face_id!.toString();
+    String imagePath = "http://" + WS_SERVER + msg.photo!;
+    //imagePath = msg.photo_string!;
+    print("art profile path=" + imagePath);
+    return Profile(name: name, profession: vendor, imageUrl:imagePath, action: actionStr,  boolList: boolList, faceId: faceId);
   }
 
 }

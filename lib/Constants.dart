@@ -1,10 +1,26 @@
 
 import 'dart:ui';
 
-String MQTT_SERVER = "192.168.0.109";
+String MQTT_SERVER = "192.168.0.136";
 final int MQTT_PORT = 1883;
 final String MQTT_TOPIC = "farglory";
 //final String MQTT_TOPIC = "aidesk";
+
+final String DEFAULT_WS_SERVER = "192.168.0.109";
+final String DEFAULT_IN_DEVICEIDS = "5";
+final String DEFAULT_OUT_DEVICEIDS = "3";
+final String DEFAULT_CLEARUP_TIME = "18:00";
+final String DEFAULT_RESET_TIME = "05:00";
+
+String WS_SERVER = "";
+final int WS_PORT = 80;
+final String WS_TOPIC = "/ws/websocket";
+
+final String PREF_KEY_WS_SERVER = 'WS_SERVER';
+final String PREF_KEY_IN_DEVICEIDS = 'IN_DEVICEIDS';
+final String PREF_KEY_OUT_DEVICEIDS = 'OUT_DEVICEIDS';
+final String PREF_KEY_CLEARUP_TIME = 'CLEARUP_TIME';
+final String PREF_KEY_RESET_TIME = 'RESET_TIM';
 
 
 const Color borderColor = Color.fromARGB(255, 224, 224, 224);

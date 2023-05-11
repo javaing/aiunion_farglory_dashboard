@@ -2,7 +2,7 @@
 class Profile {
   final String? faceId;
   final String name;
-  final String profession;
+  late String profession;
   late String imageUrl;
   late String action;
   List<bool>? boolList;
