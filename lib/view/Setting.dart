@@ -50,7 +50,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
 
   void loadPref() async {
     prefs = await SharedPreferences.getInstance() ;
-    // setState(() {
+    // setState(() { //放setState() 會error
     //   _controller.text = prefs.getString(PREF_KEY_WS_SERVER)!;
     //   _controllerIn.text = prefs.getString(PREF_KEY_IN_DEVICEIDS)!;
     //   _controllerOut.text = prefs.getString(PREF_KEY_OUT_DEVICEIDS )!;

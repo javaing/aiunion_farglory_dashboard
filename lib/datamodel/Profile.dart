@@ -1,6 +1,7 @@
 //for DashBoard
 class Profile {
-  final String? faceId;
+  //final String? faceId;
+  final int faceId;
   final String name;
   late String profession;
   late String imageUrl;

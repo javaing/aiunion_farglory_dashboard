@@ -1,12 +1,9 @@
 import 'dart:convert' as convert;
 import 'dart:convert';
 
-import 'package:far_glory_construction_gashboard/datamodel/Weather36Hr.dart';
 import 'package:flutter/material.dart';
 
 import '../Constants.dart';
-import '../datamodel/FacesDetail.dart';
-import '../datamodel/FacesDetail.dart';
 import '../datamodel/FacesDetail.dart';
 import '../datamodel/FarGloryMsg.dart';
 import '../datamodel/Profile.dart';
@@ -42,7 +39,8 @@ List<String> environColor = ["yellow", "green", "red", "green", "green", "green"
 // List<String> vendorTitle = ['榮工處', '華雄營造', '大林組', '三重埔營造', '大肚營造', '金豪營造'];
 // List<int> vendorCount = [9, 20, 20, 20, 20, 10];
 final String DEFAULT_VENDOR_NAME = '承包商';
-List<String> vendorTitle2 = ['承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '其他', '', ''];
+final String VENDOR_NAME_OTHER = '其他';
+List<String> vendorTitle2 = ['承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '承包商', VENDOR_NAME_OTHER, '', ''];
 List<double> vendorCount2 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
  final List<String> rightRowTitle = ['廠商A', '廠商B', '廠商C', '廠商D', '廠商E', '廠商F', '廠商G','廠商H'];
@@ -64,7 +62,7 @@ List<Profile> profilesPool = [
 ];
 List<Profile> profiles = [
 ];
-final int LIMIT_LIST_PROFILE = 5;
+final int LIMIT_LIST_PROFILE = 6;
 
 enum DisplayMode {
   punch,
@@ -75,7 +73,7 @@ late StompClient stomp;
 final dio = Dio();
 
 
-void askFaceDetail(String id, String action) async {
+void askFaceDetail(int id, String action) async {
   final response = await dio.get("http://$WS_SERVER/api/faces/$id");
   //print(response);
 
@@ -97,16 +95,34 @@ void updateProfile(Result face) {
 
   print("art update company autoid=$autoid");
 
-  Profile pp = profilesPool.where((element) => checkFaceId(element.faceId!, autoid)).last;
-  if(pp!=null) pp.profession = "$company-$title";
+  var ll = profilesPool.where((element) => (element.faceId==autoid));
+  if(ll.isNotEmpty) {
+    if(title.isNotEmpty) {
+      ll.last.profession = "$company-$title";
+    } else {
+      ll.last.profession = company;
+    }
+  }
+
 }
 
-bool checkFaceId(String str, int autoid) {
-  print("art update company element.faceId=$str");
-  return int.parse( str ) == autoid;
+// bool checkFaceId(int str, int autoid) {
+//   print("art update company element.faceId=$str");
+//   return int.parse( str ) == autoid;
+// }
+
+//還未離場又進場的人不用加1
+bool isExistRemain(int autoid) {
+  var ll = profilesRemain.where((element) => (element.faceId==autoid));
+  return ll.isNotEmpty;
 }
 
 void updateVendorCount(Result face) {
+  if(isExistRemain(face.autoid!)) {
+    print("art 還未離場又進場的人不用加1");
+    return;
+  }
+
   //vendorDefault
   String company = face.company?? "" ;
   if(company.isEmpty) {
@@ -231,7 +247,7 @@ class TableScreenViewModel {
   }
 
   bool isSameFace(Profile profile, WebSocketFace face) {
-    return int.parse(profile.faceId!) == face.face_id && profilesPool.last.action == enterStr;
+    return profile.faceId == face.face_id && profilesPool.last.action == enterStr;
   }
 
   cb(FarGloryMsg msg) {
@@ -260,6 +276,10 @@ class TableScreenViewModel {
         case "enter":
           askFaceDetail(p.faceId!, action);
           profilesPool.add(p);
+          if(isExistRemain(p.faceId)) {
+            print("art 還未離場又進場的人不用加 remain");
+            break;
+          }
           profilesRemain.add(p);
           break;
 
@@ -268,8 +288,11 @@ class TableScreenViewModel {
           leaveCount = leaveCount+1;
           p.action = leaveStr;
           profilesPool.add(p);
-          Profile find = profilesRemain.where((element) => element.faceId==p.faceId).first;
-          profilesRemain.remove(find);
+          var ll = profilesRemain.where((element) => element.faceId==p.faceId);
+          if(ll.isNotEmpty) {
+            Profile find = ll.first;
+            profilesRemain.remove(find);
+          }
           break;
 
         default:
@@ -302,7 +325,7 @@ class TableScreenViewModel {
     }
     String name = myName.replaceRange(1, 2, ' * ');
     String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
-    return Profile(name: name, profession: vendor, imageUrl:msg.imgUrl!, action: actionStr,  boolList: boolList, faceId: msg.id);
+    return Profile(name: name, profession: vendor, imageUrl:msg.imgUrl!, action: actionStr,  boolList: boolList, faceId: int.parse(msg.id!));
   }
 
   Profile genProfile2(WebSocketFace msg, String action) {
@@ -320,8 +343,9 @@ class TableScreenViewModel {
       myName = msg.name!;
     }
     String name = myName.replaceRange(1, 2, ' * ');
-    String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
-    String faceId = msg.face_id!.toString();
+    //String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
+    String vendor = VENDOR_NAME_OTHER;
+    int faceId = msg.face_id ?? 0;
     String imagePath = "http://$WS_SERVER${msg.photo!}";
     //imagePath = msg.photo_string!;
     print("art profile path=$imagePath");

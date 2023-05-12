@@ -37,6 +37,7 @@ class _TableScreenState extends State<TableScreen> {
   late String _timeString;
   late Timer _timerSecond;
   late Timer _timerMinute;
+  late Timer _timer3Hours;
   late String aa = headerNews;
   String clearTime = "";
   String resetTime = "";
@@ -72,7 +73,7 @@ class _TableScreenState extends State<TableScreen> {
         Timer.periodic(const Duration(seconds: 1), (Timer t) => _getTime());
     _timerMinute =
         Timer.periodic(const Duration(minutes: 1), (Timer t) => _getMinutes());
-
+    _timer3Hours = Timer.periodic(const Duration(hours: 3), (Timer t) => _ever3Hours());
   }
 
   @override
@@ -162,6 +163,12 @@ class _TableScreenState extends State<TableScreen> {
     });
   }
 
+  void _ever3Hours() {
+    setState(() {
+      askWeather(town);
+    });
+  }
+
   Future<String> loadWeatherPicData() async {
     var jsonText = await rootBundle.loadString('assets/weather.json');
     setState(() => data = json.decode(jsonText));
@@ -204,9 +211,12 @@ class _TableScreenState extends State<TableScreen> {
       //   //print("art 0511 data[]=" + element.get("description"));
       //   print("art 0511 data[]=" +element["description"]);
       // });
-      var element = data.where((element) => element["description"]== WxString).first;
-      //print("art 0511 data[]=" +element["description"] + ", " + element["day"]);
-      _pic = loadUrlImage(element["day"],90);
+      var ll = data.where((element) => element["description"]== WxString);
+      if(ll.isNotEmpty) {
+        var element = ll.first;
+        //print("art 0511 data[]=" +element["description"] + ", " + element["day"]);
+        _pic = loadUrlImage(element["day"],90);
+      }
 
     });
   }
