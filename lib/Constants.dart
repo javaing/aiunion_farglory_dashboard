@@ -6,11 +6,15 @@ final int MQTT_PORT = 1883;
 final String MQTT_TOPIC = "farglory";
 //final String MQTT_TOPIC = "aidesk";
 
-final String DEFAULT_WS_SERVER = "192.168.0.109";
+//final String DEFAULT_WS_SERVER = "192.168.0.109";
+final String DEFAULT_WS_SERVER = "60.250.33.237";
 final String DEFAULT_IN_DEVICEIDS = "5";
 final String DEFAULT_OUT_DEVICEIDS = "3";
 final String DEFAULT_CLEARUP_TIME = "18:00";
-final String DEFAULT_RESET_TIME = "05:00";
+final String DEFAULT_RESET_TIME = "00:01";
+
+String Weather_APIKEY = "CWB-D203008C-2640-4F20-A839-CD3708D26517";
+String Weather_URL = "https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-D0047-005?Authorization=$Weather_APIKEY&format=JSON&locationName=%town&elementName=Wx,AT";
 
 String WS_SERVER = "";
 final int WS_PORT = 80;

@@ -63,7 +63,9 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       //若無給初始值
       String setting = prefs.getString(PREF_KEY_WS_SERVER)??"";
+      //print('art 05111 a ' + setting);
       if(setting.isEmpty) {
+        //print('art 05111 b');
         prefs.setString(PREF_KEY_WS_SERVER, DEFAULT_WS_SERVER);
       }
       //進場設備

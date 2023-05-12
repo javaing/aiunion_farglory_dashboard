@@ -1,9 +1,12 @@
 import 'dart:convert' as convert;
 import 'dart:convert';
 
+import 'package:far_glory_construction_gashboard/datamodel/Weather36Hr.dart';
 import 'package:flutter/material.dart';
 
 import '../Constants.dart';
+import '../datamodel/FacesDetail.dart';
+import '../datamodel/FacesDetail.dart';
 import '../datamodel/FacesDetail.dart';
 import '../datamodel/FarGloryMsg.dart';
 import '../datamodel/Profile.dart';
@@ -39,7 +42,7 @@ List<String> environColor = ["yellow", "green", "red", "green", "green", "green"
 // List<String> vendorTitle = ['榮工處', '華雄營造', '大林組', '三重埔營造', '大肚營造', '金豪營造'];
 // List<int> vendorCount = [9, 20, 20, 20, 20, 10];
 final String DEFAULT_VENDOR_NAME = '承包商';
-List<String> vendorTitle2 = ['承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '', ''];
+List<String> vendorTitle2 = ['承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '其他', '', ''];
 List<double> vendorCount2 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
  final List<String> rightRowTitle = ['廠商A', '廠商B', '廠商C', '廠商D', '廠商E', '廠商F', '廠商G','廠商H'];
@@ -77,7 +80,7 @@ void askFaceDetail(String id, String action) async {
   //print(response);
 
   FacesDetail apiFaces = facesDetailFromJson(response.toString());
-  Result? face = apiFaces.result;
+  var face = apiFaces.result;
   if(face!=null) {
     updateProfile(face);
     if(action=="enter")
@@ -85,21 +88,34 @@ void askFaceDetail(String id, String action) async {
   }
 }
 
+
+
 void updateProfile(Result face) {
   String company = face.company?? "" ;
   String title = face.title ?? "";
   int autoid = face.autoid ?? 0;
 
-  Profile pp = profilesPool.where((element) => int.parse( element.faceId! ) == autoid).last;
+  print("art update company autoid=$autoid");
+
+  Profile pp = profilesPool.where((element) => checkFaceId(element.faceId!, autoid)).last;
   if(pp!=null) pp.profession = "$company-$title";
+}
+
+bool checkFaceId(String str, int autoid) {
+  print("art update company element.faceId=$str");
+  return int.parse( str ) == autoid;
 }
 
 void updateVendorCount(Result face) {
   //vendorDefault
   String company = face.company?? "" ;
+  if(company.isEmpty) {
+    vendorCount2[7] = vendorCount2[7]+1; //other
+    return;
+  }
   if(vendorTitle2.contains(company)) {
     for (int i = 0; i <vendorTitle2.length ; i++) {
-      print("art find company  name=" + vendorTitle2[i]);
+      print("art find company  name=${vendorTitle2[i]}");
       if(vendorTitle2[i]==company) {
         vendorCount2[i] = vendorCount2[i]+1;
         break;
@@ -108,9 +124,9 @@ void updateVendorCount(Result face) {
   } else {
     //find first no default name
     for (int i = 0; i <vendorTitle2.length ; i++) {
-      print("art find first no default name=" + vendorTitle2[i]);
+      print("art find first no default name=${vendorTitle2[i]}");
       if(vendorTitle2[i]==DEFAULT_VENDOR_NAME) {
-        vendorTitle2[i]=company;
+        vendorTitle2[i]=company; //該company首次紀錄到
         vendorCount2[i] = vendorCount2[i]+1;
         break;
       }
@@ -123,7 +139,7 @@ void updateVendorCount(Result face) {
 
 extension BoolParsing on String {
   bool parseBool() {
-    print("art 0419 check=" + this.toLowerCase());
+    print("art 0419 check=${this.toLowerCase()}");
     return this.toLowerCase() == 'true';
   }
 }
@@ -132,18 +148,18 @@ extension BoolParsing on String {
 class TableScreenViewModel {
   
   TableScreenViewModel(BuildContext ctx) {
-    var webSocketUrl = "ws://" + WS_SERVER + ":" + WS_PORT.toString() + WS_TOPIC;
-    print('art WebSocket url=' + webSocketUrl);
+    var webSocketUrl = "ws://$WS_SERVER:$WS_PORT$WS_TOPIC";
+    print('art WebSocket url=$webSocketUrl');
 
     stomp = StompClient(
         config: StompConfig(
           url: webSocketUrl,
           onConnect: onConnectCallback1,
           onWebSocketError: (e) => //showMsg(ctx, e.toString())
-          print('art onWebSocketError e=' + e.toString()),
+          print('art onWebSocketError e=$e'),
           onStompError: (d) => print('art error stomp'),
           onDisconnect: (f) => print('art disconnected'),
-          onDebugMessage: (f) => print('art debug ' + f),
+          onDebugMessage: (f) => print('art debug $f'),
         )
     );
     stomp.activate();
@@ -161,7 +177,7 @@ class TableScreenViewModel {
       //print("art face " + face.name! + ", " + face.type_id! + "");
       if(face.enabled!=null && face.enabled!) {
         if( isDuplicate(face) ) {
-          print("art face 去重 " + face.name! + " , id=" + face.face_id.toString());
+          print("art face 去重 ${face.name!} , id=${face.face_id}");
           //webSocketToPool(face, "leave"); //for test
           return;
         }
@@ -173,7 +189,7 @@ class TableScreenViewModel {
   }
 
   bool isDuplicate(WebSocketFace face) {
-    print("art isDuplicate currentMode=" + currentMode.name);
+    print("art isDuplicate currentMode=${currentMode.name}");
     return profilesPool.length>0 && isSameFace(profilesPool.last, face) && (currentMode == DisplayMode.punch);
   }
 
@@ -242,10 +258,6 @@ class TableScreenViewModel {
         //   }
           break;
         case "enter":
-          if(profilesPool.length>LIMIT_LIST_PROFILE) {
-            profilesPool.removeRange(0, profilesPool.length-LIMIT_LIST_PROFILE);
-          }
-
           askFaceDetail(p.faceId!, action);
           profilesPool.add(p);
           profilesRemain.add(p);
@@ -310,9 +322,9 @@ class TableScreenViewModel {
     String name = myName.replaceRange(1, 2, ' * ');
     String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
     String faceId = msg.face_id!.toString();
-    String imagePath = "http://" + WS_SERVER + msg.photo!;
+    String imagePath = "http://$WS_SERVER${msg.photo!}";
     //imagePath = msg.photo_string!;
-    print("art profile path=" + imagePath);
+    print("art profile path=$imagePath");
     return Profile(name: name, profession: vendor, imageUrl:imagePath, action: actionStr,  boolList: boolList, faceId: faceId);
   }
 

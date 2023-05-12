@@ -35,36 +35,62 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
   final TextEditingController _controllerOut = TextEditingController();
   final TextEditingController _controllerClear = TextEditingController();
   final TextEditingController _controllerRest = TextEditingController();
-  SharedPreferences? prefs = null;
+  late SharedPreferences prefs;
+  String inIDs = "";
+  String outIDs = "";
+  String clearupTime = "";
+  String resetTime = "";
 
 
+  @override
+  void initState() {
+    super.initState();
+    loadPref();
+  }
+
+  void loadPref() async {
+    prefs = await SharedPreferences.getInstance() ;
+    // setState(() {
+    //   _controller.text = prefs.getString(PREF_KEY_WS_SERVER)!;
+    //   _controllerIn.text = prefs.getString(PREF_KEY_IN_DEVICEIDS)!;
+    //   _controllerOut.text = prefs.getString(PREF_KEY_OUT_DEVICEIDS )!;
+    //   _controllerClear.text = prefs.getString(PREF_KEY_CLEARUP_TIME)!;
+    //   _controllerRest.text = prefs.getString(PREF_KEY_RESET_TIME )!;
+    // });
+    _controller.text = await prefs.getString(PREF_KEY_WS_SERVER)!;
+    _controllerIn.text = await prefs.getString(PREF_KEY_IN_DEVICEIDS)!;
+    _controllerOut.text = await prefs.getString(PREF_KEY_OUT_DEVICEIDS )!;
+    _controllerClear.text = await prefs.getString(PREF_KEY_CLEARUP_TIME)!;
+    _controllerRest.text = await prefs.getString(PREF_KEY_RESET_TIME )!;
+  }
 
   Future<void> _handleTap() async {
     //所有的進出，除了0以外不可以重複,在設定要做錯誤提示檢核
 
-    String hostStr = _controller.text;
-    String inStr = _controllerIn.text;
-    String outStr = _controllerOut.text;
-    String clearStr = _controllerClear.text;
-    String resetStr = _controllerRest.text;
-    print('art User input: $hostStr $inStr $outStr $clearStr $resetStr');
+    // String hostStr =;
+    // String inStr = ;
+    // String outStr = ;
+    // String clearStr =;
+    // String resetStr = _controllerRest.text;
+    //print('art User input: $hostStr $inStr $outStr $clearStr $resetStr');
 
-    WS_SERVER = hostStr;
+    WS_SERVER = _controller.text;
 
     if(prefs==null)
       prefs = await SharedPreferences.getInstance();
-    await prefs!.setString(PREF_KEY_WS_SERVER, hostStr);
-    await prefs!.setString(PREF_KEY_IN_DEVICEIDS , inStr);
-    await prefs!.setString(PREF_KEY_OUT_DEVICEIDS , outStr);
-    await prefs!.setString(PREF_KEY_CLEARUP_TIME , clearStr);
-    await prefs!.setString(PREF_KEY_RESET_TIME , resetStr);
+    setState(() {
+      prefs.setString(PREF_KEY_WS_SERVER,  _controller.text);
+      prefs.setString(PREF_KEY_IN_DEVICEIDS , _controllerIn.text);
+      prefs.setString(PREF_KEY_OUT_DEVICEIDS , _controllerOut.text);
+      prefs.setString(PREF_KEY_CLEARUP_TIME ,  _controllerClear.text);
+      prefs.setString(PREF_KEY_RESET_TIME , _controllerRest.text);
 
-    showMsg(_context, "Save OK");
+      showMsg(_context, "Save OK");
+    });
 
 
     //Navigator.pop(context,true);
     //Navigator.of(context).pop();
-    Navigator.pop(context);
   }
 
   late BuildContext _context;
@@ -72,6 +98,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
   @override
   Widget build(BuildContext context) {
     _context = context;
+
 
     Widget row1 = Row(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -117,7 +144,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
           child: TextField(
             controller: _controllerIn,
             decoration: InputDecoration(
-              labelText: (PREF_KEY_IN_DEVICEIDS),
+              labelText: (inIDs),
               border: const OutlineInputBorder(),
             ),
           ),
@@ -138,7 +165,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
           child: TextField(
             controller: _controllerOut,
             decoration: InputDecoration(
-              labelText: (PREF_KEY_OUT_DEVICEIDS),
+              labelText: (outIDs),
               border: const OutlineInputBorder(),
             ),
           ),
@@ -159,7 +186,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
           child: TextField(
             controller: _controllerClear,
             decoration: InputDecoration(
-              labelText: (PREF_KEY_CLEARUP_TIME),
+              labelText: (clearupTime),
               border: const OutlineInputBorder(),
             ),
           ),
@@ -180,7 +207,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
           child: TextField(
             controller: _controllerRest,
             decoration: InputDecoration(
-              labelText: (PREF_KEY_RESET_TIME),
+              labelText: (resetTime),
               border: const OutlineInputBorder(),
             ),
           ),

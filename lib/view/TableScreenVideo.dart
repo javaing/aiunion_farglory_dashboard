@@ -1,4 +1,5 @@
 
+import 'package:far_glory_construction_gashboard/viewmodel/TableScreenViewModel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -47,6 +48,8 @@ class _TableScreenVideoState extends State<TableScreenVideo> {
   Widget build(BuildContext context) {
     double hh = MediaQuery.of(context).size.height * 0.1;
 
+    var _pic = Image.asset('images/weather1.png', height: hh,);
+
     return Scaffold(
       // appBar: AppBar(
       //   title: Text(' '),
@@ -55,7 +58,7 @@ class _TableScreenVideoState extends State<TableScreenVideo> {
         padding: const EdgeInsets.fromLTRB(30,0,30,0),
         child: Column(
           children: [
-            getRowTop(context, hh),
+            getRowTop(context, hh, headerWeather, _pic),
             getVideoView(),
           ],
         ),

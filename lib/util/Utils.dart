@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 
 void showMsg(BuildContext context,String msg) {
@@ -55,14 +56,38 @@ String formatTimeDashBoard(DateTime now) {
       .replaceAll(" ", " \n$name ");
 }
 
+Widget loadUrlImage(String url, double width) {
+  if(url.contains("svg")) {
+    return  SvgPicture.network(
+      url,
+      semanticsLabel: 'A shark?!',
+      placeholderBuilder: (BuildContext context) => Container(
+          padding: const EdgeInsets.all(30.0),
+          child: const CircularProgressIndicator()),
+    );
+  } else {
+    return getUrlImage2(url, width);
+  }
 
-Image getUrlImage(String imagePath) {
+}
+
+Image getUrlImage2(String imagePath, double width) {
   return Image.network(
     imagePath,
     fit: BoxFit.cover,
-    height: 300, // set your height
-    width: 300, // and width here
+    //height: 300, // set your height
+    width: width, // and width here
   );
+}
+
+Image getUrlImage(String imagePath) {
+  return getUrlImage2(imagePath, 300);
+  // return Image.network(
+  //   imagePath,
+  //   fit: BoxFit.cover,
+  //   height: 300, // set your height
+  //   width: 300, // and width here
+  // );
 }
 
 Image getAssetImage(String name) {

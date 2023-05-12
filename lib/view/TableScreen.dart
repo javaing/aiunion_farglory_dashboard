@@ -5,9 +5,13 @@ import 'package:far_glory_construction_gashboard/util/UIUtil.dart';
 import 'package:far_glory_construction_gashboard/view/Setting.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async' show Future;
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart';
 
 import '../Constants.dart';
 import '../datamodel/Profile.dart';
+import '../datamodel/Weather36Hr.dart';
 import '../datamodel/WebSocketFace.dart';
 import '../util/MarqueeWidget.dart';
 import '../util/Utils.dart';
@@ -36,12 +40,32 @@ class _TableScreenState extends State<TableScreen> {
   late String aa = headerNews;
   String clearTime = "";
   String resetTime = "";
+  late Widget _pic;
+  String town = "桃園區";
+
+  late double heightRowTop;
+  late double heightRowBody;
+  late double heightRowBottom;
+  late double widthThirdOne;
+  late double myWidth;
+  int demoType = 0;
+  late TableScreenViewModel viewModel;
+
+  late List data;
+  String weatherText = "";
+  String WxString="", ATString = "";
+
 
 
   @override
   void initState() {
+    _pic = Image.asset('images/weather1.png', width:100, height:100);
+    //_pic = loadUrlImage("https://www.cwb.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/day/01.svg",90);
     super.initState();
     loadPref();
+    loadWeatherPicData();
+    askWeather(town);
+
 
     _timeString = formatDateTime(DateTime.now());
     _timerSecond =
@@ -49,20 +73,51 @@ class _TableScreenState extends State<TableScreen> {
     _timerMinute =
         Timer.periodic(const Duration(minutes: 1), (Timer t) => _getMinutes());
 
-    // TableScreenViewModel viewModel = TableScreenViewModel();
-    //
-    // var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
-    // leaveCount = filtered1.length;
   }
 
+  @override
+  Widget build(BuildContext context) {
+
+    var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
+    leaveCount = filtered1.length;
+
+    heightRowTop = MediaQuery.of(context).size.height * 0.1;
+    heightRowBody = MediaQuery.of(context).size.height * 0.33;
+    heightRowBottom = MediaQuery.of(context).size.height * 0.36;
+    myWidth = MediaQuery.of(context).size.width;
+
+    return Scaffold(
+      body: Container(
+        padding: const EdgeInsets.fromLTRB(0,0,0,0),
+        decoration: BoxDecoration(
+          border: Border.all(width: BORER_WIDTH, color: borderColor),
+        ),
+        child: getCombination(context, currentMode),
+      ),
+    );
+
+  }
+
+  @override
+  void deactivate() {
+    print("art 0509 deactivate()");
+    super.deactivate();
+    viewModel.deactivate();
+    _timerSecond.cancel();
+    _timerMinute.cancel();
+  }
 
   void loadPref() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     setState(() {
-      WS_SERVER = prefs.getString(PREF_KEY_WS_SERVER)!;
-      clearTime = prefs.getString(PREF_KEY_CLEARUP_TIME)!;
-      resetTime = prefs.getString(PREF_KEY_RESET_TIME)!;
+      if(prefs==null) {
+        print("art 0511 loadPref not ready");
+        return;
+      }
+      WS_SERVER = prefs.getString(PREF_KEY_WS_SERVER) ?? DEFAULT_WS_SERVER;
+      clearTime = prefs.getString(PREF_KEY_CLEARUP_TIME) ?? DEFAULT_CLEARUP_TIME;
+      resetTime = prefs.getString(PREF_KEY_RESET_TIME) ?? DEFAULT_RESET_TIME;
       //clearTime = "11:50";
       //resetTime = "12:50";
       //print("art 0511 loadPref OK WS_SERVER="+ WS_SERVER);
@@ -89,9 +144,10 @@ class _TableScreenState extends State<TableScreen> {
     setState(() {
       String hhmm = getHHMM();
       print("art hhmm=$hhmm clearTime=$clearTime resetTime=$resetTime");
-      if(hhmm == clearTime) {
+      if(hhmm == clearTime) { //清場
         currentMode = DisplayMode.clearup;
-      } else if(hhmm == resetTime){
+      } else if(hhmm == resetTime){ //歸零
+        askWeather(town);
         currentMode = DisplayMode.punch;
         for (int i = 0; i <vendorTitle2.length ; i++) {
           vendorTitle2[i]=DEFAULT_VENDOR_NAME;
@@ -101,53 +157,59 @@ class _TableScreenState extends State<TableScreen> {
         }
         profilesPool.clear();
         leaveCount = 0;
+
       }
     });
   }
 
-  @override
-  void deactivate() {
-    print("art 0509 deactivate()");
-    super.deactivate();
-    viewModel.deactivate();
-    _timerSecond.cancel();
-    _timerMinute.cancel();
-  }
-
-  late double heightRowTop;
-  late double heightRowBody;
-  late double heightRowBottom;
-  late double widthThirdOne;
-  late double myWidth;
-  int demoType = 0;
-  late TableScreenViewModel viewModel;
-
-  @override
-  Widget build(BuildContext context) {
-
-    var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
-    leaveCount = filtered1.length;
-
-    heightRowTop = MediaQuery.of(context).size.height * 0.1;
-    heightRowBody = MediaQuery.of(context).size.height * 0.33;
-    heightRowBottom = MediaQuery.of(context).size.height * 0.36;
-    myWidth = MediaQuery.of(context).size.width;
-
-
-
-    return Scaffold(
-      body: Container(
-        padding: const EdgeInsets.fromLTRB(30,0,30,0),
-        decoration: BoxDecoration(
-          border: Border.all(width: BORER_WIDTH, color: borderColor),
-        ),
-        child: getCombination(context, currentMode),
-      ),
-    );
-
+  Future<String> loadWeatherPicData() async {
+    var jsonText = await rootBundle.loadString('assets/weather.json');
+    setState(() => data = json.decode(jsonText));
+    return 'success';
   }
 
 
+  Future<void> askWeather(String town) async {
+    final response = await dio.get(Weather_URL.replaceFirst("%town", town));
+
+    Weather36Hr weather = weather36HrFromJson(response.toString()) ;
+    //int length = weather.records?.locations?.length ?? 0;
+    //print('art 0511 weather=$length');
+
+    List<LocationLocation>? aa = weather.records?.locations?[0].location;
+    if(aa!=null) {
+      //print('art 0511 LocationLocation len =${aa.length}' );
+      List<WeatherElement>? ww = aa.first.weatherElement;
+      //length = ww?.length ?? 0;
+      //print('art 0511 WeatherElement len=$length');
+
+      //Wx
+      var Wx = ww?[0];
+      if((Wx?.time?.length ?? 0) > 0) {
+        var ev = Wx?.time?[0].elementValue![0];
+        WxString = ev?.value ?? "";
+        //print('art 0511  wx=' + value );
+      }
+      var TA = ww?[1];
+      if((TA?.time?.length ?? 0) > 0) {
+        var ev = TA?.time?[0].elementValue![0];
+        ATString = ev?.value ?? "";
+        //print('art 0511  AT =' + value );
+      }
+    }
+
+    weatherText = "$WxString\n$ATString";
+    setState(() {
+      // data.forEach((element) {
+      //   //print("art 0511 data[]=" + element.get("description"));
+      //   print("art 0511 data[]=" +element["description"]);
+      // });
+      var element = data.where((element) => element["description"]== WxString).first;
+      //print("art 0511 data[]=" +element["description"] + ", " + element["day"]);
+      _pic = loadUrlImage(element["day"],90);
+
+    });
+  }
 
 
   Widget getCombination(BuildContext context, DisplayMode mode) {
@@ -157,7 +219,7 @@ class _TableScreenState extends State<TableScreen> {
       case DisplayMode.punch:
         wig = Column(
           children: [
-            getRowTop(context, heightRowTop),
+            getRowTop(context, heightRowTop, weatherText, _pic),
             getRowBody(context),
             getRowBottom(),
           ],
@@ -696,21 +758,6 @@ Widget normalBorderLeftBottom(Widget w) {
 }
 
 Widget centerTextSetHeight(String txt, double hh) {
-  // return Container(
-  //   padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-  //   color: normalBackground,
-  //   child: Align(
-  //     alignment: Alignment.bottomCenter,
-  //     child: SizedBox(
-  //       height: hh,
-  //       child: Center(
-  //         child: whiteText(txt,22),
-  //       ),
-  //     ),
-  //
-  //   ),
-  // );
-  //return centerTextSetHeightSize(txt, hh, 22); 720p
   return centerTextSetHeightSize(txt, hh, 26); //1080p
 }
 
@@ -733,39 +780,53 @@ Widget centerTextSetHeightSize(String txt, double hh, double fontSize) {
 }
 
 
-Widget getRowTop(BuildContext ctx, double hh) {
+Widget getRowTop(BuildContext ctx, double hh, String weatherText, Widget _pic) {
   String str1 = headerNews;
   String str2 = formatDateTimeDashBoard(DateTime.now());
 
-  double myWidth = MediaQuery.of(ctx).size.width;
-  double mqueeWidth = myWidth * 0.75;
-  double timeWidth = myWidth * 0.1;
-  double weatherWidth = myWidth * 0.05;
+  Widget timeW = normalBorderTopLeft(
+    centerTextSetHeight(str2, hh)
+  );
 
-  Widget w = Row(children: [
-    normalBorderTopLeft(
-      SizedBox(child: centerTextSetHeight(str2, hh),width: timeWidth)
 
+  Widget weatherStrW = Container(
+    padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+    height: hh,
+    color: normalBackground,
+    child: Center(child: Text(weatherText,
+      style: const TextStyle(
+        fontSize: 26,
+        color: Colors.white,
+      ),)),
+  );
+
+  Widget weatherPic = Container(
+    decoration: BoxDecoration(
+      color: normalBackground,
     ),
-    normalBorderTopLeftRight(
-        Row(children: [
-          centerTextSetHeight(headerWeather, hh),
-          Container(
-            decoration: BoxDecoration(
-              color: normalBackground,
-            ),
-            child: Image.asset('images/weather1.png', width: weatherWidth, height: hh, ),
-          ),
+    height: hh,
+    child: _pic ,
+  );
 
-      ],)
+  Widget weatherW = normalBorderTopLeftRight(
+    Row(
+        children: [
+          Expanded(flex: 1, child: weatherStrW),
+          Expanded(flex: 1, child: weatherPic),
+        ])
+   );
 
-    ),
-  ],);
+  Widget timeandWeatherW =  Row(
+      children: [
+        Expanded(flex: 1, child: timeW),
+        Expanded(flex: 1, child: weatherW),
+      ]);
+
 
  Widget maquee = normalBorderTopLeft(
      addTextBackGround(
          SizedBox(
-           width: mqueeWidth,
+           //width: mqueeWidth,
            height: hh,
            child: MarqueeWidget(
              direction: Axis.horizontal,
@@ -776,10 +837,7 @@ Widget getRowTop(BuildContext ctx, double hh) {
  );
 
 
-
-  return
-    Row(children: [
-      GestureDetector(
+  Widget left = GestureDetector(
         onTap: () {
           //showDialog(context: ctx, builder: (BuildContext context) => setDevicesDialog(context));
           Navigator.push(ctx,
@@ -787,46 +845,22 @@ Widget getRowTop(BuildContext ctx, double hh) {
           );
         },
         child: maquee,
-      ),
-
-      GestureDetector(
+      );
+  Widget right = GestureDetector(
         onTap: () {
           Navigator.push(ctx,
             MaterialPageRoute(builder: (context) => const TableScreenVideo()),
           );
         },
-        child: w,
-      ),
+        child: timeandWeatherW,
+      );
+
+  return Row(
+        children: [
+          Expanded(flex: 3, child: left),
+          Expanded(flex: 1, child: right),
+  ]);
 
 
-    ]);
-}
 
-Dialog setDevicesDialog(BuildContext ctx) {
-  return Dialog(
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)), //this right here
-    child: Container(
-      height: 300.0,
-      width: 300.0,
-
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Padding(
-            padding:  EdgeInsets.all(10.0),
-            child: Text('進場裝置', ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(10.0),
-            child: Text('出場裝置', style: TextStyle(color: Colors.red),),
-          ),
-          Padding(padding: EdgeInsets.only(top: 50.0)),
-          TextButton(onPressed: () {
-            Navigator.of(ctx).pop();
-          },
-              child: Text(' OK ', style: TextStyle(color: Colors.purple, fontSize: 18.0),))
-        ],
-      ),
-    ),
-  );
 }
