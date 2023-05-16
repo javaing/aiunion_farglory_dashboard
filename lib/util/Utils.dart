@@ -29,7 +29,7 @@ void showMsg(BuildContext context,String msg) {
 }
 
 String formatDateTime(DateTime dateTime) {
-  return DateFormat('yyyy/MM/dd hh:mm:s').format(dateTime);
+  return DateFormat('yyyy/MM/dd hh:mm:ss').format(dateTime);
 }
 
 String getformatNow() {
@@ -44,14 +44,14 @@ String getHHMM() {
 
 String formatDateTimeDashBoard(DateTime now) {
   String name = getLocaleWeekDay(now.weekday);
-  return DateFormat('yyyy/MM/dd hh:mm:s')
+  return DateFormat('yyyy/MM/dd hh:mm:ss')
       .format(now)
       .replaceAll(" ", " \n$name ");
 }
 
 String formatTimeDashBoard(DateTime now) {
   String name = getLocaleWeekDay(now.weekday);
-  return DateFormat(' hh:mm:s')
+  return DateFormat(' hh:mm:ss')
       .format(now)
       .replaceAll(" ", " \n$name ");
 }

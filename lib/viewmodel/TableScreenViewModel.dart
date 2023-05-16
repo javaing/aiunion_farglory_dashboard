@@ -24,6 +24,7 @@ final List<String> leftRow1Title = ['進場人次','出場人次','現場人數'
 final List<String> clearupTitle = ['進場人次','出場人次','滯留人數'];
 //List<String> leftRow1Count = ["99","0","99"];
 int leaveCount = 0;
+int enterCount = 0;
 const String enterStr = '進場';
 const String leaveStr = '出場';
 
@@ -128,6 +129,7 @@ void updateVendorCount(Result face, Profile profile) {
     print("art 還未離場又進場的人不用加1");
     return;
   }
+  enterCount++;
   profilesRemain.add(profile);
 
   //vendorDefault

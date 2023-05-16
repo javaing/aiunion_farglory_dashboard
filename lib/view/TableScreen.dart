@@ -38,7 +38,7 @@ class _TableScreenState extends State<TableScreen> {
   late String _timeString;
   late Timer _timerSecond;
   late Timer _timerMinute;
-  late Timer _timer3Hours;
+  late Timer _timerHours;
   late String aa = headerNews;
   String clearTime = "";
   String resetTime = "";
@@ -83,7 +83,7 @@ class _TableScreenState extends State<TableScreen> {
         Timer.periodic(const Duration(seconds: 1), (Timer t) => _getTime());
     _timerMinute =
         Timer.periodic(const Duration(minutes: 1), (Timer t) => _getMinutes());
-    _timer3Hours = Timer.periodic(const Duration(hours: 3), (Timer t) => _ever3Hours());
+    _timerHours = Timer.periodic(const Duration(hours: 1), (Timer t) => _everHours());
   }
 
   @override
@@ -122,7 +122,8 @@ class _TableScreenState extends State<TableScreen> {
     var url = "https://data.epa.gov.tw/api/v2/aqx_p_432?api_key=e8dd42e6-9b8b-43f8-991e-b3dee723a52d&limit=1000&sort=ImportDate%20desc&format=JSON";
     var response = await dio.get(url);
     setState(() {
-      AirCondition airCondition = airConditionFromJson(response.toString());
+      var str = response.toString().replaceAll("pm2.5", "pm25");
+      AirCondition airCondition = airConditionFromJson(str);
       //print(airCondition);
       var find = airCondition.records?.where((element) => element.sitename=="桃園");
       //print(find);
@@ -133,7 +134,7 @@ class _TableScreenState extends State<TableScreen> {
         environCount[2] = find.first.status!;
         environCount[3] = find.first.co! + " (ppm)";
         environCount[4] = find.first.pm10! + " (μg/m3)";
-        environCount[5] = find.first.pm25?? "-"+ " (μg/m3)";
+        environCount[5] = find.first.pm25! +" (μg/m3)";
         environCount[6] = find.first.wind_speed! + " (m/sec)";
 
         if(environCount[2]=="普通") {
@@ -209,9 +210,10 @@ wind_speed(風速(m/sec))、
     });
   }
 
-  void _ever3Hours() {
+  void _everHours() {
     setState(() {
       askWeather(town);
+      loadAirReport();
     });
   }
 
@@ -251,7 +253,7 @@ wind_speed(風速(m/sec))、
       }
     }
 
-    weatherText = "$WxString\n$ATString";
+    weatherText = "$WxString\n$ATString°C";
     setState(() {
       if(data!=null) {
         var ll = data!.where((element) => element["description"]== WxString);
@@ -295,9 +297,9 @@ wind_speed(風速(m/sec))、
 
   Widget getBigNumberRow() {
     List<Color> fieldColors = [enterCountColor , leaveCountColor,resideCountColor];
-    var sum = vendorCount2.reduce((value, element) => value + element);
+    //var sum = vendorCount2.reduce((value, element) => value + element);
     //List<int> leftRow1Count = [ sum.toInt(), leaveCount, (sum-leaveCount).toInt()];
-    List<int> leftRow1Count = [ sum.toInt(), leaveCount, profilesRemain.length];
+    List<int> leftRow1Count = [ enterCount, leaveCount, profilesRemain.length];
 
     return Table(
         border: TableBorder.all(
