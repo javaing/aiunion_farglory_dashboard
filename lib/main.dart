@@ -60,7 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void loadPref() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
+    //setState(() {
       //若無給初始值
       String setting = prefs.getString(PREF_KEY_WS_SERVER)??"";
       //print('art 05111 a ' + setting);
@@ -88,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if(setting.isEmpty) {
         prefs.setString(PREF_KEY_RESET_TIME, DEFAULT_RESET_TIME);
       }
-    });
+    //});
   }
 
   @override

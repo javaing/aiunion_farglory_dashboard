@@ -123,11 +123,11 @@ class _TableScreenState extends State<TableScreen> {
     var response = await dio.get(url);
     setState(() {
       AirCondition airCondition = airConditionFromJson(response.toString());
-      print(airCondition);
+      //print(airCondition);
       var find = airCondition.records?.where((element) => element.sitename=="桃園");
-      print(find);
+      //print(find);
       if(find!.isNotEmpty) {
-        print("${find.first.aqi!} ${find.first.wind_speed!}");
+        //print("${find.first.aqi!} ${find.first.wind_speed!}");
         environCount[0] = find.first.aqi!;
         environCount[1] = find.first.pollutant!;
         environCount[2] = find.first.status!;
