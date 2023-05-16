@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:far_glory_construction_gashboard/datamodel/AirCondition.dart';
 import 'package:far_glory_construction_gashboard/util/UIUtil.dart';
 import 'package:far_glory_construction_gashboard/view/Setting.dart';
 import 'package:flutter/material.dart';
@@ -52,7 +53,8 @@ class _TableScreenState extends State<TableScreen> {
   int demoType = 0;
   late TableScreenViewModel viewModel;
 
-  late List data;
+  List<dynamic>? data;
+  //var data = new List(Map<String, String>);
   String weatherText = "";
   String WxString="", ATString = "";
 
@@ -60,12 +62,20 @@ class _TableScreenState extends State<TableScreen> {
 
   @override
   void initState() {
+    //init vendor
+    for(int i=0;i<12; i++) {
+      vendorTitle2.add(DEFAULT_VENDOR_NAME);
+      vendorCount2.add(0);
+    }
+    vendorTitle2[vendorTitle2.length-1]=VENDOR_NAME_OTHER;
+
     _pic = Image.asset('images/weather1.png', width:100, height:100);
     //_pic = loadUrlImage("https://www.cwb.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/day/01.svg",90);
     super.initState();
     loadPref();
     loadWeatherPicData();
     askWeather(town);
+    loadAirReport();
 
 
     _timeString = formatDateTime(DateTime.now());
@@ -106,6 +116,42 @@ class _TableScreenState extends State<TableScreen> {
     viewModel.deactivate();
     _timerSecond.cancel();
     _timerMinute.cancel();
+  }
+
+  void loadAirReport() async {
+    var url = "https://data.epa.gov.tw/api/v2/aqx_p_432?api_key=e8dd42e6-9b8b-43f8-991e-b3dee723a52d&limit=1000&sort=ImportDate%20desc&format=JSON";
+    var response = await dio.get(url);
+    setState(() {
+      AirCondition airCondition = airConditionFromJson(response.toString());
+      print(airCondition);
+      var find = airCondition.records?.where((element) => element.sitename=="桃園");
+      print(find);
+      if(find!.isNotEmpty) {
+        print("${find.first.aqi!} ${find.first.wind_speed!}");
+        environCount[0] = find.first.aqi!;
+        environCount[1] = find.first.pollutant!;
+        environCount[2] = find.first.status!;
+        environCount[3] = find.first.co! + " (ppm)";
+        environCount[4] = find.first.pm10! + " (μg/m3)";
+        environCount[5] = find.first.pm25?? "-"+ " (μg/m3)";
+        environCount[6] = find.first.wind_speed! + " (m/sec)";
+
+        if(environCount[2]=="普通") {
+          environColor[2] = "yellow";
+        }
+      }
+      /*
+      aqi(空氣品質指標)、
+pollutant(空氣污染指標物)、
+status(狀態)、
+co(一氧化碳(ppm))、
+pm10(懸浮微粒(μg/m3))、
+pm2.5(細懸浮微粒(μg/m3))、
+wind_speed(風速(m/sec))、
+       */
+    });
+
+
   }
 
   void loadPref() async {
@@ -207,17 +253,14 @@ class _TableScreenState extends State<TableScreen> {
 
     weatherText = "$WxString\n$ATString";
     setState(() {
-      // data.forEach((element) {
-      //   //print("art 0511 data[]=" + element.get("description"));
-      //   print("art 0511 data[]=" +element["description"]);
-      // });
-      var ll = data.where((element) => element["description"]== WxString);
-      if(ll.isNotEmpty) {
-        var element = ll.first;
-        //print("art 0511 data[]=" +element["description"] + ", " + element["day"]);
-        _pic = loadUrlImage(element["day"],90);
+      if(data!=null) {
+        var ll = data!.where((element) => element["description"]== WxString);
+        if(ll.isNotEmpty) {
+          var element = ll.first;
+          //print("art 0511 data[]=" +element["description"] + ", " + element["day"]);
+          _pic = loadUrlImage(element["day"],90);
+        }
       }
-
     });
   }
 
@@ -253,7 +296,8 @@ class _TableScreenState extends State<TableScreen> {
   Widget getBigNumberRow() {
     List<Color> fieldColors = [enterCountColor , leaveCountColor,resideCountColor];
     var sum = vendorCount2.reduce((value, element) => value + element);
-    List<int> leftRow1Count = [ sum.toInt(), leaveCount, (sum-leaveCount).toInt()];
+    //List<int> leftRow1Count = [ sum.toInt(), leaveCount, (sum-leaveCount).toInt()];
+    List<int> leftRow1Count = [ sum.toInt(), leaveCount, profilesRemain.length];
 
     return Table(
         border: TableBorder.all(
@@ -333,7 +377,13 @@ class _TableScreenState extends State<TableScreen> {
     double rowHeight = heightRowBody / 5;
 
     List<List<String>> dataList = List.generate(4, (index) =>
-    [vendorTitle2[index], vendorCount2[index].toInt().toString(), vendorTitle2[index+4], vendorCount2[index+4].toInt().toString(),]
+    [vendorTitle2[index],
+      vendorCount2[index].toInt().toString(),
+      vendorTitle2[index+4],
+      vendorCount2[index+4].toInt().toString(),
+      vendorTitle2[index+8],
+      vendorCount2[index+8].toInt().toString(),
+    ]
     ) ;
     Widget tab = EnviromentTable(height: rowHeight, data: dataList, fontSize: 36,);
 
@@ -356,7 +406,7 @@ class _TableScreenState extends State<TableScreen> {
     return SizedBox(
       height: h,
       child: Row(children: [
-        Expanded(flex: 2, child: getMiddleLeft(h)),
+        Expanded(flex: 3, child: getMiddleLeft(h)),
         Expanded(flex: 1, child: getMiddleRight(context, h)),
       ]),
     );
@@ -367,8 +417,8 @@ class _TableScreenState extends State<TableScreen> {
   //環境檢測
   Widget getMiddleRight(BuildContext context, double h) {
     List<List<String>> dataList = List.generate(environTitle.length, (index) =>
-    //[environTitle[index], environCount[index]]) ;
-    [environTitle[index], environCount[index], environColor[index]]) ;
+    [environTitle[index], environCount[index]]) ;
+    //[environTitle[index], environCount[index], environColor[index]]) ;
     double hh = 40*1.8;
 
     Widget w = normalBorder(

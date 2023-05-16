@@ -32,13 +32,13 @@ class EnviromentTable extends StatelessWidget {
       children: List.generate(
         list.length,
             (index) => TableCell(
-          child: centerTextSetHeightBold(list[index]),
+          child: centerTextSetHeightBold(list[index], "colorText"),
         ),
       ),
     );
   }
 
-  Widget centerTextSetHeightBold(String txt) {
+  Widget centerTextSetHeightBold(String txt, String colorText) {
     if(txt.compareTo('0')==0) {
       txt = " ";
     }
@@ -56,6 +56,14 @@ class EnviromentTable extends StatelessWidget {
         break;
 
       default:
+        var myColor = Colors.white;
+        if(colorText=='red')
+          myColor = Colors.red;
+        if(colorText=='yellow')
+          myColor = Colors.yellow;
+
+        // double myFontSize =32;
+        // if(txt.length>5) myFontSize = 23;
         return Container(
           height: height,
           color: normalBackground,
@@ -63,9 +71,8 @@ class EnviromentTable extends StatelessWidget {
               child: Text(
                 txt,
                 style: TextStyle(
-                    //fontWeight: FontWeight.bold,
                     fontSize: fontSize,
-                    color: Colors.white
+                    color: myColor
                 ),
               )),
         );

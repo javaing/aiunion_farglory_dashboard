@@ -23,6 +23,7 @@ _$_WebSocketFace _$$_WebSocketFaceFromJson(Map<String, dynamic> json) =>
       fever: json['fever'] as bool?,
       last_update: json['last_update'] as int?,
       photo_string: json['photo_string'] as String?,
+      snapshot_uri: json['snapshot_uri'] as String?,
     );
 
 Map<String, dynamic> _$$_WebSocketFaceToJson(_$_WebSocketFace instance) =>
@@ -42,4 +43,5 @@ Map<String, dynamic> _$$_WebSocketFaceToJson(_$_WebSocketFace instance) =>
       'fever': instance.fever,
       'last_update': instance.last_update,
       'photo_string': instance.photo_string,
+      'snapshot_uri': instance.snapshot_uri,
     };

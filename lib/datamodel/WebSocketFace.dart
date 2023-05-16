@@ -30,6 +30,7 @@ class WebSocketFace with _$WebSocketFace {
     bool? fever,
     int? last_update,
     String? photo_string,
+    String? snapshot_uri,
   }) = _WebSocketFace;
 
   factory WebSocketFace.fromJson(Map<String, dynamic> json) => _$WebSocketFaceFromJson(json);

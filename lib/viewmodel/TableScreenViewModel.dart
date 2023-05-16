@@ -14,6 +14,7 @@ import 'package:stomp_dart_client/stomp_config.dart';
 import 'package:stomp_dart_client/stomp_frame.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 //final List<String> headerInfo = ['GPT-4掀起AI界高潮，ChatGPT之父卻怕了：我設了一個終止開關    敬禮！張育成獲經典賽最佳一壘手    BLACKPINK七月再來台？「主辦方員工」洩消息',
 //  '            26°  大致晴朗'];
@@ -26,22 +27,26 @@ int leaveCount = 0;
 const String enterStr = '進場';
 const String leaveStr = '出場';
 
-final List<String> workTypeTitle = ['點工', '板模', '水泥', '排水', '電氣', '吊臂', '砂石'];
+//final List<String> workTypeTitle = ['點工', '板模', '水泥', '排水', '電氣', '吊臂', '砂石'];
 List<int> workTypeCount = [0, 0, 0, 0, 0, 0, 0];
 
 
 const Utf8Codec utf8 = Utf8Codec();
 
-final List<String> environTitle = ['PM2.5', 'PM10', '紫外線指數', "噪音", "濕度", "溫度", "風速"];
-List<String> environCount = ["21", "66", "6", "86 db", "75%", "27度C", "4.4m/s"];
-List<String> environColor = ["yellow", "green", "red", "green", "green", "green", "green"];
+
+
+final List<String> environTitle = ['空氣品質指標', '空氣污染指標物', '狀態', "一氧化碳", "PM10", "PM2.5", "風速"];
+List<String> environCount = ["", "", "", "", "", "", ""];
+List<String> environColor = ["green", "green", "green", "green", "green", "green", "green"];
 
 // List<String> vendorTitle = ['榮工處', '華雄營造', '大林組', '三重埔營造', '大肚營造', '金豪營造'];
 // List<int> vendorCount = [9, 20, 20, 20, 20, 10];
 final String DEFAULT_VENDOR_NAME = '承包商';
 final String VENDOR_NAME_OTHER = '其他';
-List<String> vendorTitle2 = ['承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '承包商', VENDOR_NAME_OTHER, '', ''];
-List<double> vendorCount2 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+// List<String> vendorTitle2 = ['承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '承包商', VENDOR_NAME_OTHER, '', ''];
+// List<double> vendorCount2 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+List<String> vendorTitle2 = [];
+List<double> vendorCount2 = [];
 
  final List<String> rightRowTitle = ['廠商A', '廠商B', '廠商C', '廠商D', '廠商E', '廠商F', '廠商G','廠商H'];
 // List<int> rightRowCount = [7, 8, 5, 6, 15, 35, 3, 5];
@@ -73,7 +78,7 @@ late StompClient stomp;
 final dio = Dio();
 
 
-void askFaceDetail(int id, String action) async {
+void askFaceDetail(int id, String action, Profile profile) async {
   final response = await dio.get("http://$WS_SERVER/api/faces/$id");
   //print(response);
 
@@ -82,7 +87,7 @@ void askFaceDetail(int id, String action) async {
   if(face!=null) {
     updateProfile(face);
     if(action=="enter")
-      updateVendorCount(face);
+      updateVendorCount(face, profile);
   }
 }
 
@@ -114,19 +119,21 @@ void updateProfile(Result face) {
 //還未離場又進場的人不用加1
 bool isExistRemain(int autoid) {
   var ll = profilesRemain.where((element) => (element.faceId==autoid));
-  return ll.isNotEmpty;
+  print("art isExistRemain =${ll.length}");
+  return ll.length>0;
 }
 
-void updateVendorCount(Result face) {
+void updateVendorCount(Result face, Profile profile) {
   if(isExistRemain(face.autoid!)) {
     print("art 還未離場又進場的人不用加1");
     return;
   }
+  profilesRemain.add(profile);
 
   //vendorDefault
   String company = face.company?? "" ;
   if(company.isEmpty) {
-    vendorCount2[7] = vendorCount2[7]+1; //other
+    vendorCount2[ vendorCount2.length-1 ] = vendorCount2[ vendorCount2.length-1 ]+1; //other
     return;
   }
   if(vendorTitle2.contains(company)) {
@@ -241,9 +248,14 @@ class TableScreenViewModel {
   }
 
   webSocketToPool(WebSocketFace face, String action) {
-    Profile p = genProfile2(face, action);
-    p.boolList = null;
-    addToPool(p, action);
+    // Profile p = genProfile2(face, action);
+    // p.boolList = null;
+    // addToPool(p, action);
+    genProfile2(face, action).then((value) => {
+      // value.boolList = null
+      addToPool(value, action)
+    }
+    );
   }
 
   bool isSameFace(Profile profile, WebSocketFace face) {
@@ -274,24 +286,27 @@ class TableScreenViewModel {
         //   }
           break;
         case "enter":
-          askFaceDetail(p.faceId!, action);
+          askFaceDetail(p.faceId!, action, p);
           profilesPool.add(p);
-          if(isExistRemain(p.faceId)) {
-            print("art 還未離場又進場的人不用加 remain");
-            break;
-          }
-          profilesRemain.add(p);
+          // if(isExistRemain(p.faceId)) {
+          //   print("art 還未離場又進場的人不用加 remain");
+          //   break;
+          // }
+          // profilesRemain.add(p);
           break;
 
         case "leave":
-          askFaceDetail(p.faceId!, action);
-          leaveCount = leaveCount+1;
+          askFaceDetail(p.faceId!, action, p);
           p.action = leaveStr;
           profilesPool.add(p);
-          var ll = profilesRemain.where((element) => element.faceId==p.faceId);
-          if(ll.isNotEmpty) {
-            Profile find = ll.first;
-            profilesRemain.remove(find);
+
+          if(isExistRemain(p.faceId)) {
+            leaveCount = leaveCount+1;
+            var ll = profilesRemain.where((element) => element.faceId==p.faceId);
+            if(ll.isNotEmpty) {
+              Profile find = ll.first;
+              profilesRemain.remove(find);
+            }
           }
           break;
 
@@ -324,11 +339,12 @@ class TableScreenViewModel {
       myName = utf8.decode(msg.name!.codeUnits);
     }
     String name = myName.replaceRange(1, 2, ' * ');
-    String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
+    //String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
+    String vendor = VENDOR_NAME_OTHER;
     return Profile(name: name, profession: vendor, imageUrl:msg.imgUrl!, action: actionStr,  boolList: boolList, faceId: int.parse(msg.id!));
   }
 
-  Profile genProfile2(WebSocketFace msg, String action) {
+  Future<Profile> genProfile2(WebSocketFace msg, String action) async {
     //轉成好讀
     String actionStr = enterStr;
     if(action=="leave") {
@@ -349,6 +365,63 @@ class TableScreenViewModel {
     String imagePath = "http://$WS_SERVER${msg.photo!}";
     //imagePath = msg.photo_string!;
     print("art profile path=$imagePath");
+
+    // TODO check helmet, vest by api -- start
+    boolList[1] = false;
+    boolList[2] = false;
+    try {
+      final imageUrl = imagePath;
+      var HOST = "60.250.33.237:60105";
+      Future<String?> networkImageToBase64(String imageUrls) async {
+        http.Response response = await http.get(Uri.parse(imageUrls));
+        if (response.statusCode == 200) {
+          final bytes = response?.bodyBytes;
+          if (bytes != null) {
+            String encodedString = base64Encode(bytes);
+            return encodedString;
+          } else {
+            return null;
+          }
+        } else {
+          print('art call $imageUrl fail! code: $response.statusCode');
+          return null;
+        }
+      }
+
+      //snapshot_uri
+      //final imgBase64Str = await networkImageToBase64(imageUrl.toString());
+      //print(imgBase64Str);
+      var imgBase64Str =msg.photo_string;
+      if(msg.snapshot_uri!=null && msg.snapshot_uri!.isNotEmpty) {
+        print(msg.snapshot_uri);
+        if(msg.snapshot_uri!.startsWith("app/static")|| msg.snapshot_uri!.startsWith("/static")) {
+          var url = "http://" + msg.snapshot_uri!;
+          imgBase64Str = await networkImageToBase64(url);
+        } else {
+          imgBase64Str = msg.snapshot_uri; // is already image string
+        }
+      }
+      if (imgBase64Str != null) {
+        final String checkUrl = "http://" + HOST + "/image_in";
+        var map = new Map<String, dynamic>();
+        map['img'] = imgBase64Str;
+        var response = await http.post(Uri.parse(checkUrl), body: map);
+        if (response.statusCode == 200) {
+          Map data = jsonDecode(response.body);
+          print("art image_in=$data");
+          // print(boolList);
+          boolList[1] = data["helmet"];
+          boolList[2] = data["vest"];
+        } else {
+          print('art call $checkUrl fail! code: $response.statusCode');
+        }
+      }
+    } catch (e, s) {
+      print('art post fetch and set catch error');
+      print("Exception $e");
+      print("StackTrace $s");
+    }
+    // TODO check helmet, vest by api -- end
     return Profile(name: name, profession: vendor, imageUrl:imagePath, action: actionStr,  boolList: boolList, faceId: faceId);
   }
 

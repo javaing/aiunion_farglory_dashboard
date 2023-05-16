@@ -35,6 +35,7 @@ mixin _$WebSocketFace {
   bool? get fever => throw _privateConstructorUsedError;
   int? get last_update => throw _privateConstructorUsedError;
   String? get photo_string => throw _privateConstructorUsedError;
+  String? get snapshot_uri => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -63,7 +64,8 @@ abstract class $WebSocketFaceCopyWith<$Res> {
       bool? enabled,
       bool? fever,
       int? last_update,
-      String? photo_string});
+      String? photo_string,
+      String? snapshot_uri});
 }
 
 /// @nodoc
@@ -94,6 +96,7 @@ class _$WebSocketFaceCopyWithImpl<$Res, $Val extends WebSocketFace>
     Object? fever = freezed,
     Object? last_update = freezed,
     Object? photo_string = freezed,
+    Object? snapshot_uri = freezed,
   }) {
     return _then(_value.copyWith(
       name: freezed == name
@@ -156,6 +159,10 @@ class _$WebSocketFaceCopyWithImpl<$Res, $Val extends WebSocketFace>
           ? _value.photo_string
           : photo_string // ignore: cast_nullable_to_non_nullable
               as String?,
+      snapshot_uri: freezed == snapshot_uri
+          ? _value.snapshot_uri
+          : snapshot_uri // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -183,7 +190,8 @@ abstract class _$$_WebSocketFaceCopyWith<$Res>
       bool? enabled,
       bool? fever,
       int? last_update,
-      String? photo_string});
+      String? photo_string,
+      String? snapshot_uri});
 }
 
 /// @nodoc
@@ -212,6 +220,7 @@ class __$$_WebSocketFaceCopyWithImpl<$Res>
     Object? fever = freezed,
     Object? last_update = freezed,
     Object? photo_string = freezed,
+    Object? snapshot_uri = freezed,
   }) {
     return _then(_$_WebSocketFace(
       name: freezed == name
@@ -274,6 +283,10 @@ class __$$_WebSocketFaceCopyWithImpl<$Res>
           ? _value.photo_string
           : photo_string // ignore: cast_nullable_to_non_nullable
               as String?,
+      snapshot_uri: freezed == snapshot_uri
+          ? _value.snapshot_uri
+          : snapshot_uri // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -296,7 +309,8 @@ class _$_WebSocketFace implements _WebSocketFace {
       this.enabled,
       this.fever,
       this.last_update,
-      this.photo_string});
+      this.photo_string,
+      this.snapshot_uri});
 
   factory _$_WebSocketFace.fromJson(Map<String, dynamic> json) =>
       _$$_WebSocketFaceFromJson(json);
@@ -331,10 +345,12 @@ class _$_WebSocketFace implements _WebSocketFace {
   final int? last_update;
   @override
   final String? photo_string;
+  @override
+  final String? snapshot_uri;
 
   @override
   String toString() {
-    return 'WebSocketFace(name: $name, photo: $photo, type_id: $type_id, identity: $identity, serialNo: $serialNo, cardSerialNo: $cardSerialNo, device_id: $device_id, temperature: $temperature, face_id: $face_id, start_time: $start_time, endT_time: $endT_time, enabled: $enabled, fever: $fever, last_update: $last_update, photo_string: $photo_string)';
+    return 'WebSocketFace(name: $name, photo: $photo, type_id: $type_id, identity: $identity, serialNo: $serialNo, cardSerialNo: $cardSerialNo, device_id: $device_id, temperature: $temperature, face_id: $face_id, start_time: $start_time, endT_time: $endT_time, enabled: $enabled, fever: $fever, last_update: $last_update, photo_string: $photo_string, snapshot_uri: $snapshot_uri)';
   }
 
   @override
@@ -365,7 +381,9 @@ class _$_WebSocketFace implements _WebSocketFace {
             (identical(other.last_update, last_update) ||
                 other.last_update == last_update) &&
             (identical(other.photo_string, photo_string) ||
-                other.photo_string == photo_string));
+                other.photo_string == photo_string) &&
+            (identical(other.snapshot_uri, snapshot_uri) ||
+                other.snapshot_uri == snapshot_uri));
   }
 
   @JsonKey(ignore: true)
@@ -386,7 +404,8 @@ class _$_WebSocketFace implements _WebSocketFace {
       enabled,
       fever,
       last_update,
-      photo_string);
+      photo_string,
+      snapshot_uri);
 
   @JsonKey(ignore: true)
   @override
@@ -418,7 +437,8 @@ abstract class _WebSocketFace implements WebSocketFace {
       final bool? enabled,
       final bool? fever,
       final int? last_update,
-      final String? photo_string}) = _$_WebSocketFace;
+      final String? photo_string,
+      final String? snapshot_uri}) = _$_WebSocketFace;
 
   factory _WebSocketFace.fromJson(Map<String, dynamic> json) =
       _$_WebSocketFace.fromJson;
@@ -453,6 +473,8 @@ abstract class _WebSocketFace implements WebSocketFace {
   int? get last_update;
   @override
   String? get photo_string;
+  @override
+  String? get snapshot_uri;
   @override
   @JsonKey(ignore: true)
   _$$_WebSocketFaceCopyWith<_$_WebSocketFace> get copyWith =>
