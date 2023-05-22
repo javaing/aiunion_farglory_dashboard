@@ -25,13 +25,14 @@ class WebSocketFace with _$WebSocketFace {
     String? temperature,
     int? face_id,
     int? start_time,
-    int? endT_time,
+    int? end_time,
     bool? enabled,
     bool? fever,
     int? last_update,
     String? photo_string,
     String? snapshot_uri,
   }) = _WebSocketFace;
+
 
   factory WebSocketFace.fromJson(Map<String, dynamic> json) => _$WebSocketFaceFromJson(json);
 }

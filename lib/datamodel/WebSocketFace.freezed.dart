@@ -30,7 +30,7 @@ mixin _$WebSocketFace {
   String? get temperature => throw _privateConstructorUsedError;
   int? get face_id => throw _privateConstructorUsedError;
   int? get start_time => throw _privateConstructorUsedError;
-  int? get endT_time => throw _privateConstructorUsedError;
+  int? get end_time => throw _privateConstructorUsedError;
   bool? get enabled => throw _privateConstructorUsedError;
   bool? get fever => throw _privateConstructorUsedError;
   int? get last_update => throw _privateConstructorUsedError;
@@ -60,7 +60,7 @@ abstract class $WebSocketFaceCopyWith<$Res> {
       String? temperature,
       int? face_id,
       int? start_time,
-      int? endT_time,
+      int? end_time,
       bool? enabled,
       bool? fever,
       int? last_update,
@@ -91,7 +91,7 @@ class _$WebSocketFaceCopyWithImpl<$Res, $Val extends WebSocketFace>
     Object? temperature = freezed,
     Object? face_id = freezed,
     Object? start_time = freezed,
-    Object? endT_time = freezed,
+    Object? end_time = freezed,
     Object? enabled = freezed,
     Object? fever = freezed,
     Object? last_update = freezed,
@@ -139,9 +139,9 @@ class _$WebSocketFaceCopyWithImpl<$Res, $Val extends WebSocketFace>
           ? _value.start_time
           : start_time // ignore: cast_nullable_to_non_nullable
               as int?,
-      endT_time: freezed == endT_time
-          ? _value.endT_time
-          : endT_time // ignore: cast_nullable_to_non_nullable
+      end_time: freezed == end_time
+          ? _value.end_time
+          : end_time // ignore: cast_nullable_to_non_nullable
               as int?,
       enabled: freezed == enabled
           ? _value.enabled
@@ -186,7 +186,7 @@ abstract class _$$_WebSocketFaceCopyWith<$Res>
       String? temperature,
       int? face_id,
       int? start_time,
-      int? endT_time,
+      int? end_time,
       bool? enabled,
       bool? fever,
       int? last_update,
@@ -215,7 +215,7 @@ class __$$_WebSocketFaceCopyWithImpl<$Res>
     Object? temperature = freezed,
     Object? face_id = freezed,
     Object? start_time = freezed,
-    Object? endT_time = freezed,
+    Object? end_time = freezed,
     Object? enabled = freezed,
     Object? fever = freezed,
     Object? last_update = freezed,
@@ -263,9 +263,9 @@ class __$$_WebSocketFaceCopyWithImpl<$Res>
           ? _value.start_time
           : start_time // ignore: cast_nullable_to_non_nullable
               as int?,
-      endT_time: freezed == endT_time
-          ? _value.endT_time
-          : endT_time // ignore: cast_nullable_to_non_nullable
+      end_time: freezed == end_time
+          ? _value.end_time
+          : end_time // ignore: cast_nullable_to_non_nullable
               as int?,
       enabled: freezed == enabled
           ? _value.enabled
@@ -305,7 +305,7 @@ class _$_WebSocketFace implements _WebSocketFace {
       this.temperature,
       this.face_id,
       this.start_time,
-      this.endT_time,
+      this.end_time,
       this.enabled,
       this.fever,
       this.last_update,
@@ -336,7 +336,7 @@ class _$_WebSocketFace implements _WebSocketFace {
   @override
   final int? start_time;
   @override
-  final int? endT_time;
+  final int? end_time;
   @override
   final bool? enabled;
   @override
@@ -350,7 +350,7 @@ class _$_WebSocketFace implements _WebSocketFace {
 
   @override
   String toString() {
-    return 'WebSocketFace(name: $name, photo: $photo, type_id: $type_id, identity: $identity, serialNo: $serialNo, cardSerialNo: $cardSerialNo, device_id: $device_id, temperature: $temperature, face_id: $face_id, start_time: $start_time, endT_time: $endT_time, enabled: $enabled, fever: $fever, last_update: $last_update, photo_string: $photo_string, snapshot_uri: $snapshot_uri)';
+    return 'WebSocketFace(name: $name, photo: $photo, type_id: $type_id, identity: $identity, serialNo: $serialNo, cardSerialNo: $cardSerialNo, device_id: $device_id, temperature: $temperature, face_id: $face_id, start_time: $start_time, end_time: $end_time, enabled: $enabled, fever: $fever, last_update: $last_update, photo_string: $photo_string, snapshot_uri: $snapshot_uri)';
   }
 
   @override
@@ -374,8 +374,8 @@ class _$_WebSocketFace implements _WebSocketFace {
             (identical(other.face_id, face_id) || other.face_id == face_id) &&
             (identical(other.start_time, start_time) ||
                 other.start_time == start_time) &&
-            (identical(other.endT_time, endT_time) ||
-                other.endT_time == endT_time) &&
+            (identical(other.end_time, end_time) ||
+                other.end_time == end_time) &&
             (identical(other.enabled, enabled) || other.enabled == enabled) &&
             (identical(other.fever, fever) || other.fever == fever) &&
             (identical(other.last_update, last_update) ||
@@ -400,7 +400,7 @@ class _$_WebSocketFace implements _WebSocketFace {
       temperature,
       face_id,
       start_time,
-      endT_time,
+      end_time,
       enabled,
       fever,
       last_update,
@@ -433,7 +433,7 @@ abstract class _WebSocketFace implements WebSocketFace {
       final String? temperature,
       final int? face_id,
       final int? start_time,
-      final int? endT_time,
+      final int? end_time,
       final bool? enabled,
       final bool? fever,
       final int? last_update,
@@ -464,7 +464,7 @@ abstract class _WebSocketFace implements WebSocketFace {
   @override
   int? get start_time;
   @override
-  int? get endT_time;
+  int? get end_time;
   @override
   bool? get enabled;
   @override

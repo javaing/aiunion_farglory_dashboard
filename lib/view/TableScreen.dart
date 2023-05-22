@@ -65,7 +65,7 @@ class _TableScreenState extends State<TableScreen> {
     //init vendor
     for(int i=0;i<12; i++) {
       vendorTitle2.add(DEFAULT_VENDOR_NAME);
-      vendorCount2.add(0);
+      vendorCount2.add([]);
     }
     vendorTitle2[vendorTitle2.length-1]=VENDOR_NAME_OTHER;
 
@@ -243,8 +243,9 @@ wind_speed(風速(m/sec))、
           vendorTitle2[i]=DEFAULT_VENDOR_NAME;
         }
         for (int i = 0; i <vendorCount2.length ; i++) {
-          vendorCount2[i] = 0;
+          vendorCount2[i]=[];
         }
+        //vendorCount2 = [];
         profilesPool.clear();
         profilesRemain.clear();
         enterCount = 0;
@@ -361,9 +362,13 @@ wind_speed(風速(m/sec))、
 
   Widget getClearuTitle() {
     List<Color> fieldColors = [enterCountColor , leaveCountColor, resideCountColor];
-    var sum = vendorCount2.reduce((value, element) => value + element);
+    //var sum = vendorCount2.reduce((value, element) => value + element);
+    int sum =0;
+    for(int i=0; i<vendorCount2.length; i++) {
+      sum += vendorCount2[i].length;
+    }
     //leaveCount = sum.toInt() - profilesRemain.length;
-    List<int> leftRow1Count = [ sum.toInt(), leaveCount,  profilesRemain.length];
+    List<int> leftRow1Count = [ sum, leaveCount,  profilesRemain.length];
 
     Widget title =  Table(
         border: TableBorder.all(
@@ -425,11 +430,11 @@ wind_speed(風速(m/sec))、
 
     List<List<String>> dataList = List.generate(4, (index) =>
     [vendorTitle2[index],
-      vendorCount2[index].toInt().toString(),
+      vendorCount2[index].length.toString(),
       vendorTitle2[index+4],
-      vendorCount2[index+4].toInt().toString(),
+      vendorCount2[index+4].length.toString(),
       vendorTitle2[index+8],
-      vendorCount2[index+8].toInt().toString(),
+      vendorCount2[index+8].length.toString(),
     ]
     ) ;
     Widget tab = EnviromentTable(height: rowHeight, data: dataList, fontSize: 36,);

@@ -1,5 +1,7 @@
 import 'dart:convert' as convert;
 import 'dart:convert';
+import 'dart:core';
+import 'dart:core';
 
 import 'package:flutter/material.dart';
 
@@ -37,7 +39,7 @@ List<String> environColor = ["green", "green", "green", "green", "green", "green
 final String DEFAULT_VENDOR_NAME = '承包商';
 final String VENDOR_NAME_OTHER = '其他';
 List<String> vendorTitle2 = [];
-List<double> vendorCount2 = [];
+List<List<String>> vendorCount2 = [];
 
 final List<String> rightRowTitle = ['廠商A', '廠商B', '廠商C', '廠商D', '廠商E', '廠商F', '廠商G','廠商H'];
 List<String> workerImages = ['worker1.png', 'worker2.png', 'worker3.png', 'worker4.png', 'worker5.png'];
@@ -70,7 +72,7 @@ class TableScreenViewModel {
   
   TableScreenViewModel(BuildContext ctx) {
     var webSocketUrl = "ws://$WS_SERVER:$WS_PORT$WS_TOPIC";
-    print('art WebSocket url=$webSocketUrl');
+    //print('art WebSocket url=$webSocketUrl');
 
     stomp = StompClient(
         config: StompConfig(
@@ -80,7 +82,7 @@ class TableScreenViewModel {
           print('art onWebSocketError e=$e'),
           onStompError: (d) => print('art error stomp'),
           onDisconnect: (f) => print('art disconnected'),
-          onDebugMessage: (f) => print('art debug $f'),
+          //onDebugMessage: (f) => print('art debug $f'),
         )
     );
     stomp.activate();
@@ -102,20 +104,48 @@ class TableScreenViewModel {
       if(face.enabled!=null && face.enabled!) {
         if( isDuplicate(face) ) {
           print("art face 去重 ${face.name!} , id=${face.face_id}");
-          //webSocketToPool(face, "leave"); //for test
           return;
         }
-
+        // if(isExistRemain(face.face_id!)) {
+        //   print("art 還未離場又進場的人不用加pool");
+        //   return;
+        // }
         webSocketToPool(face, "enter");
       }
 
     });
   }
 
+  // bool isDuplicate(WebSocketFace face) {
+  //   //print("art isDuplicate currentMode=${currentMode.name}");
+  //   return profilesPool.length>0 && isSameFace(profilesPool.last, face) && (currentMode == DisplayMode.punch);
+  // }
+
+  //與Remain比對，如果存在一樣faceid且15秒內 則不給離場或新增
   bool isDuplicate(WebSocketFace face) {
     //print("art isDuplicate currentMode=${currentMode.name}");
-    return profilesPool.length>0 && isSameFace(profilesPool.last, face) && (currentMode == DisplayMode.punch);
+    if(currentMode != DisplayMode.punch) {
+      return false;
+    }
+    if(face.end_time==0) {
+      print('art isDuplicate face.end_time==0');
+      return false;
+    }
+    for(int i=0; i<profilesRemain.length; i++) {
+      if(profilesRemain[i].faceId == face.face_id) {
+        var diff = face.end_time! - profilesRemain[i].end_time;
+        print('art isDuplicate ' + face.name! + " time diff=" + diff.toString() +" , 更新 profilesRemain[i].end_time");
+        profilesRemain[i].end_time = face.end_time!;
+        if (diff< 15000) {
+          //but need update end_time
+          print('art isDuplicate 15秒內 不給離場或新增');
+          return true;
+        }
+      }
+    }
+    return false;
   }
+
 
   void addLeaveSubscribe(String deviceID) {
     stomp.subscribe(destination: "/topic/capture/$deviceID", headers: {}, callback: (frame) {
@@ -123,6 +153,10 @@ class TableScreenViewModel {
       WebSocketFace face=  webSocketFaceFromJson(frame.body.toString());
       //print("art face " + face.name! + ", " + face.type_id! + "");
       if(face.enabled!=null && face.enabled!) {
+        if( isDuplicate(face) ) {
+          print("art face leave去重");
+          return;
+        }
         webSocketToPool(face, "leave");
       }
 
@@ -152,11 +186,11 @@ class TableScreenViewModel {
     // Profile p = genProfile2(face, action);
     // p.boolList = null;
     // addToPool(p, action);
+    print('art add pool :' + face.toString());
     genProfile2(face, action).then((value) => {
-      // value.boolList = null
       addToPool(value, action)
-    }
-    );
+    });
+
   }
 
   bool isSameFace(Profile profile, WebSocketFace face) {
@@ -245,7 +279,7 @@ class TableScreenViewModel {
     //String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
     String vendor = VENDOR_NAME_OTHER;
     List<bool> boolList = [true, false, false, true]; //酒測 工地帽 背心 效期內,非黑名單
-    return Profile(name: name, profession: vendor, imageUrl:msg.imgUrl!, action: actionStr,  boolList: boolList, faceId: int.parse(msg.id!));
+    return Profile(name: name, profession: vendor, imageUrl:msg.imgUrl!, action: actionStr,  boolList: boolList, faceId: int.parse(msg.id!), end_time: 0);
   }
 
   Future<Profile> genProfile2(WebSocketFace msg, String action) async {
@@ -272,7 +306,9 @@ class TableScreenViewModel {
     //imagePath = msg.photo_string!;
     //print("art profile path=$imagePath");
 
+    //2023-5-22 老闆指示工地帽先不判斷, 但要用抓拍照
     // TODO check helmet, vest by api -- start
+
     boolList[1] = false;
     boolList[2] = false;
     try {
@@ -310,60 +346,61 @@ class TableScreenViewModel {
       //snapshot_uri
       //final imgBase64Str = await networkImageToBase64(imageUrl.toString());
       //print('art snapshot=' + (msg.snapshot_uri ?? "") );
-      var imgBase64Str =msg.photo_string;
+      //var imgBase64Str =msg.photo_string;
       if(msg.snapshot_uri!=null && msg.snapshot_uri!.isNotEmpty) {
         if(msg.snapshot_uri!.startsWith("app/static")|| msg.snapshot_uri!.startsWith("/static")) {
           var path = msg.snapshot_uri?.replaceFirst("app/static", "/static");
           var url = "http://$WS_SERVER$path";
           print('art img1 url=$url');
-          imgBase64Str = await networkImageToBase64(url);
+          //imgBase64Str = await networkImageToBase64(url);
           imagePath = url;
         } else {
-          print('art img2');
-          imgBase64Str = msg.snapshot_uri; // is already image string
+          //imgBase64Str = msg.snapshot_uri; // is already image string
           imagePath = msg.snapshot_uri!;
+          print('art img2 url='+ imagePath);
         }
 
       }
-      print('art img3');
-      if (imgBase64Str != null) {
-        /*
-        art post fetch and set catch error
-        StackTrace #0      IOClient.send (package:http/src/io_client.dart:94:7)
-         <asynchronous suspension>
-        #3      TableScreenViewModel.genProfile2 (package:far_glory_construction_dashboard/viewmodel/TableScreenViewModel.dart:412:24)
-      <asynchronous suspension>
-         */
-          final String checkUrl = "http://" + HOST + "/image_in";
-          var map = new Map<String, dynamic>();
-          map['img'] = imgBase64Str;
-          var response = await http.post(Uri.parse(checkUrl), body: map);
-          Map data = jsonDecode(response.toString());
-          print("art image_in=$data");
-          if (data["code"] == 200) {
-            // print(boolList);
-            boolList[1] = data["helmet"];
-            boolList[2] = data["vest"];
-          } else {
-            print('art call $checkUrl fail! code: $response.statusCode');
-          }
-        //}
-        // var body = await checkHelmet(imgBase64Str);
-        // if (body != null) {
-        //   Map data = jsonDecode(body);
-        //   print("art image_in=$data");
-        //   boolList[1] = data["helmet"];
-        //   boolList[2] = data["vest"];
-        // }
-      }
-
+    //   print('art img3');
+    //   if (imgBase64Str != null) {
+    //     /*
+    //     art post fetch and set catch error
+    //     StackTrace #0      IOClient.send (package:http/src/io_client.dart:94:7)
+    //      <asynchronous suspension>
+    //     #3      TableScreenViewModel.genProfile2 (package:far_glory_construction_dashboard/viewmodel/TableScreenViewModel.dart:412:24)
+    //   <asynchronous suspension>
+    //      */
+    //       final String checkUrl = "http://" + HOST + "/image_in";
+    //       var map = new Map<String, dynamic>();
+    //       map['img'] = imgBase64Str;
+    //       var response = await http.post(Uri.parse(checkUrl), body: map);
+    //       print("art image_in=$response");
+    //       Map data = jsonDecode(response.toString());
+    //       if (data["code"] == 200) {
+    //         // print(boolList);
+    //         boolList[1] = data["helmet"];
+    //         boolList[2] = data["vest"];
+    //       } else {
+    //         print('art call $checkUrl fail! code: $response.statusCode');
+    //       }
+    //     //}
+    //     // var body = await checkHelmet(imgBase64Str);
+    //     // if (body != null) {
+    //     //   Map data = jsonDecode(body);
+    //     //   print("art image_in=$data");
+    //     //   boolList[1] = data["helmet"];
+    //     //   boolList[2] = data["vest"];
+    //     // }
+    //   }
+    //
     } catch (e, s) {
       print('art post fetch and set catch error');
       print("Exception $e");
       print("StackTrace $s");
     }
+
     // TODO check helmet, vest by api -- end
-    return Profile(name: name, profession: vendor, imageUrl:imagePath, action: actionStr,  boolList: boolList, faceId: faceId);
+    return Profile(name: name, profession: vendor, imageUrl:imagePath, action: actionStr,  boolList: boolList, faceId: faceId, end_time: msg.end_time!);
   }
 
 }
@@ -418,7 +455,7 @@ Future<void> saveEnterLeave() async {
   prefs.setInt(PREF_KEY_ENTER_COUNT, enterCount);
   prefs.setInt(PREF_KEY_LEAVE_COUNT, leaveCount);
   prefs.setString(PREF_KEY_PROFILE_REMAIN, jsonEncode(profilesRemain));
-  print('art jsonEncode=' + jsonEncode(profilesRemain));
+  //print('art jsonEncode=' + jsonEncode(profilesRemain));
 }
 
 void updateVendorCount(Result face, Profile profile) {
@@ -433,14 +470,20 @@ void updateVendorCount(Result face, Profile profile) {
   //vendorDefault
   String company = face.company?? "" ;
   if(company.isEmpty) {
-    vendorCount2[ vendorCount2.length-1 ] = vendorCount2[ vendorCount2.length-1 ]+1; //other
+    //vendorCount2[ vendorCount2.length-1 ] = vendorCount2[ vendorCount2.length-1 ]+1; //other
+    List<String> ll =  vendorCount2[ vendorCount2.length-1 ];
+    ll.add(profile.name);
+    vendorCount2[ vendorCount2.length-1 ] = ll;
     return;
   }
   if(vendorTitle2.contains(company)) {
     for (int i = 0; i <vendorTitle2.length ; i++) {
       print("art find company  name=${vendorTitle2[i]}");
       if(vendorTitle2[i]==company) {
-        vendorCount2[i] = vendorCount2[i]+1;
+        //vendorCount2[i] = vendorCount2[i]+1;
+        List<String> ll =  vendorCount2[i];
+        ll.add(profile.name);
+        vendorCount2[i] = ll;
         break;
       }
     }
@@ -450,7 +493,10 @@ void updateVendorCount(Result face, Profile profile) {
       print("art find first no default name=${vendorTitle2[i]}");
       if(vendorTitle2[i]==DEFAULT_VENDOR_NAME) {
         vendorTitle2[i]=company; //該company首次紀錄到
-        vendorCount2[i] = vendorCount2[i]+1;
+        //vendorCount2[i] = vendorCount2[i]+1;
+        List<String> ll =  vendorCount2[i];
+        ll.add(profile.name);
+        vendorCount2[i] = ll;
         break;
       }
     }
@@ -459,10 +505,9 @@ void updateVendorCount(Result face, Profile profile) {
 }
 
 
-
 extension BoolParsing on String {
   bool parseBool() {
-    print("art 0419 check=${this.toLowerCase()}");
-    return this.toLowerCase() == 'true';
+    print("art 0419 check=${toLowerCase()}");
+    return toLowerCase() == 'true';
   }
 }
