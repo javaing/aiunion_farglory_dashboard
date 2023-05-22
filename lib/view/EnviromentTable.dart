@@ -1,4 +1,4 @@
-import 'package:far_glory_construction_gashboard/util/UIUtil.dart';
+import 'package:far_glory_construction_dashboard/util/UIUtil.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -62,8 +62,8 @@ class EnviromentTable extends StatelessWidget {
         if(colorText=='yellow')
           myColor = Colors.yellow;
 
-        // double myFontSize =32;
-        // if(txt.length>5) myFontSize = 23;
+        double myFontSize =32;
+        if(txt.length>7) myFontSize = 28;
         return Container(
           height: height,
           color: normalBackground,
@@ -71,7 +71,7 @@ class EnviromentTable extends StatelessWidget {
               child: Text(
                 txt,
                 style: TextStyle(
-                    fontSize: fontSize,
+                    fontSize: myFontSize,
                     color: myColor
                 ),
               )),

@@ -1,7 +1,7 @@
 
 import 'dart:typed_data';
 
-import 'package:far_glory_construction_gashboard/service/AbstractService.dart';
+import 'package:far_glory_construction_dashboard/service/AbstractService.dart';
 
 import '../Constants.dart';
 import '../datamodel/FarGloryMsg.dart';

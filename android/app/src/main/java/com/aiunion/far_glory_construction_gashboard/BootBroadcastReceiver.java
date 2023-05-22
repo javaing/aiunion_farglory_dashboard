@@ -1,4 +1,4 @@
-package com.aiunion.far_glory_construction_gashboard;
+package com.aiunion.far_glory_construction_dashboard;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

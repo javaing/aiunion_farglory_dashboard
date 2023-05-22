@@ -1,6 +1,6 @@
-import 'package:far_glory_construction_gashboard/Constants.dart';
-import 'package:far_glory_construction_gashboard/view/Setting.dart';
-import 'package:far_glory_construction_gashboard/view/TableScreen.dart';
+import 'package:far_glory_construction_dashboard/Constants.dart';
+import 'package:far_glory_construction_dashboard/view/Setting.dart';
+import 'package:far_glory_construction_dashboard/view/TableScreen.dart';
 
 import '../service/notification_service.dart';
 import '../util/MqttUtil.dart';

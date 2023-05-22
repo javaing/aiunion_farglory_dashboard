@@ -17,14 +17,19 @@ String Weather_APIKEY = "CWB-D203008C-2640-4F20-A839-CD3708D26517";
 String Weather_URL = "https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-D0047-005?Authorization=$Weather_APIKEY&format=JSON&locationName=%town&elementName=Wx,AT";
 
 String WS_SERVER = "";
-final int WS_PORT = 80;
-final String WS_TOPIC = "/ws/websocket";
+const int WS_PORT = 80;
+const String WS_TOPIC = "/ws/websocket";
 
-final String PREF_KEY_WS_SERVER = 'WS_SERVER';
+const String PREF_KEY_WS_SERVER = 'WS_SERVER';
 final String PREF_KEY_IN_DEVICEIDS = 'IN_DEVICEIDS';
-final String PREF_KEY_OUT_DEVICEIDS = 'OUT_DEVICEIDS';
-final String PREF_KEY_CLEARUP_TIME = 'CLEARUP_TIME';
-final String PREF_KEY_RESET_TIME = 'RESET_TIM';
+const String PREF_KEY_OUT_DEVICEIDS = 'OUT_DEVICEIDS';
+const String PREF_KEY_CLEARUP_TIME = 'CLEARUP_TIME';
+const String PREF_KEY_RESET_TIME = 'RESET_TIM';
+const String PREF_KEY_ENTER_COUNT = 'ENTER_COUNT';
+const String PREF_KEY_LEAVE_COUNT = 'LEAVE_COUNT';
+const String PREF_KEY_PROFILE_REMAIN = 'PROFILE_REMAIN';
+
+
 
 
 const Color borderColor = Color.fromARGB(255, 224, 224, 224);

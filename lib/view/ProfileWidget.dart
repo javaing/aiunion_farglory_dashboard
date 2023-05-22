@@ -74,7 +74,7 @@ class ProfileWidget extends StatelessWidget {
   Widget getCheckList() {
     Widget check;
     if(profile.boolList==null) {
-      check = getCheckInit();
+      check = getCheckInit(DEFAULT_BOOLLIST);
     } else {
       check = getCheckResult(profile.boolList!);
     }
@@ -126,7 +126,7 @@ class ProfileWidget extends StatelessWidget {
     );
   }
 
-  Widget getCheckInit() {
+  Widget getCheckInit(List<bool> boolList) {
     //print("art 0420 CheckResult [boolList]=" + boolList.toString());
     return Column(children: [
       //酒精

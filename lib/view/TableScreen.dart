@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:far_glory_construction_gashboard/datamodel/AirCondition.dart';
-import 'package:far_glory_construction_gashboard/util/UIUtil.dart';
-import 'package:far_glory_construction_gashboard/view/Setting.dart';
+import 'package:far_glory_construction_dashboard/datamodel/AirCondition.dart';
+import 'package:far_glory_construction_dashboard/util/UIUtil.dart';
+import 'package:far_glory_construction_dashboard/view/Setting.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async' show Future;
@@ -76,7 +76,7 @@ class _TableScreenState extends State<TableScreen> {
     loadWeatherPicData();
     askWeather(town);
     loadAirReport();
-
+    loadToday();
 
     _timeString = formatDateTime(DateTime.now());
     _timerSecond =
@@ -89,8 +89,8 @@ class _TableScreenState extends State<TableScreen> {
   @override
   Widget build(BuildContext context) {
 
-    var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
-    leaveCount = filtered1.length;
+    //var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
+   // leaveCount = filtered1.length;
 
     heightRowTop = MediaQuery.of(context).size.height * 0.1;
     heightRowBody = MediaQuery.of(context).size.height * 0.33;
@@ -169,10 +169,51 @@ wind_speed(風速(m/sec))、
       //clearTime = "11:50";
       //resetTime = "12:50";
       //print("art 0511 loadPref OK WS_SERVER="+ WS_SERVER);
+
       viewModel = TableScreenViewModel(context);
     });
 
   }
+
+  void loadToday() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      if(prefs==null) {
+        print("art 0511 loadPref not ready");
+        return;
+      }
+      enterCount = prefs.getInt(PREF_KEY_ENTER_COUNT) ?? 0;
+      leaveCount = prefs.getInt(PREF_KEY_LEAVE_COUNT) ?? 0;
+      String jsonStr = prefs.getString(PREF_KEY_PROFILE_REMAIN) ?? "";
+      if(jsonStr!=null && jsonStr.isNotEmpty) {
+        //profilesRemain = jsonDecode(prefs.getString(PREF_KEY_PROFILE_REMAIN)!);
+        List<dynamic> dd = jsonDecode(prefs.getString(PREF_KEY_PROFILE_REMAIN)!);
+        for(int i=0; i<dd.length; i++) {
+          profilesRemain.add(Profile.fromJson(dd[i]));
+        }
+        print("art 0522 loadPref Profile success!");
+      }
+    });
+
+  }
+
+  void resetToday() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      if(prefs==null) {
+        print("art 0511 loadPref not ready");
+        return;
+      }
+      prefs.setInt(PREF_KEY_ENTER_COUNT, 0) ;
+      prefs.setInt(PREF_KEY_LEAVE_COUNT,0) ;
+      prefs.setString(PREF_KEY_PROFILE_REMAIN, "");
+    });
+
+  }
+
+
 
   //int profileCount = 0;
   void _getTime() {
@@ -191,11 +232,12 @@ wind_speed(風速(m/sec))、
   void _getMinutes() {
     setState(() {
       String hhmm = getHHMM();
-      print("art hhmm=$hhmm clearTime=$clearTime resetTime=$resetTime");
+      //print("art hhmm=$hhmm clearTime=$clearTime resetTime=$resetTime");
       if(hhmm == clearTime) { //清場
         currentMode = DisplayMode.clearup;
       } else if(hhmm == resetTime){ //歸零
         askWeather(town);
+        resetToday();
         currentMode = DisplayMode.punch;
         for (int i = 0; i <vendorTitle2.length ; i++) {
           vendorTitle2[i]=DEFAULT_VENDOR_NAME;
@@ -204,6 +246,8 @@ wind_speed(風速(m/sec))、
           vendorCount2[i] = 0;
         }
         profilesPool.clear();
+        profilesRemain.clear();
+        enterCount = 0;
         leaveCount = 0;
 
       }
@@ -212,6 +256,7 @@ wind_speed(風速(m/sec))、
 
   void _everHours() {
     setState(() {
+      print("art _everHours askWeather");
       askWeather(town);
       loadAirReport();
     });
@@ -317,7 +362,7 @@ wind_speed(風速(m/sec))、
   Widget getClearuTitle() {
     List<Color> fieldColors = [enterCountColor , leaveCountColor, resideCountColor];
     var sum = vendorCount2.reduce((value, element) => value + element);
-    leaveCount = sum.toInt() - profilesRemain.length;
+    //leaveCount = sum.toInt() - profilesRemain.length;
     List<int> leftRow1Count = [ sum.toInt(), leaveCount,  profilesRemain.length];
 
     Widget title =  Table(

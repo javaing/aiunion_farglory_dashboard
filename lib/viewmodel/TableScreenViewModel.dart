@@ -30,31 +30,19 @@ const String leaveStr = '出場';
 
 //final List<String> workTypeTitle = ['點工', '板模', '水泥', '排水', '電氣', '吊臂', '砂石'];
 List<int> workTypeCount = [0, 0, 0, 0, 0, 0, 0];
-
-
 const Utf8Codec utf8 = Utf8Codec();
-
-
-
 final List<String> environTitle = ['空氣品質指標', '空氣污染指標物', '狀態', "一氧化碳", "PM10", "PM2.5", "風速"];
 List<String> environCount = ["", "", "", "", "", "", ""];
 List<String> environColor = ["green", "green", "green", "green", "green", "green", "green"];
-
-// List<String> vendorTitle = ['榮工處', '華雄營造', '大林組', '三重埔營造', '大肚營造', '金豪營造'];
-// List<int> vendorCount = [9, 20, 20, 20, 20, 10];
 final String DEFAULT_VENDOR_NAME = '承包商';
 final String VENDOR_NAME_OTHER = '其他';
-// List<String> vendorTitle2 = ['承包商', '承包商', '承包商', '承包商', '承包商', '承包商', '承包商', VENDOR_NAME_OTHER, '', ''];
-// List<double> vendorCount2 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 List<String> vendorTitle2 = [];
 List<double> vendorCount2 = [];
 
- final List<String> rightRowTitle = ['廠商A', '廠商B', '廠商C', '廠商D', '廠商E', '廠商F', '廠商G','廠商H'];
-// List<int> rightRowCount = [7, 8, 5, 6, 15, 35, 3, 5];
-
+final List<String> rightRowTitle = ['廠商A', '廠商B', '廠商C', '廠商D', '廠商E', '廠商F', '廠商G','廠商H'];
 List<String> workerImages = ['worker1.png', 'worker2.png', 'worker3.png', 'worker4.png', 'worker5.png'];
 List<String> workerNames = ['姜才藝','黃文柏','蘇銳思','沈立誠','徐涵暢','萬泰清','孫鵬翼','史俊雄','湯嘉石','秦承運','李文成','夏陽舒','袁經義','盧樂湛','謝俊材','段雨星','崔俊哲',];
-List<bool> boolList = [true, true, true, true]; //酒測 工地帽 背心 效期內,非黑名單
+List<bool> DEFAULT_BOOLLIST = [true, true, true, true]; //酒測 工地帽 背心 效期內,非黑名單
 List<bool> boolListDrink = [false, true, true, true];
 //List<bool> boolListHat = [true, false, true, true];
 List<bool> boolListBlack = [true, true, true, false];
@@ -77,98 +65,6 @@ enum DisplayMode {
 DisplayMode currentMode = DisplayMode.punch ; //差勤或清場
 late StompClient stomp;
 final dio = Dio();
-
-
-void askFaceDetail(int id, String action, Profile profile) async {
-  final response = await dio.get("http://$WS_SERVER/api/faces/$id");
-  //print(response);
-
-  FacesDetail apiFaces = facesDetailFromJson(response.toString());
-  var face = apiFaces.result;
-  if(face!=null) {
-    updateProfile(face);
-    if(action=="enter")
-      updateVendorCount(face, profile);
-  }
-}
-
-
-
-void updateProfile(Result face) {
-  String company = face.company?? "" ;
-  String title = face.title ?? "";
-  int autoid = face.autoid ?? 0;
-
-  print("art update company autoid=$autoid");
-
-  var ll = profilesPool.where((element) => (element.faceId==autoid));
-  if(ll.isNotEmpty) {
-    if(title.isNotEmpty) {
-      ll.last.profession = "$company-$title";
-    } else {
-      ll.last.profession = company;
-    }
-  }
-
-}
-
-// bool checkFaceId(int str, int autoid) {
-//   print("art update company element.faceId=$str");
-//   return int.parse( str ) == autoid;
-// }
-
-//還未離場又進場的人不用加1
-bool isExistRemain(int autoid) {
-  var ll = profilesRemain.where((element) => (element.faceId==autoid));
-  print("art isExistRemain =${ll.length}");
-  return ll.length>0;
-}
-
-void updateVendorCount(Result face, Profile profile) {
-  if(isExistRemain(face.autoid!)) {
-    print("art 還未離場又進場的人不用加1");
-    return;
-  }
-  enterCount++;
-  profilesRemain.add(profile);
-
-  //vendorDefault
-  String company = face.company?? "" ;
-  if(company.isEmpty) {
-    vendorCount2[ vendorCount2.length-1 ] = vendorCount2[ vendorCount2.length-1 ]+1; //other
-    return;
-  }
-  if(vendorTitle2.contains(company)) {
-    for (int i = 0; i <vendorTitle2.length ; i++) {
-      print("art find company  name=${vendorTitle2[i]}");
-      if(vendorTitle2[i]==company) {
-        vendorCount2[i] = vendorCount2[i]+1;
-        break;
-      }
-    }
-  } else {
-    //find first no default name
-    for (int i = 0; i <vendorTitle2.length ; i++) {
-      print("art find first no default name=${vendorTitle2[i]}");
-      if(vendorTitle2[i]==DEFAULT_VENDOR_NAME) {
-        vendorTitle2[i]=company; //該company首次紀錄到
-        vendorCount2[i] = vendorCount2[i]+1;
-        break;
-      }
-    }
-  }
-
-}
-
-
-
-extension BoolParsing on String {
-  bool parseBool() {
-    print("art 0419 check=${this.toLowerCase()}");
-    return this.toLowerCase() == 'true';
-  }
-}
-
 
 class TableScreenViewModel {
   
@@ -195,6 +91,9 @@ class TableScreenViewModel {
     stomp.deactivate();
   }
 
+
+
+
   void addSubscribe(String deviceID) {
     stomp.subscribe(destination: "/topic/capture/$deviceID", headers: {}, callback: (frame) {
 
@@ -214,7 +113,7 @@ class TableScreenViewModel {
   }
 
   bool isDuplicate(WebSocketFace face) {
-    print("art isDuplicate currentMode=${currentMode.name}");
+    //print("art isDuplicate currentMode=${currentMode.name}");
     return profilesPool.length>0 && isSameFace(profilesPool.last, face) && (currentMode == DisplayMode.punch);
   }
 
@@ -302,14 +201,16 @@ class TableScreenViewModel {
           p.action = leaveStr;
           profilesPool.add(p);
 
-          if(isExistRemain(p.faceId)) {
-            leaveCount = leaveCount+1;
+          //if(isExistRemain(p.faceId)) {
             var ll = profilesRemain.where((element) => element.faceId==p.faceId);
-            if(ll.isNotEmpty) {
+          print('art check remove p.faceId=' + p.faceId.toString() + " name=" + p.name + " ll size=" + ll.length.toString());
+            if(ll.length>0) {
+              leaveCount = leaveCount+1;
               Profile find = ll.first;
-              profilesRemain.remove(find);
+              var isSuiccess = profilesRemain.remove(find);
+              print('art remove is success='+isSuiccess.toString());
             }
-          }
+          //}
           break;
 
         default:
@@ -317,8 +218,8 @@ class TableScreenViewModel {
       }
     }
 
-    var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
-    leaveCount = filtered1.length;
+    //var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
+    //leaveCount = filtered1.length;
   }
 
   static String base64Decode(String data){
@@ -343,10 +244,13 @@ class TableScreenViewModel {
     String name = myName.replaceRange(1, 2, ' * ');
     //String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
     String vendor = VENDOR_NAME_OTHER;
+    List<bool> boolList = [true, false, false, true]; //酒測 工地帽 背心 效期內,非黑名單
     return Profile(name: name, profession: vendor, imageUrl:msg.imgUrl!, action: actionStr,  boolList: boolList, faceId: int.parse(msg.id!));
   }
 
   Future<Profile> genProfile2(WebSocketFace msg, String action) async {
+    List<bool> boolList = [true, false, false, true]; //酒測 工地帽 背心 效期內,非黑名單
+
     //轉成好讀
     String actionStr = enterStr;
     if(action=="leave") {
@@ -366,7 +270,7 @@ class TableScreenViewModel {
     int faceId = msg.face_id ?? 0;
     String imagePath = "http://$WS_SERVER${msg.photo!}";
     //imagePath = msg.photo_string!;
-    print("art profile path=$imagePath");
+    //print("art profile path=$imagePath");
 
     // TODO check helmet, vest by api -- start
     boolList[1] = false;
@@ -390,34 +294,69 @@ class TableScreenViewModel {
         }
       }
 
+      // Future<String?> checkHelmet(String imgBase64Str) async {
+      //   final String checkUrl = "http://" + HOST + "/image_in";
+      //   var map = new Map<String, dynamic>();
+      //   map['img'] = imgBase64Str;
+      //   var response = await http.post(Uri.parse(checkUrl), body: map);
+      //   if (response.statusCode == 200) {
+      //     return response.body;
+      //   } else {
+      //     print('art call $checkUrl fail! code: $response.statusCode');
+      //     return null;
+      //   }
+      // }
+
       //snapshot_uri
       //final imgBase64Str = await networkImageToBase64(imageUrl.toString());
-      //print(imgBase64Str);
+      //print('art snapshot=' + (msg.snapshot_uri ?? "") );
       var imgBase64Str =msg.photo_string;
       if(msg.snapshot_uri!=null && msg.snapshot_uri!.isNotEmpty) {
-        print(msg.snapshot_uri);
         if(msg.snapshot_uri!.startsWith("app/static")|| msg.snapshot_uri!.startsWith("/static")) {
-          var url = "http://" + msg.snapshot_uri!;
+          var path = msg.snapshot_uri?.replaceFirst("app/static", "/static");
+          var url = "http://$WS_SERVER$path";
+          print('art img1 url=$url');
           imgBase64Str = await networkImageToBase64(url);
+          imagePath = url;
         } else {
+          print('art img2');
           imgBase64Str = msg.snapshot_uri; // is already image string
+          imagePath = msg.snapshot_uri!;
         }
+
       }
+      print('art img3');
       if (imgBase64Str != null) {
-        final String checkUrl = "http://" + HOST + "/image_in";
-        var map = new Map<String, dynamic>();
-        map['img'] = imgBase64Str;
-        var response = await http.post(Uri.parse(checkUrl), body: map);
-        if (response.statusCode == 200) {
-          Map data = jsonDecode(response.body);
+        /*
+        art post fetch and set catch error
+        StackTrace #0      IOClient.send (package:http/src/io_client.dart:94:7)
+         <asynchronous suspension>
+        #3      TableScreenViewModel.genProfile2 (package:far_glory_construction_dashboard/viewmodel/TableScreenViewModel.dart:412:24)
+      <asynchronous suspension>
+         */
+          final String checkUrl = "http://" + HOST + "/image_in";
+          var map = new Map<String, dynamic>();
+          map['img'] = imgBase64Str;
+          var response = await http.post(Uri.parse(checkUrl), body: map);
+          Map data = jsonDecode(response.toString());
           print("art image_in=$data");
-          // print(boolList);
-          boolList[1] = data["helmet"];
-          boolList[2] = data["vest"];
-        } else {
-          print('art call $checkUrl fail! code: $response.statusCode');
-        }
+          if (data["code"] == 200) {
+            // print(boolList);
+            boolList[1] = data["helmet"];
+            boolList[2] = data["vest"];
+          } else {
+            print('art call $checkUrl fail! code: $response.statusCode');
+          }
+        //}
+        // var body = await checkHelmet(imgBase64Str);
+        // if (body != null) {
+        //   Map data = jsonDecode(body);
+        //   print("art image_in=$data");
+        //   boolList[1] = data["helmet"];
+        //   boolList[2] = data["vest"];
+        // }
       }
+
     } catch (e, s) {
       print('art post fetch and set catch error');
       print("Exception $e");
@@ -427,4 +366,103 @@ class TableScreenViewModel {
     return Profile(name: name, profession: vendor, imageUrl:imagePath, action: actionStr,  boolList: boolList, faceId: faceId);
   }
 
+}
+
+void askFaceDetail(int id, String action, Profile profile) async {
+  final response = await dio.get("http://$WS_SERVER/api/faces/$id");
+  //print(response);
+
+  FacesDetail apiFaces = facesDetailFromJson(response.toString());
+  var face = apiFaces.result;
+  if(face!=null) {
+    updateProfile(face);
+    if(action=="enter")
+      updateVendorCount(face, profile);
+  }
+}
+
+
+
+void updateProfile(Result face) {
+  String company = face.company?? "" ;
+  String title = face.title ?? "";
+  int autoid = face.autoid ?? 0;
+
+  //print("art update company autoid=$autoid");
+
+  var ll = profilesPool.where((element) => (element.faceId==autoid));
+  if(ll.isNotEmpty) {
+    if(title.isNotEmpty) {
+      ll.last.profession = "$company-$title";
+    } else {
+      ll.last.profession = company;
+    }
+  }
+
+}
+
+// bool checkFaceId(int str, int autoid) {
+//   print("art update company element.faceId=$str");
+//   return int.parse( str ) == autoid;
+// }
+
+//還未離場又進場的人不用加1
+bool isExistRemain(int autoid) {
+  var ll = profilesRemain.where((element) => (element.faceId==autoid));
+  print("art isExistRemain =${ll.length}");
+  return ll.length>0;
+}
+
+Future<void> saveEnterLeave() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setInt(PREF_KEY_ENTER_COUNT, enterCount);
+  prefs.setInt(PREF_KEY_LEAVE_COUNT, leaveCount);
+  prefs.setString(PREF_KEY_PROFILE_REMAIN, jsonEncode(profilesRemain));
+  print('art jsonEncode=' + jsonEncode(profilesRemain));
+}
+
+void updateVendorCount(Result face, Profile profile) {
+  if(isExistRemain(face.autoid!)) {
+    print("art 還未離場又進場的人不用加1");
+    return;
+  }
+  enterCount++;
+  profilesRemain.add(profile);
+  saveEnterLeave();
+
+  //vendorDefault
+  String company = face.company?? "" ;
+  if(company.isEmpty) {
+    vendorCount2[ vendorCount2.length-1 ] = vendorCount2[ vendorCount2.length-1 ]+1; //other
+    return;
+  }
+  if(vendorTitle2.contains(company)) {
+    for (int i = 0; i <vendorTitle2.length ; i++) {
+      print("art find company  name=${vendorTitle2[i]}");
+      if(vendorTitle2[i]==company) {
+        vendorCount2[i] = vendorCount2[i]+1;
+        break;
+      }
+    }
+  } else {
+    //find first no default name
+    for (int i = 0; i <vendorTitle2.length ; i++) {
+      print("art find first no default name=${vendorTitle2[i]}");
+      if(vendorTitle2[i]==DEFAULT_VENDOR_NAME) {
+        vendorTitle2[i]=company; //該company首次紀錄到
+        vendorCount2[i] = vendorCount2[i]+1;
+        break;
+      }
+    }
+  }
+
+}
+
+
+
+extension BoolParsing on String {
+  bool parseBool() {
+    print("art 0419 check=${this.toLowerCase()}");
+    return this.toLowerCase() == 'true';
+  }
 }
