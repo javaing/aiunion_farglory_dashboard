@@ -53,7 +53,7 @@ class ProfileWidget extends StatelessWidget {
   }
 
   Widget getAvatar() {
-    if(profile.action==leaveStr) {
+    if(profile.action==EASY_READ_LEAVE) {
       return avatarW();
     } else {
       // red or green check icon
@@ -89,7 +89,7 @@ class ProfileWidget extends StatelessWidget {
 
   Widget enterOrLeaveTag() {
     Color tagColor = enterCountColor;
-    if(profile.action==leaveStr) {
+    if(profile.action==EASY_READ_LEAVE) {
       tagColor = leaveCountColor;
     }
     return Center(child: Container(

@@ -3,7 +3,10 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:core';
 
+//import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+
 
 import '../Constants.dart';
 import '../datamodel/FacesDetail.dart';
@@ -27,8 +30,10 @@ final List<String> clearupTitle = ['進場人次','出場人次','滯留人數']
 //List<String> leftRow1Count = ["99","0","99"];
 int leaveCount = 0;
 int enterCount = 0;
-const String enterStr = '進場';
-const String leaveStr = '出場';
+List<int> enterName = [];
+List<int> leaveName = [];
+const String EASY_READ_ENTER = '進場';
+const String EASY_READ_LEAVE = '出場';
 
 //final List<String> workTypeTitle = ['點工', '板模', '水泥', '排水', '電氣', '吊臂', '砂石'];
 List<int> workTypeCount = [0, 0, 0, 0, 0, 0, 0];
@@ -38,15 +43,14 @@ List<String> environCount = ["", "", "", "", "", "", ""];
 List<String> environColor = ["green", "green", "green", "green", "green", "green", "green"];
 final String DEFAULT_VENDOR_NAME = '承包商';
 final String VENDOR_NAME_OTHER = '其他';
-List<String> vendorTitle2 = [];
-List<List<String>> vendorCount2 = [];
+//List<int> vendorFaceTypeId = [];
+//List<List<String>> vendorCount2 = [];
+List<Vendor> vendorList = [];
 
-final List<String> rightRowTitle = ['廠商A', '廠商B', '廠商C', '廠商D', '廠商E', '廠商F', '廠商G','廠商H'];
-List<String> workerImages = ['worker1.png', 'worker2.png', 'worker3.png', 'worker4.png', 'worker5.png'];
-List<String> workerNames = ['姜才藝','黃文柏','蘇銳思','沈立誠','徐涵暢','萬泰清','孫鵬翼','史俊雄','湯嘉石','秦承運','李文成','夏陽舒','袁經義','盧樂湛','謝俊材','段雨星','崔俊哲',];
+
+//List<String> workerNames = ['姜才藝','黃文柏','蘇銳思','沈立誠','徐涵暢','萬泰清','孫鵬翼','史俊雄','湯嘉石','秦承運','李文成','夏陽舒','袁經義','盧樂湛','謝俊材','段雨星','崔俊哲',];
 List<bool> DEFAULT_BOOLLIST = [true, true, true, true]; //酒測 工地帽 背心 效期內,非黑名單
 List<bool> boolListDrink = [false, true, true, true];
-//List<bool> boolListHat = [true, false, true, true];
 List<bool> boolListBlack = [true, true, true, false];
 
 
@@ -67,8 +71,12 @@ enum DisplayMode {
 DisplayMode currentMode = DisplayMode.punch ; //差勤或清場
 late StompClient stomp;
 final dio = Dio();
+//final assetsAudioPlayer = AssetsAudioPlayer();
+
 
 class TableScreenViewModel {
+
+
   
   TableScreenViewModel(BuildContext ctx) {
     var webSocketUrl = "ws://$WS_SERVER:$WS_PORT$WS_TOPIC";
@@ -87,14 +95,12 @@ class TableScreenViewModel {
     );
     stomp.activate();
 
+    //initTts();
   }
   
   deactivate() {
     stomp.deactivate();
   }
-
-
-
 
   void addSubscribe(String deviceID) {
     stomp.subscribe(destination: "/topic/capture/$deviceID", headers: {}, callback: (frame) {
@@ -136,7 +142,7 @@ class TableScreenViewModel {
         var diff = face.end_time! - profilesRemain[i].end_time;
         print('art isDuplicate ' + face.name! + " time diff=" + diff.toString() +" , 更新 profilesRemain[i].end_time");
         profilesRemain[i].end_time = face.end_time!;
-        if (diff< 15000) {
+        if (diff< 25000) {
           //but need update end_time
           print('art isDuplicate 15秒內 不給離場或新增');
           return true;
@@ -186,7 +192,7 @@ class TableScreenViewModel {
     // Profile p = genProfile2(face, action);
     // p.boolList = null;
     // addToPool(p, action);
-    print('art add pool :' + face.toString());
+    print('art add pool :' + (face.name ?? "") + ", " + face.type_id.toString());
     genProfile2(face, action).then((value) => {
       addToPool(value, action)
     });
@@ -194,7 +200,7 @@ class TableScreenViewModel {
   }
 
   bool isSameFace(Profile profile, WebSocketFace face) {
-    return profile.faceId == face.face_id && profilesPool.last.action == enterStr;
+    return profile.faceId == face.face_id && profilesPool.last.action == EASY_READ_ENTER;
   }
 
   cb(FarGloryMsg msg) {
@@ -221,28 +227,37 @@ class TableScreenViewModel {
         //   }
           break;
         case "enter":
-          askFaceDetail(p.faceId!, action, p);
+          askFaceDetail(p.faceId, action, p);
           profilesPool.add(p);
+          if(!enterName.contains(p.faceId)) {
+            enterName.add(p.faceId);
+          }
           // if(isExistRemain(p.faceId)) {
           //   print("art 還未離場又進場的人不用加 remain");
           //   break;
           // }
           // profilesRemain.add(p);
+          //playMP3('blacklist.mp3'); //for test
           break;
 
         case "leave":
-          askFaceDetail(p.faceId!, action, p);
-          p.action = leaveStr;
+          askFaceDetail(p.faceId, action, p);
+          p.action = EASY_READ_LEAVE;
           profilesPool.add(p);
+          leaveCount = leaveCount+1;
+          if(!leaveName.contains(p.faceId)) {
+            leaveName.add(p.faceId);
+          }
+          //playMP3('blacklist.mp3'); //for test
 
           //if(isExistRemain(p.faceId)) {
-            var ll = profilesRemain.where((element) => element.faceId==p.faceId);
+          var ll = profilesRemain.where((element) => element.faceId==p.faceId);
           print('art check remove p.faceId=' + p.faceId.toString() + " name=" + p.name + " ll size=" + ll.length.toString());
             if(ll.length>0) {
-              leaveCount = leaveCount+1;
+              //leaveCount = leaveCount+1;
               Profile find = ll.first;
               var isSuiccess = profilesRemain.remove(find);
-              print('art remove is success='+isSuiccess.toString());
+              print('art remove is success=$isSuiccess');
             }
           //}
           break;
@@ -265,13 +280,14 @@ class TableScreenViewModel {
   }
 
   Profile genProfile(FarGloryMsg msg) {
-    String actionStr = enterStr;
+    String actionStr = EASY_READ_ENTER;
     if(msg.action=="leave") {
-      actionStr = leaveStr;
+      actionStr = EASY_READ_LEAVE;
     }
     String myName;
     if(msg.name==null || msg.name!.isEmpty) {
-      myName = randomListItem(workerNames);
+      //myName = randomListItem(workerNames);
+      myName = "台灣第一勇";
     } else {
       myName = utf8.decode(msg.name!.codeUnits);
     }
@@ -279,21 +295,21 @@ class TableScreenViewModel {
     //String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
     String vendor = VENDOR_NAME_OTHER;
     List<bool> boolList = [true, false, false, true]; //酒測 工地帽 背心 效期內,非黑名單
-    return Profile(name: name, profession: vendor, imageUrl:msg.imgUrl!, action: actionStr,  boolList: boolList, faceId: int.parse(msg.id!), end_time: 0);
+    return Profile(name: name, profession: vendor, imageUrl:msg.imgUrl!, action: actionStr,  boolList: boolList, faceId: int.parse(msg.id!), end_time: 0, typeId:-1 );
   }
 
   Future<Profile> genProfile2(WebSocketFace msg, String action) async {
     List<bool> boolList = [true, false, false, true]; //酒測 工地帽 背心 效期內,非黑名單
 
     //轉成好讀
-    String actionStr = enterStr;
+    String actionStr = EASY_READ_ENTER;
     if(action=="leave") {
-      actionStr = leaveStr;
+      actionStr = EASY_READ_LEAVE;
     }
 
     String myName;
     if(msg.name==null || msg.name!.isEmpty) {
-      myName = randomListItem(workerNames);
+      myName = "台灣第一勇";
     } else {
       //myName = utf8.decode(msg.name!.codeUnits);
       myName = msg.name!;
@@ -302,7 +318,7 @@ class TableScreenViewModel {
     //String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
     String vendor = VENDOR_NAME_OTHER;
     int faceId = msg.face_id ?? 0;
-    String imagePath = "http://$WS_SERVER${msg.photo!}";
+    String imagePath = getFullImageUrl(msg.photo!);
     //imagePath = msg.photo_string!;
     //print("art profile path=$imagePath");
 
@@ -345,19 +361,21 @@ class TableScreenViewModel {
 
       //snapshot_uri
       //final imgBase64Str = await networkImageToBase64(imageUrl.toString());
-      //print('art snapshot=' + (msg.snapshot_uri ?? "") );
+      String snapshotUrl = (msg.snapshot_uri ?? "");
+      print('art snapshot=' + snapshotUrl );
       //var imgBase64Str =msg.photo_string;
-      if(msg.snapshot_uri!=null && msg.snapshot_uri!.isNotEmpty) {
-        if(msg.snapshot_uri!.startsWith("app/static")|| msg.snapshot_uri!.startsWith("/static")) {
-          var path = msg.snapshot_uri?.replaceFirst("app/static", "/static");
-          var url = "http://$WS_SERVER$path";
+      if(snapshotUrl!.isNotEmpty) {
+        if(snapshotUrl.startsWith("app/static")|| snapshotUrl.startsWith("/static")) {
+          //var path = snapshotUrl.replaceFirst("app/static", "/static");
+          //var url = "http://$WS_SERVER$path";
+          var url = getFullImageUrl(snapshotUrl);
           print('art img1 url=$url');
           //imgBase64Str = await networkImageToBase64(url);
           imagePath = url;
         } else {
           //imgBase64Str = msg.snapshot_uri; // is already image string
-          imagePath = msg.snapshot_uri!;
-          print('art img2 url='+ imagePath);
+          imagePath = snapshotUrl;
+          print('art img2 url=$imagePath');
         }
 
       }
@@ -400,7 +418,7 @@ class TableScreenViewModel {
     }
 
     // TODO check helmet, vest by api -- end
-    return Profile(name: name, profession: vendor, imageUrl:imagePath, action: actionStr,  boolList: boolList, faceId: faceId, end_time: msg.end_time!);
+    return Profile(name: name, profession: vendor, imageUrl:imagePath, action: actionStr,  boolList: boolList, faceId: faceId, end_time: msg.end_time!, typeId:-1);
   }
 
 }
@@ -429,6 +447,7 @@ void updateProfile(Result face) {
 
   var ll = profilesPool.where((element) => (element.faceId==autoid));
   if(ll.isNotEmpty) {
+    ll.last.typeId = face.typeId ?? -1;
     if(title.isNotEmpty) {
       ll.last.profession = "$company-$title";
     } else {
@@ -451,59 +470,102 @@ bool isExistRemain(int autoid) {
 }
 
 Future<void> saveEnterLeave() async {
+  //print('art debug vendorList=' + vendorList.toList().toString());
   SharedPreferences prefs = await SharedPreferences.getInstance();
   prefs.setInt(PREF_KEY_ENTER_COUNT, enterCount);
   prefs.setInt(PREF_KEY_LEAVE_COUNT, leaveCount);
   prefs.setString(PREF_KEY_PROFILE_REMAIN, jsonEncode(profilesRemain));
+  prefs.setString(PREF_KEY_VENDOR , jsonEncode(vendorList));
+  prefs.setString(PREF_KEY_ENTER_UNIQUE_NAME , jsonEncode(enterName.toList()));
+  prefs.setString(PREF_KEY_LEAVE_UNIQUE_NAME , jsonEncode(leaveName.toList()));
   //print('art jsonEncode=' + jsonEncode(profilesRemain));
 }
 
+List<String> addUnique(List<String> list)  {
+  var seen = Set<String>();
+  return list.where((ele) => seen.add(ele)).toList();
+}
+
+
+/*
+各別供應商人"數"：
+  4.清單異動時，要修改顯示順序，數字大的在前面
+    4-1.當供應商小於等於8時,最大顯示八個(排序先人數降冪，在faceTypeId升冪)
+    4-2.當供應商大於8時,顯示前七大(排序先人數降冪，在faceTypeId升冪)，超過7者
+      ，全部加在一起顯示其他
+ */
 void updateVendorCount(Result face, Profile profile) {
   if(isExistRemain(face.autoid!)) {
     print("art 還未離場又進場的人不用加1");
+    playMP3('blacklist.mp3');
     return;
   }
   enterCount++;
   profilesRemain.add(profile);
   saveEnterLeave();
 
-  //vendorDefault
-  String company = face.company?? "" ;
-  if(company.isEmpty) {
-    //vendorCount2[ vendorCount2.length-1 ] = vendorCount2[ vendorCount2.length-1 ]+1; //other
-    List<String> ll =  vendorCount2[ vendorCount2.length-1 ];
-    ll.add(profile.name);
-    vendorCount2[ vendorCount2.length-1 ] = ll;
-    return;
-  }
-  if(vendorTitle2.contains(company)) {
-    for (int i = 0; i <vendorTitle2.length ; i++) {
-      print("art find company  name=${vendorTitle2[i]}");
-      if(vendorTitle2[i]==company) {
-        //vendorCount2[i] = vendorCount2[i]+1;
-        List<String> ll =  vendorCount2[i];
-        ll.add(profile.name);
-        vendorCount2[i] = ll;
-        break;
-      }
-    }
+  print('art 0523 find vendor typeid:' + face.typeId.toString() + ", company="+ face.company! );
+  var find = vendorList.where((f) => f.faceTypeId==face.typeId).toList();
+  if(find.isEmpty) {
+    //print('art 0523 find vendor  add new');
+    List<int> workerNames = [];
+    workerNames.add(face.autoid!);
+    Vendor v = Vendor(faceTypeId: face.typeId ?? -1, name: face.company ?? "", worker: workerNames);
+    vendorList.add(v);
   } else {
-    //find first no default name
-    for (int i = 0; i <vendorTitle2.length ; i++) {
-      print("art find first no default name=${vendorTitle2[i]}");
-      if(vendorTitle2[i]==DEFAULT_VENDOR_NAME) {
-        vendorTitle2[i]=company; //該company首次紀錄到
-        //vendorCount2[i] = vendorCount2[i]+1;
-        List<String> ll =  vendorCount2[i];
-        ll.add(profile.name);
-        vendorCount2[i] = ll;
-        break;
-      }
+    Vendor v = find.first;
+    if(!v.worker.contains(face.autoid) ) {
+      v.worker.add(face.autoid!);
     }
+    vendorList[vendorList.indexWhere((element) => element.faceTypeId == face.typeId)] = v;
   }
+  vendorList.sort((a, b) => b.worker.length.compareTo(a.worker.length));
+  print('art 0523 find vendor  sorted ${jsonEncode(vendorList)}' );
+
+  //String company = face.company?? "" ;
+  // if(company.isEmpty) {
+  //   //vendorCount2[ vendorCount2.length-1 ] = vendorCount2[ vendorCount2.length-1 ]+1; //other
+  //   List<String> ll =  vendorCount2[ vendorCount2.length-1 ];
+  //   ll.add(profile.name);
+  //   vendorCount2[ vendorCount2.length-1 ] = addUnique(ll);
+  //   return;
+  // }
+  // if(vendorTitle2.contains(company)) {
+  //   for (int i = 0; i <vendorTitle2.length ; i++) {
+  //     //print("art find company  name=${vendorTitle2[i]}");
+  //     if(vendorTitle2[i]==company) {
+  //       //vendorCount2[i] = vendorCount2[i]+1;
+  //       List<String> ll =  vendorCount2[i];
+  //       ll.add(profile.name);
+  //       vendorCount2[i] = addUnique(ll);
+  //       break;
+  //     }
+  //   }
+  // } else {
+  //   //find first no default name
+  //   for (int i = 0; i <vendorTitle2.length ; i++) {
+  //     print("art find first no default name=${vendorTitle2[i]}");
+  //     if(vendorTitle2[i]==DEFAULT_VENDOR_NAME) {
+  //       vendorTitle2[i]=company; //該company首次紀錄到
+  //       //vendorCount2[i] = vendorCount2[i]+1;
+  //       List<String> ll =  vendorCount2[i];
+  //       ll.add(profile.name);
+  //       vendorCount2[i] = addUnique(ll);
+  //       break;
+  //     }
+  //   }
+  // }
 
 }
 
+void playMP3(String filename) {
+  // assetsAudioPlayer.open(
+  //   Audio("audios/$filename"),
+  // );
+
+  FlutterRingtonePlayer.play(fromAsset: "audios/$filename");
+  //FlutterRingtonePlayer.playNotification();
+}
 
 extension BoolParsing on String {
   bool parseBool() {

@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../Constants.dart';
+
 
 void showMsg(BuildContext context,String msg) {
   showDialog(
@@ -119,4 +121,42 @@ List<String> toStringList(List<int> intList) {
 T randomListItem<T>(List<T> lst) {
   Random rnd = Random();
   return lst[rnd.nextInt(lst.length)];
+}
+
+String getFullImageUrl(String url) {
+  var path = url.replaceFirst("app/static", "/static");
+  return "http://$WS_SERVER$path";
+}
+
+List<bool> dynamicToListBool(List<dynamic> dd) {
+  List<bool> lb = [];
+  for(int i=0;i<dd.length; i++) {
+    lb.add(dd[i] as bool);
+  }
+  return lb;
+}
+
+List<String> dynamicToListString(List<dynamic> dd) {
+  List<String> ls = [];
+  for(int i=0;i<dd.length; i++) {
+    ls.add(dd[i] as String);
+  }
+  return ls;
+}
+
+List<int> dynamicToListInt(List<dynamic> dd) {
+  List<int> li = [];
+  for(int i=0;i<dd.length; i++) {
+    li.add(dd[i] as int);
+  }
+  return li;
+}
+
+Set<String> dynamicToSetString(List<dynamic> dd) {
+  Set<String> ss = {};
+  for(int i=0;i<dd.length; i++) {
+    //print('art add set conatin('+ dd[i] +')'+  ss.contains(dd[i]).toString() );
+    ss.add(dd[i] as String);
+  }
+  return ss;
 }

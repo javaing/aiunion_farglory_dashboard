@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:collection';
 
 import 'package:far_glory_construction_dashboard/datamodel/AirCondition.dart';
 import 'package:far_glory_construction_dashboard/util/UIUtil.dart';
 import 'package:far_glory_construction_dashboard/view/Setting.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async' show Future;
@@ -58,25 +60,161 @@ class _TableScreenState extends State<TableScreen> {
   String weatherText = "";
   String WxString="", ATString = "";
 
+  // late FlutterTts flutterTts;
+  // String? language;
+  // String? engine;
+  // double volume = 0.5;
+  // double pitch = 1.0;
+  // double rate = 0.5;
+  // bool isCurrentLanguageInstalled = false;
+
+  //String _newVoiceText = "你好";
+  //int? _inputLength;
+
+  // TtsState ttsState = TtsState.stopped;
+  //
+  // get isPlaying => ttsState == TtsState.playing;
+  // get isStopped => ttsState == TtsState.stopped;
+  // get isPaused => ttsState == TtsState.paused;
+  // get isContinued => ttsState == TtsState.continued;
+
+  // bool get isIOS => !kIsWeb && Platform.isIOS;
+  // bool get isAndroid => !kIsWeb && Platform.isAndroid;
+  // bool get isWindows => !kIsWeb && Platform.isWindows;
+  // bool get isWeb => kIsWeb;
+  //bool isAndroid = true;
+
+
+  // initTts() {
+  //   flutterTts = FlutterTts();
+  //
+  //   _setAwaitOptions();
+  //
+  //   if (isAndroid) {
+  //     _getDefaultEngine();
+  //     _getDefaultVoice();
+  //   }
+  //
+  //   flutterTts.setStartHandler(() {
+  //     setState(() {
+  //       print("Playing");
+  //       ttsState = TtsState.playing;
+  //     });
+  //   });
+  //
+  //   if (isAndroid) {
+  //     flutterTts.setInitHandler(() {
+  //       setState(() {
+  //         print("TTS Initialized");
+  //       });
+  //     });
+  //   }
+  //
+  //   flutterTts.setCompletionHandler(() {
+  //     setState(() {
+  //       print("Complete");
+  //       ttsState = TtsState.stopped;
+  //     });
+  //   });
+  //
+  //   flutterTts.setCancelHandler(() {
+  //     setState(() {
+  //       print("Cancel");
+  //       ttsState = TtsState.stopped;
+  //     });
+  //   });
+  //
+  //   flutterTts.setPauseHandler(() {
+  //     setState(() {
+  //       print("Paused");
+  //       ttsState = TtsState.paused;
+  //     });
+  //   });
+  //
+  //   flutterTts.setContinueHandler(() {
+  //     setState(() {
+  //       print("Continued");
+  //       ttsState = TtsState.continued;
+  //     });
+  //   });
+  //
+  //   flutterTts.setErrorHandler((msg) {
+  //     setState(() {
+  //       print("error: $msg");
+  //       ttsState = TtsState.stopped;
+  //     });
+  //   });
+  // }
+
+  // Future<dynamic> _getLanguages() async => await flutterTts.getLanguages;
+  //
+  // Future<dynamic> _getEngines() async => await flutterTts.getEngines;
+  //
+  // Future _getDefaultEngine() async {
+  //   var engine = await flutterTts.getDefaultEngine;
+  //   if (engine != null) {
+  //     print(engine);
+  //   }
+  // }
+  //
+  // Future _getDefaultVoice() async {
+  //   var voice = await flutterTts.getDefaultVoice;
+  //   if (voice != null) {
+  //     print(voice);
+  //   }
+  // }
+  //
+  // Future _speak() async {
+  //   await flutterTts.setVolume(volume);
+  //   await flutterTts.setSpeechRate(rate);
+  //   await flutterTts.setPitch(pitch);
+  //
+  //   if (_newVoiceText != null) {
+  //     if (_newVoiceText!.isNotEmpty) {
+  //       await flutterTts.speak(_newVoiceText!);
+  //     }
+  //   }
+  // }
+  //
+  // Future _setAwaitOptions() async {
+  //   await flutterTts.awaitSpeakCompletion(true);
+  // }
+  //
+  // Future _stop() async {
+  //   var result = await flutterTts.stop();
+  //   if (result == 1) setState(() => ttsState = TtsState.stopped);
+  // }
+  //
+  // Future _pause() async {
+  //   var result = await flutterTts.pause();
+  //   if (result == 1) setState(() => ttsState = TtsState.paused);
+  // }
+  //
+  // @override
+  // void dispose() {
+  //   super.dispose();
+  //   flutterTts.stop();
+  // }
 
 
   @override
   void initState() {
     //init vendor
-    for(int i=0;i<12; i++) {
-      vendorTitle2.add(DEFAULT_VENDOR_NAME);
-      vendorCount2.add([]);
-    }
-    vendorTitle2[vendorTitle2.length-1]=VENDOR_NAME_OTHER;
+    // for(int i=0;i<12; i++) {
+    //   vendorFaceTypeId.add(-1);
+    //   //vendorCount2.add([]);
+    // }
+    //vendorTitle2[vendorTitle2.length-1]=VENDOR_NAME_OTHER;
+    //initTts();
 
     _pic = Image.asset('images/weather1.png', width:100, height:100);
-    //_pic = loadUrlImage("https://www.cwb.gov.tw/V8/assets/img/weather_icons/weathers/svg_icon/day/01.svg",90);
     super.initState();
     loadPref();
     loadWeatherPicData();
     askWeather(town);
     loadAirReport();
     loadToday();
+
 
     _timeString = formatDateTime(DateTime.now());
     _timerSecond =
@@ -118,6 +256,7 @@ class _TableScreenState extends State<TableScreen> {
     _timerMinute.cancel();
   }
 
+  String environUpdateTime = "";
   void loadAirReport() async {
     var url = "https://data.epa.gov.tw/api/v2/aqx_p_432?api_key=e8dd42e6-9b8b-43f8-991e-b3dee723a52d&limit=1000&sort=ImportDate%20desc&format=JSON";
     var response = await dio.get(url);
@@ -132,14 +271,16 @@ class _TableScreenState extends State<TableScreen> {
         environCount[0] = find.first.aqi!;
         environCount[1] = find.first.pollutant!;
         environCount[2] = find.first.status!;
-        environCount[3] = find.first.co! + " (ppm)";
-        environCount[4] = find.first.pm10! + " (μg/m3)";
-        environCount[5] = find.first.pm25! +" (μg/m3)";
-        environCount[6] = find.first.wind_speed! + " (m/sec)";
+        environCount[3] = "${find.first.co!} (ppm)";
+        environCount[4] = "${find.first.pm10!} (μg/m3)";
+        environCount[5] = "${find.first.pm25!} (μg/m3)";
+        environCount[6] = "${find.first.wind_speed!} (m/sec)";
 
         if(environCount[2]=="普通") {
           environColor[2] = "yellow";
         }
+        environUpdateTime = find.first.publishtime ?? "";
+        environUpdateTime = "${environUpdateTime.replaceAll(":00:00", ":00")} 更新";
       }
       /*
       aqi(空氣品質指標)、
@@ -178,6 +319,8 @@ wind_speed(風速(m/sec))、
   void loadToday() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
+    playMP3('blacklist.mp3');
+
     setState(() {
       if(prefs==null) {
         print("art 0511 loadPref not ready");
@@ -187,15 +330,38 @@ wind_speed(風速(m/sec))、
       leaveCount = prefs.getInt(PREF_KEY_LEAVE_COUNT) ?? 0;
       String jsonStr = prefs.getString(PREF_KEY_PROFILE_REMAIN) ?? "";
       if(jsonStr!=null && jsonStr.isNotEmpty) {
-        //profilesRemain = jsonDecode(prefs.getString(PREF_KEY_PROFILE_REMAIN)!);
-        List<dynamic> dd = jsonDecode(prefs.getString(PREF_KEY_PROFILE_REMAIN)!);
+        List<dynamic> dd = jsonDecode(jsonStr);
         for(int i=0; i<dd.length; i++) {
           profilesRemain.add(Profile.fromJson(dd[i]));
         }
-        print("art 0522 loadPref Profile success!");
       }
+
+      jsonStr = prefs.getString(PREF_KEY_VENDOR) ?? "";
+      if(jsonStr!=null && jsonStr.isNotEmpty) {
+        List<dynamic> dd = jsonDecode(jsonStr);
+        for(int i=0; i<dd.length; i++) {
+          vendorList.add(Vendor.fromJson(dd[i]));
+        }
+      }
+
+      jsonStr = prefs.getString(PREF_KEY_ENTER_UNIQUE_NAME) ?? "";
+      if(jsonStr!=null && jsonStr.isNotEmpty) {
+        enterName = dynamicToListInt( jsonDecode(jsonStr) );
+        //print("art 0511 load enterName=$enterName");
+      }
+
+      jsonStr = prefs.getString(PREF_KEY_LEAVE_UNIQUE_NAME) ?? "";
+      if(jsonStr!=null && jsonStr.isNotEmpty) {
+        leaveName = dynamicToListInt( jsonDecode(jsonStr) );
+        //print("art 0511 load leaveName=$leaveName");
+      }
+
+      //_speak();
     });
 
+    // for(int i=0; i<profilesRemain.length; i++) {
+    //   print('art 0524 Remain ' +profilesRemain[i].name + " " + profilesRemain[i].typeId.toString());
+    // }
   }
 
   void resetToday() async {
@@ -209,6 +375,8 @@ wind_speed(風速(m/sec))、
       prefs.setInt(PREF_KEY_ENTER_COUNT, 0) ;
       prefs.setInt(PREF_KEY_LEAVE_COUNT,0) ;
       prefs.setString(PREF_KEY_PROFILE_REMAIN, "");
+      prefs.setString(PREF_KEY_ENTER_UNIQUE_NAME , "");
+      prefs.setString(PREF_KEY_LEAVE_UNIQUE_NAME , "");
     });
 
   }
@@ -229,6 +397,21 @@ wind_speed(風速(m/sec))、
     }
   }
 
+  void resetData() {
+    askWeather(town);
+    resetToday();
+    currentMode = DisplayMode.punch;
+    vendorList.clear();
+    // for (int i = 0; i <vendorFaceTypeId.length ; i++) {
+    //   vendorFaceTypeId[i]=-1;
+    // }
+    //vendorCount2 = [];
+    profilesPool.clear();
+    profilesRemain.clear();
+    enterCount = 0;
+    leaveCount = 0;
+  }
+
   void _getMinutes() {
     setState(() {
       String hhmm = getHHMM();
@@ -236,21 +419,7 @@ wind_speed(風速(m/sec))、
       if(hhmm == clearTime) { //清場
         currentMode = DisplayMode.clearup;
       } else if(hhmm == resetTime){ //歸零
-        askWeather(town);
-        resetToday();
-        currentMode = DisplayMode.punch;
-        for (int i = 0; i <vendorTitle2.length ; i++) {
-          vendorTitle2[i]=DEFAULT_VENDOR_NAME;
-        }
-        for (int i = 0; i <vendorCount2.length ; i++) {
-          vendorCount2[i]=[];
-        }
-        //vendorCount2 = [];
-        profilesPool.clear();
-        profilesRemain.clear();
-        enterCount = 0;
-        leaveCount = 0;
-
+        resetData();
       }
     });
   }
@@ -345,7 +514,17 @@ wind_speed(風速(m/sec))、
     List<Color> fieldColors = [enterCountColor , leaveCountColor,resideCountColor];
     //var sum = vendorCount2.reduce((value, element) => value + element);
     //List<int> leftRow1Count = [ sum.toInt(), leaveCount, (sum-leaveCount).toInt()];
-    List<int> leftRow1Count = [ enterCount, leaveCount, profilesRemain.length];
+    //List<int> leftRow1Count = [ enterCount, leaveCount, profilesRemain.length];
+    // int sum =0;
+    // for(int j=0; j<vendorList.length; j++) {
+    //   sum += vendorList[j].worker.length;
+    // }
+    //for Peter
+    //List<String> leftRow1Count = [ enterCount.toString(), leaveCount.toString(),  profilesRemain.length.toString()];
+
+
+    int remainNum = profilesRemain.where((element) => element.typeId>0).length;
+    List<String> leftRow1CountNew = [ "$enterCount (${enterName.length})", "$leaveCount (${leaveName.length})",  remainNum.toString() ];
 
     return Table(
         border: TableBorder.all(
@@ -354,7 +533,7 @@ wind_speed(風速(m/sec))、
         ),
         children: [
           genTableRowWithColor(leftRow1Title, fieldColors, heightRowBody*0.2, Top2_TEXT_SIZE),
-          genTableRowWithColor(toStringList(leftRow1Count), fieldColors, heightRowBody*0.42, Top2_NUMBER_SIZE )
+          genTableRowWithColor(leftRow1CountNew, fieldColors, heightRowBody*0.42, Top2_NUMBER_SIZE )
         ]
     );
 
@@ -364,11 +543,13 @@ wind_speed(風速(m/sec))、
     List<Color> fieldColors = [enterCountColor , leaveCountColor, resideCountColor];
     //var sum = vendorCount2.reduce((value, element) => value + element);
     int sum =0;
-    for(int i=0; i<vendorCount2.length; i++) {
-      sum += vendorCount2[i].length;
+    for(int j=0; j<vendorList.length; j++) {
+      sum += vendorList[j].worker.length;
     }
     //leaveCount = sum.toInt() - profilesRemain.length;
-    List<int> leftRow1Count = [ sum, leaveCount,  profilesRemain.length];
+    //List<int> leftRow1Count = [ sum, leaveCount,  profilesRemain.length];
+    List<String> leftRow1CountNew = [ "$sum/${enterName.length}", "$leaveCount/${leaveName.length}",  profilesRemain.length.toString() ];
+
 
     Widget title =  Table(
         border: TableBorder.all(
@@ -377,7 +558,7 @@ wind_speed(風速(m/sec))、
         ),
         children: [
           genTableRowWithColor(clearupTitle, fieldColors, heightRowBody*0.2, Top2_TEXT_SIZE),
-          genTableRowWithColor(toStringList(leftRow1Count), fieldColors, heightRowBody*0.42, Top2_NUMBER_SIZE )
+          genTableRowWithColor(leftRow1CountNew, fieldColors, heightRowBody*0.42, Top2_NUMBER_SIZE )
         ]
     );
 
@@ -426,15 +607,72 @@ wind_speed(風速(m/sec))、
   }
 
   Widget getMiddleLeft(double h) {
+    Widget bigNumber = getBigNumberRow();
+
     double rowHeight = heightRowBody / 5;
+
+    List<int> vendorFaceTypeId = [];
+    for(int i=0; i<12; i++) {
+      vendorFaceTypeId.add(-1);
+    }
+    for(int i=0; i<vendorList.length; i++) {
+      vendorFaceTypeId[i] = vendorList[i].faceTypeId;
+    }
+
+    List<String> vendorTitle2 = [];
+    List<String> vendorCount2 = [];
+    String other_count = "";
+
+    //print('art 0524 bigNumber start');
+
+    for(int i=0; i<vendorFaceTypeId.length; i++) {
+      var name = "";
+      var countStr = "";
+      if(vendorFaceTypeId[i] == -1) {
+        name = DEFAULT_VENDOR_NAME;
+        countStr = "0";
+      } else {
+        var filter = profilesRemain.where((element) => element.typeId==vendorFaceTypeId[i]);
+         // for(int filterI=0; filterI< filter.length; filterI++) {
+         //   print('art 0525 filter ['+ i.toString()  +']=' + filter.toList()[filterI].name + ", " + filter.toList()[filterI].typeId.toString());
+         // }
+
+        name = vendorList[i].name;
+        countStr = " ${filter.length} (${vendorList[i].worker.toSet().length})";
+        if(name.isEmpty) name = VENDOR_NAME_OTHER;
+        if(name == VENDOR_NAME_OTHER) {
+          other_count = countStr;
+          continue;
+        }
+
+      }
+      vendorTitle2.add(name);
+      vendorCount2.add(countStr);
+    }
+    //若有 '其他' 放最後
+    if(other_count.isNotEmpty) {
+      vendorTitle2.add(VENDOR_NAME_OTHER);
+      vendorCount2.add(other_count);
+    }
+
+    //print('art 0524 bigNumber end');
+    // vendorCount2[0] = "20";
+    // vendorCount2[1] = "20";
+    // vendorCount2[2] = "15";
+    // vendorCount2[3] = "15";
+    // vendorCount2[4] = "10";
+    // vendorCount2[5] = "5";
+    // vendorCount2[6] = "5";
+    // vendorCount2[11] = "5";
+
 
     List<List<String>> dataList = List.generate(4, (index) =>
     [vendorTitle2[index],
-      vendorCount2[index].length.toString(),
+      vendorCount2[index].toString(),
       vendorTitle2[index+4],
-      vendorCount2[index+4].length.toString(),
+      vendorCount2[index+4].toString(),
       vendorTitle2[index+8],
-      vendorCount2[index+8].length.toString(),
+      vendorCount2[index+8].toString(),
     ]
     ) ;
     Widget tab = EnviromentTable(height: rowHeight, data: dataList, fontSize: 36,);
@@ -443,7 +681,7 @@ wind_speed(風速(m/sec))、
         height: h,
         child: Column(
           children: [
-            getBigNumberRow(),
+            bigNumber,
             const SizedBox(height: 10,),
             tab
           ],
@@ -479,8 +717,19 @@ wind_speed(風速(m/sec))、
         padding: const EdgeInsets.only(left:20, bottom: 0, right: 0, top:0),
         child: Column(
       children: [
-        textSetHeightBold2('環境資訊', 55, 200),
+        textSetHeightBold2('環境資訊', 40, 200),
         EnviromentTable(height: hh, data: dataList, fontSize: 32,),
+        //textSetHeightBold2(environUpdateTime, 25, 200),
+        Align(alignment: Alignment.centerRight, child: Text(
+          environUpdateTime,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            //fontWeight: FontWeight.bold,
+          )
+          ,)
+
+        ),
       ],
     )
     ));
@@ -705,7 +954,7 @@ wind_speed(風速(m/sec))、
             txt,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 28,
+              fontSize: 30,
               fontWeight: FontWeight.bold,
             ),
           ),
