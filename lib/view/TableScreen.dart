@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 
 import '../Constants.dart';
 import '../datamodel/Profile.dart';
+import '../datamodel/ServerFaceType.dart';
 import '../datamodel/Weather36Hr.dart';
 import '../datamodel/WebSocketFace.dart';
 import '../util/MarqueeWidget.dart';
@@ -22,6 +23,7 @@ import '../viewmodel/TableScreenViewModel.dart';
 import 'EnviromentTable.dart';
 import 'ProfileWidget.dart';
 import 'TableScreenVideo.dart';
+import 'package:dio/dio.dart';
 
 class TableScreen extends StatefulWidget {
   const TableScreen({super.key});
@@ -42,8 +44,6 @@ class _TableScreenState extends State<TableScreen> {
   late Timer _timerMinute;
   late Timer _timerHours;
   late String aa = headerNews;
-  String clearTime = "";
-  String resetTime = "";
   late Widget _pic;
   String town = "桃園區";
 
@@ -60,161 +60,19 @@ class _TableScreenState extends State<TableScreen> {
   String weatherText = "";
   String WxString="", ATString = "";
 
-  // late FlutterTts flutterTts;
-  // String? language;
-  // String? engine;
-  // double volume = 0.5;
-  // double pitch = 1.0;
-  // double rate = 0.5;
-  // bool isCurrentLanguageInstalled = false;
-
-  //String _newVoiceText = "你好";
-  //int? _inputLength;
-
-  // TtsState ttsState = TtsState.stopped;
-  //
-  // get isPlaying => ttsState == TtsState.playing;
-  // get isStopped => ttsState == TtsState.stopped;
-  // get isPaused => ttsState == TtsState.paused;
-  // get isContinued => ttsState == TtsState.continued;
-
-  // bool get isIOS => !kIsWeb && Platform.isIOS;
-  // bool get isAndroid => !kIsWeb && Platform.isAndroid;
-  // bool get isWindows => !kIsWeb && Platform.isWindows;
-  // bool get isWeb => kIsWeb;
-  //bool isAndroid = true;
-
-
-  // initTts() {
-  //   flutterTts = FlutterTts();
-  //
-  //   _setAwaitOptions();
-  //
-  //   if (isAndroid) {
-  //     _getDefaultEngine();
-  //     _getDefaultVoice();
-  //   }
-  //
-  //   flutterTts.setStartHandler(() {
-  //     setState(() {
-  //       print("Playing");
-  //       ttsState = TtsState.playing;
-  //     });
-  //   });
-  //
-  //   if (isAndroid) {
-  //     flutterTts.setInitHandler(() {
-  //       setState(() {
-  //         print("TTS Initialized");
-  //       });
-  //     });
-  //   }
-  //
-  //   flutterTts.setCompletionHandler(() {
-  //     setState(() {
-  //       print("Complete");
-  //       ttsState = TtsState.stopped;
-  //     });
-  //   });
-  //
-  //   flutterTts.setCancelHandler(() {
-  //     setState(() {
-  //       print("Cancel");
-  //       ttsState = TtsState.stopped;
-  //     });
-  //   });
-  //
-  //   flutterTts.setPauseHandler(() {
-  //     setState(() {
-  //       print("Paused");
-  //       ttsState = TtsState.paused;
-  //     });
-  //   });
-  //
-  //   flutterTts.setContinueHandler(() {
-  //     setState(() {
-  //       print("Continued");
-  //       ttsState = TtsState.continued;
-  //     });
-  //   });
-  //
-  //   flutterTts.setErrorHandler((msg) {
-  //     setState(() {
-  //       print("error: $msg");
-  //       ttsState = TtsState.stopped;
-  //     });
-  //   });
-  // }
-
-  // Future<dynamic> _getLanguages() async => await flutterTts.getLanguages;
-  //
-  // Future<dynamic> _getEngines() async => await flutterTts.getEngines;
-  //
-  // Future _getDefaultEngine() async {
-  //   var engine = await flutterTts.getDefaultEngine;
-  //   if (engine != null) {
-  //     print(engine);
-  //   }
-  // }
-  //
-  // Future _getDefaultVoice() async {
-  //   var voice = await flutterTts.getDefaultVoice;
-  //   if (voice != null) {
-  //     print(voice);
-  //   }
-  // }
-  //
-  // Future _speak() async {
-  //   await flutterTts.setVolume(volume);
-  //   await flutterTts.setSpeechRate(rate);
-  //   await flutterTts.setPitch(pitch);
-  //
-  //   if (_newVoiceText != null) {
-  //     if (_newVoiceText!.isNotEmpty) {
-  //       await flutterTts.speak(_newVoiceText!);
-  //     }
-  //   }
-  // }
-  //
-  // Future _setAwaitOptions() async {
-  //   await flutterTts.awaitSpeakCompletion(true);
-  // }
-  //
-  // Future _stop() async {
-  //   var result = await flutterTts.stop();
-  //   if (result == 1) setState(() => ttsState = TtsState.stopped);
-  // }
-  //
-  // Future _pause() async {
-  //   var result = await flutterTts.pause();
-  //   if (result == 1) setState(() => ttsState = TtsState.paused);
-  // }
-  //
-  // @override
-  // void dispose() {
-  //   super.dispose();
-  //   flutterTts.stop();
-  // }
-
 
   @override
   void initState() {
-    //init vendor
-    // for(int i=0;i<12; i++) {
-    //   vendorFaceTypeId.add(-1);
-    //   //vendorCount2.add([]);
-    // }
-    //vendorTitle2[vendorTitle2.length-1]=VENDOR_NAME_OTHER;
-    //initTts();
 
     _pic = Image.asset('images/weather1.png', width:100, height:100);
     super.initState();
     loadPref();
+    loadFaceType(dio);
     loadWeatherPicData();
     askWeather(town);
     loadAirReport();
-    loadToday();
-
+    loadTodayProfile();
+    
 
     _timeString = formatDateTime(DateTime.now());
     _timerSecond =
@@ -227,12 +85,9 @@ class _TableScreenState extends State<TableScreen> {
   @override
   Widget build(BuildContext context) {
 
-    //var filtered1 = profilesPool.where((e) => e.action == leaveStr).toList();
-   // leaveCount = filtered1.length;
-
     heightRowTop = MediaQuery.of(context).size.height * 0.1;
     heightRowBody = MediaQuery.of(context).size.height * 0.33;
-    heightRowBottom = MediaQuery.of(context).size.height * 0.36;
+    heightRowBottom = MediaQuery.of(context).size.height * 0.368;
     myWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -254,6 +109,7 @@ class _TableScreenState extends State<TableScreen> {
     viewModel.deactivate();
     _timerSecond.cancel();
     _timerMinute.cancel();
+    _timerHours.cancel();
   }
 
   String environUpdateTime = "";
@@ -296,6 +152,11 @@ wind_speed(風速(m/sec))、
 
   }
 
+  Future<void> loadFaceLib() async {
+    loadFaceType(dio);
+    print('art 0526 facelib aa=' + faceTypes.toString());
+  }
+
   void loadPref() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -304,9 +165,9 @@ wind_speed(風速(m/sec))、
         print("art 0511 loadPref not ready");
         return;
       }
-      WS_SERVER = prefs.getString(PREF_KEY_WS_SERVER) ?? DEFAULT_WS_SERVER;
-      clearTime = prefs.getString(PREF_KEY_CLEARUP_TIME) ?? DEFAULT_CLEARUP_TIME;
-      resetTime = prefs.getString(PREF_KEY_RESET_TIME) ?? DEFAULT_RESET_TIME;
+      HOST = prefs.getString(PREF_KEY_WS_SERVER) ?? DEFAULT_WS_SERVER;
+      mClearTime = prefs.getString(PREF_KEY_CLEARUP_TIME) ?? DEFAULT_CLEARUP_TIME;
+      mResetTime = prefs.getString(PREF_KEY_RESET_TIME) ?? DEFAULT_RESET_TIME;
       //clearTime = "11:50";
       //resetTime = "12:50";
       //print("art 0511 loadPref OK WS_SERVER="+ WS_SERVER);
@@ -316,7 +177,18 @@ wind_speed(風速(m/sec))、
 
   }
 
-  void loadToday() async {
+  Future<void> loadFaceType(Dio dio) async {
+    var response = await dioV2Get(dio, "/api/v2/face-types?pageSize=1000");
+    //print('art find face ' + response.toString() );
+    ServerFaceType setting = serverFaceTypeFromJson(response.toString()) ;
+    //print('art find face setting= ' + setting.result!.toString());
+    if(setting!=null) {
+      faceTypes = setting.result!;
+      print('art find face faceTypes.length= ' + faceTypes.length.toString() );
+    }
+  }
+
+  void loadTodayProfile() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     playMP3('blacklist.mp3');
@@ -402,12 +274,11 @@ wind_speed(風速(m/sec))、
     resetToday();
     currentMode = DisplayMode.punch;
     vendorList.clear();
-    // for (int i = 0; i <vendorFaceTypeId.length ; i++) {
-    //   vendorFaceTypeId[i]=-1;
-    // }
-    //vendorCount2 = [];
+
     profilesPool.clear();
     profilesRemain.clear();
+    enterName.clear();
+    leaveName.clear();
     enterCount = 0;
     leaveCount = 0;
   }
@@ -415,10 +286,10 @@ wind_speed(風速(m/sec))、
   void _getMinutes() {
     setState(() {
       String hhmm = getHHMM();
-      //print("art hhmm=$hhmm clearTime=$clearTime resetTime=$resetTime");
-      if(hhmm == clearTime) { //清場
+      print("art hhmm=$hhmm clearTime=$mClearTime resetTime=$mResetTime");
+      if(hhmm == mClearTime) { //清場
         currentMode = DisplayMode.clearup;
-      } else if(hhmm == resetTime){ //歸零
+      } else if(hhmm == mResetTime){ //歸零
         resetData();
       }
     });
@@ -429,6 +300,7 @@ wind_speed(風速(m/sec))、
       print("art _everHours askWeather");
       askWeather(town);
       loadAirReport();
+      loadFaceLib();
     });
   }
 
@@ -622,6 +494,8 @@ wind_speed(風速(m/sec))、
     List<String> vendorTitle2 = [];
     List<String> vendorCount2 = [];
     String other_count = "";
+    int sum_filter = 0;
+    int other_sum = 0;
 
     //print('art 0524 bigNumber start');
 
@@ -641,7 +515,9 @@ wind_speed(風速(m/sec))、
         countStr = " ${filter.length} (${vendorList[i].worker.toSet().length})";
         if(name.isEmpty) name = VENDOR_NAME_OTHER;
         if(name == VENDOR_NAME_OTHER) {
-          other_count = countStr;
+          sum_filter += filter.length;
+          other_sum += vendorList[i].worker.toSet().length;
+          other_count =  " $sum_filter (${other_sum})";
           continue;
         }
 
@@ -709,7 +585,7 @@ wind_speed(風速(m/sec))、
     List<List<String>> dataList = List.generate(environTitle.length, (index) =>
     [environTitle[index], environCount[index]]) ;
     //[environTitle[index], environCount[index], environColor[index]]) ;
-    double hh = 40*1.8;
+    double hh = 40*1.7;
 
     Widget w = normalBorder(
     Container(color: normalBackground,

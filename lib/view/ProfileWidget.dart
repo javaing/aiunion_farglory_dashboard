@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../Constants.dart';
 import '../datamodel/Profile.dart';
 import '../util/Utils.dart';
@@ -113,6 +114,8 @@ class ProfileWidget extends StatelessWidget {
   // }
 
   Widget avatarW() {
+    var format = new DateFormat('HH:mm a');
+    var date = DateTime.fromMillisecondsSinceEpoch(profile.end_time);
     return Column(
       children: [
         CircleAvatar(
@@ -120,8 +123,10 @@ class ProfileWidget extends StatelessWidget {
           backgroundImage: getImage(profile.imageUrl),
         ),
         SizedBox(height: 4,),
-        whiteText( "姓名:${profile.name}", font1080p),
-        whiteText("單位:${profile.profession}", font1080p),
+        whiteText( "姓名: ${profile.name}", font1080p),
+        whiteText("單位: ${profile.profession}", font1080p),
+        SizedBox(height: 4,),
+        whiteText(format.format(date) , 24),
       ],
     );
   }

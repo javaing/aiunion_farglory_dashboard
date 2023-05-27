@@ -1,3 +1,4 @@
+import 'package:far_glory_construction_dashboard/viewmodel/TableScreenViewModel.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -38,8 +39,8 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
   late SharedPreferences prefs;
   String inIDs = "";
   String outIDs = "";
-  String clearupTime = "";
-  String resetTime = "";
+  //String clearupTime = "";
+  //String resetTime = "";
 
 
   @override
@@ -74,7 +75,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
     // String resetStr = _controllerRest.text;
     //print('art User input: $hostStr $inStr $outStr $clearStr $resetStr');
 
-    WS_SERVER = _controller.text;
+    HOST = _controller.text;
 
     if(prefs==null)
       prefs = await SharedPreferences.getInstance();
@@ -84,6 +85,9 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
       prefs.setString(PREF_KEY_OUT_DEVICEIDS , _controllerOut.text);
       prefs.setString(PREF_KEY_CLEARUP_TIME ,  _controllerClear.text);
       prefs.setString(PREF_KEY_RESET_TIME , _controllerRest.text);
+      
+      mClearTime = _controllerClear.text;
+      mResetTime = _controllerRest.text;
 
       showMsg(_context, "Save OK");
     });
@@ -123,7 +127,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
           child: TextField(
             controller: _controller,
             decoration: InputDecoration(
-              labelText: (WS_SERVER),
+              labelText: (HOST),
               border: const OutlineInputBorder(),
             ),
           ),
@@ -186,7 +190,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
           child: TextField(
             controller: _controllerClear,
             decoration: InputDecoration(
-              labelText: (clearupTime),
+              labelText: (mClearTime),
               border: const OutlineInputBorder(),
             ),
           ),
@@ -207,7 +211,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
           child: TextField(
             controller: _controllerRest,
             decoration: InputDecoration(
-              labelText: (resetTime),
+              labelText: (mResetTime),
               border: const OutlineInputBorder(),
             ),
           ),

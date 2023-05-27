@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -6,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../Constants.dart';
+import '../datamodel/ServerFaceType.dart';
+import 'package:dio/dio.dart';
 
 
 void showMsg(BuildContext context,String msg) {
@@ -41,7 +44,7 @@ String getformatNow() {
 
 String getHHMM() {
   final DateTime now = DateTime.now();
-  return DateFormat('hh:mm').format(now);
+  return DateFormat.Hm().format(now);
 }
 
 String formatDateTimeDashBoard(DateTime now) {
@@ -125,7 +128,7 @@ T randomListItem<T>(List<T> lst) {
 
 String getFullImageUrl(String url) {
   var path = url.replaceFirst("app/static", "/static");
-  return "http://$WS_SERVER$path";
+  return "http://$HOST$path";
 }
 
 List<bool> dynamicToListBool(List<dynamic> dd) {
@@ -160,3 +163,27 @@ Set<String> dynamicToSetString(List<dynamic> dd) {
   }
   return ss;
 }
+
+String makeUrl(String path) {
+  print("art makeUrl http://" + DEFAULT_WS_SERVER + path);
+  return "http://" + DEFAULT_WS_SERVER + path;
+}
+
+Future<Response> dioV2Get(Dio dio, String path) {
+  return dio.get(makeUrl(path),
+    options: Options(headers: {
+      HttpHeaders.contentTypeHeader: "application/json",
+      HttpHeaders.authorizationHeader: "Bearer $V2_TOKEN"
+    }, validateStatus: (statusCode){
+      if(statusCode == null){
+        return false;
+      }
+      if(statusCode == 400||statusCode == 405||statusCode == 500){ // your http status code
+        return true;
+      }else{
+        return statusCode >= 200 && statusCode < 300;
+      }
+    },),);
+}
+
+

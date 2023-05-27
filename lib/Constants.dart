@@ -16,9 +16,11 @@ final String DEFAULT_RESET_TIME = "00:01";
 String Weather_APIKEY = "CWB-D203008C-2640-4F20-A839-CD3708D26517";
 String Weather_URL = "https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-D0047-005?Authorization=$Weather_APIKEY&format=JSON&locationName=%town&elementName=Wx,AT";
 
-String WS_SERVER = "";
+String HOST = "";
 const int WS_PORT = 80;
 const String WS_TOPIC = "/ws/websocket";
+final String V2_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsiZmFjZWFpIl0sInNjb3BlIjpbImFwaS1zZXJ2aWNlIl0sImV4cCI6MTkyMTE1MzI1OCwiYXV0aG9yaXRpZXMiOlsiYWl1bmlvbiJdLCJqdGkiOiI3ODI3YTBkYi0zMGQ3LTRhODItYjQyYy0yMTQ0NTMyZWRlNDEiLCJjbGllbnRfaWQiOiJhcGktY2xpZW50In0.mE8WnaGzVuWhS5LfT0ajQcBr_JP2TUOVfhch-5dJ6mA";
+
 
 const String PREF_KEY_WS_SERVER = 'WS_SERVER';
 final String PREF_KEY_IN_DEVICEIDS = 'IN_DEVICEIDS';

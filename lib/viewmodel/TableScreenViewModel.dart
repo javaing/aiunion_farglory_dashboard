@@ -12,6 +12,7 @@ import '../Constants.dart';
 import '../datamodel/FacesDetail.dart';
 import '../datamodel/FarGloryMsg.dart';
 import '../datamodel/Profile.dart';
+import '../datamodel/ServerFaceType.dart';
 import '../datamodel/WebSocketFace.dart';
 import '../util/Utils.dart';
 import 'package:stomp_dart_client/stomp.dart';
@@ -35,6 +36,9 @@ List<int> leaveName = [];
 const String EASY_READ_ENTER = '進場';
 const String EASY_READ_LEAVE = '出場';
 
+String mClearTime = "";
+String mResetTime = "";
+
 //final List<String> workTypeTitle = ['點工', '板模', '水泥', '排水', '電氣', '吊臂', '砂石'];
 List<int> workTypeCount = [0, 0, 0, 0, 0, 0, 0];
 const Utf8Codec utf8 = Utf8Codec();
@@ -43,8 +47,6 @@ List<String> environCount = ["", "", "", "", "", "", ""];
 List<String> environColor = ["green", "green", "green", "green", "green", "green", "green"];
 final String DEFAULT_VENDOR_NAME = '承包商';
 final String VENDOR_NAME_OTHER = '其他';
-//List<int> vendorFaceTypeId = [];
-//List<List<String>> vendorCount2 = [];
 List<Vendor> vendorList = [];
 
 
@@ -71,15 +73,14 @@ enum DisplayMode {
 DisplayMode currentMode = DisplayMode.punch ; //差勤或清場
 late StompClient stomp;
 final dio = Dio();
-//final assetsAudioPlayer = AssetsAudioPlayer();
+List<FaceType> faceTypes = [];
 
 
 class TableScreenViewModel {
 
 
-  
-  TableScreenViewModel(BuildContext ctx) {
-    var webSocketUrl = "ws://$WS_SERVER:$WS_PORT$WS_TOPIC";
+  TableScreenViewModel(BuildContext ctx)  {
+    var webSocketUrl = "ws://$HOST:$WS_PORT$WS_TOPIC";
     //print('art WebSocket url=$webSocketUrl');
 
     stomp = StompClient(
@@ -95,8 +96,9 @@ class TableScreenViewModel {
     );
     stomp.activate();
 
-    //initTts();
   }
+
+
   
   deactivate() {
     stomp.deactivate();
@@ -176,7 +178,7 @@ class TableScreenViewModel {
     String setting = prefs.getString(PREF_KEY_IN_DEVICEIDS)??"";
     List<String> ids = setting.split(",");
     ids.forEach((element) {addSubscribe(element);});
-    if(WS_SERVER == '192.168.0.109') {
+    if(HOST == '192.168.0.109') {
       addSubscribe('30'); //for test in 109
       addLeaveSubscribe('31');
     }
@@ -192,7 +194,7 @@ class TableScreenViewModel {
     // Profile p = genProfile2(face, action);
     // p.boolList = null;
     // addToPool(p, action);
-    print('art add pool :' + (face.name ?? "") + ", " + face.type_id.toString());
+    //print('art add from socket :' + (face.name ?? "") + ", " + face.type_id.toString());
     genProfile2(face, action).then((value) => {
       addToPool(value, action)
     });
@@ -229,9 +231,6 @@ class TableScreenViewModel {
         case "enter":
           askFaceDetail(p.faceId, action, p);
           profilesPool.add(p);
-          if(!enterName.contains(p.faceId)) {
-            enterName.add(p.faceId);
-          }
           // if(isExistRemain(p.faceId)) {
           //   print("art 還未離場又進場的人不用加 remain");
           //   break;
@@ -244,17 +243,17 @@ class TableScreenViewModel {
           askFaceDetail(p.faceId, action, p);
           p.action = EASY_READ_LEAVE;
           profilesPool.add(p);
-          leaveCount = leaveCount+1;
-          if(!leaveName.contains(p.faceId)) {
-            leaveName.add(p.faceId);
-          }
+
           //playMP3('blacklist.mp3'); //for test
 
           //if(isExistRemain(p.faceId)) {
           var ll = profilesRemain.where((element) => element.faceId==p.faceId);
           print('art check remove p.faceId=' + p.faceId.toString() + " name=" + p.name + " ll size=" + ll.length.toString());
             if(ll.length>0) {
-              //leaveCount = leaveCount+1;
+              leaveCount = leaveCount+1;
+              if(!leaveName.contains(p.faceId)) {
+                leaveName.add(p.faceId);
+              }
               Profile find = ll.first;
               var isSuiccess = profilesRemain.remove(find);
               print('art remove is success=$isSuiccess');
@@ -316,7 +315,7 @@ class TableScreenViewModel {
     }
     String name = myName.replaceRange(1, 2, ' * ');
     //String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
-    String vendor = VENDOR_NAME_OTHER;
+    String vendor = getFacelibName(int.parse(msg.type_id!) );
     int faceId = msg.face_id ?? 0;
     String imagePath = getFullImageUrl(msg.photo!);
     //imagePath = msg.photo_string!;
@@ -362,14 +361,14 @@ class TableScreenViewModel {
       //snapshot_uri
       //final imgBase64Str = await networkImageToBase64(imageUrl.toString());
       String snapshotUrl = (msg.snapshot_uri ?? "");
-      print('art snapshot=' + snapshotUrl );
+      //print('art snapshot=' + snapshotUrl );
       //var imgBase64Str =msg.photo_string;
       if(snapshotUrl!.isNotEmpty) {
         if(snapshotUrl.startsWith("app/static")|| snapshotUrl.startsWith("/static")) {
           //var path = snapshotUrl.replaceFirst("app/static", "/static");
           //var url = "http://$WS_SERVER$path";
           var url = getFullImageUrl(snapshotUrl);
-          print('art img1 url=$url');
+          //print('art img1 url=$url');
           //imgBase64Str = await networkImageToBase64(url);
           imagePath = url;
         } else {
@@ -418,44 +417,91 @@ class TableScreenViewModel {
     }
 
     // TODO check helmet, vest by api -- end
-    return Profile(name: name, profession: vendor, imageUrl:imagePath, action: actionStr,  boolList: boolList, faceId: faceId, end_time: msg.end_time!, typeId:-1);
+    return Profile(name: name, profession: vendor, imageUrl:imagePath, action: actionStr,  boolList: boolList, faceId: faceId, end_time: msg.end_time!, typeId: int.parse(msg.type_id??"-1") );
   }
 
 }
 
-void askFaceDetail(int id, String action, Profile profile) async {
-  final response = await dio.get("http://$WS_SERVER/api/faces/$id");
-  //print(response);
-
-  FacesDetail apiFaces = facesDetailFromJson(response.toString());
-  var face = apiFaces.result;
-  if(face!=null) {
-    updateProfile(face);
-    if(action=="enter")
-      updateVendorCount(face, profile);
-  }
-}
-
-
-
-void updateProfile(Result face) {
-  String company = face.company?? "" ;
-  String title = face.title ?? "";
-  int autoid = face.autoid ?? 0;
-
-  //print("art update company autoid=$autoid");
-
-  var ll = profilesPool.where((element) => (element.faceId==autoid));
-  if(ll.isNotEmpty) {
-    ll.last.typeId = face.typeId ?? -1;
-    if(title.isNotEmpty) {
-      ll.last.profession = "$company-$title";
-    } else {
-      ll.last.profession = company;
+String getFacelibName(int typeid) {
+  print('art 0526 getFacelibName id='+ typeid.toString() + ", faceTypes len=" + faceTypes.length.toString());
+  for(int i=0; i<faceTypes.length; i++) {
+    if(faceTypes[i].id == typeid) {
+      print('art 0526 bingo! id='+ typeid.toString() +' name=' + faceTypes[i].name!);
+      return faceTypes[i].name! ;
     }
   }
+  return "";
+}
+
+// void askFaceDetail(int id, String action, Profile profile) async {
+//   final response = await dio.get("http://$HOST/api/faces/$id");
+//   //print(profile.typeId.toString() + "," + profile.faceId.toString() + ", " + profile.name!);
+//
+//   FacesDetail apiFaces = facesDetailFromJson(response.toString());
+//   var face = apiFaces.result;
+//   if(face!=null) {
+//     updateProfile(face);
+//     if(action=="enter")
+//       updateVendorCount(face, profile);
+//   }
+// }
+
+void askFaceDetail(int id, String action, Profile profile) async {
+   //String facelibName = getFacelibName(profile.typeId);
+  // print("art update facelibName =$facelibName" );
+  // if(facelibName.isNotEmpty) {
+  //   updateProfileNew(profile.faceId, facelibName);
+  //   if(action=="enter")
+  //     updateVendorList(facelibName, profile);
+  // }
+
+  if(action=="enter")
+    updateVendorList(profile.profession, profile);
 
 }
+
+void updateProfileNew(int autoid, String facelibName) {
+  // String company = face.company?? "" ;
+  // String title = face.title ?? "";
+  // int autoid = face.autoid ?? 0;
+
+  //
+  //print("art update company autoid=$autoid" + ", " + company + "," + title);
+
+  for(int i=0; i<profilesPool.length; i++) {
+    print('art faceId=' + profilesPool[i].faceId.toString());
+  }
+
+
+  var ll = profilesPool.where((element) => (element.faceId==autoid));
+  print("art update "+ autoid.toString() +" find ="+ll.toList().toString() );
+  if(ll.isNotEmpty) {
+    print("art update "+ autoid.toString() +" find ="+ll.last.toString() );
+    ll.last.profession = facelibName;
+  }
+
+}
+
+// void updateProfile(Result face) {
+//   String company = face.company?? "" ;
+//   String title = face.title ?? "";
+//   int autoid = face.autoid ?? 0;
+//
+//   //getFacelibName(profile.typeId);
+//   print("art update company autoid=$autoid" + ", " + company + "," + title);
+//
+//
+//   var ll = profilesPool.where((element) => (element.faceId==autoid));
+//   if(ll.isNotEmpty) {
+//     ll.last.typeId = face.typeId ?? -1;
+//     if(title.isNotEmpty) {
+//       ll.last.profession = "$company-$title";
+//     } else {
+//       ll.last.profession = company;
+//     }
+//   }
+//
+// }
 
 // bool checkFaceId(int str, int autoid) {
 //   print("art update company element.faceId=$str");
@@ -494,67 +540,39 @@ List<String> addUnique(List<String> list)  {
     4-2.當供應商大於8時,顯示前七大(排序先人數降冪，在faceTypeId升冪)，超過7者
       ，全部加在一起顯示其他
  */
-void updateVendorCount(Result face, Profile profile) {
-  if(isExistRemain(face.autoid!)) {
+void updateVendorList(String company, Profile profile) {
+  int autoid = profile.faceId;
+  int typeId = profile.typeId;
+  if(isExistRemain(autoid!)) {
     print("art 還未離場又進場的人不用加1");
-    playMP3('blacklist.mp3');
+    //playMP3('blacklist.mp3');
     return;
   }
   enterCount++;
+  if(!enterName.contains(autoid)) {
+    enterName.add(autoid);
+  }
+
   profilesRemain.add(profile);
   saveEnterLeave();
 
-  print('art 0523 find vendor typeid:' + face.typeId.toString() + ", company="+ face.company! );
-  var find = vendorList.where((f) => f.faceTypeId==face.typeId).toList();
+  print('art 0526 find vendor typeid:' + typeId.toString() + ", company="+ company! );
+  var find = vendorList.where((f) => f.faceTypeId==typeId).toList();
   if(find.isEmpty) {
     //print('art 0523 find vendor  add new');
     List<int> workerNames = [];
-    workerNames.add(face.autoid!);
-    Vendor v = Vendor(faceTypeId: face.typeId ?? -1, name: face.company ?? "", worker: workerNames);
+    workerNames.add(autoid);
+    Vendor v = Vendor(faceTypeId: typeId, name: company, worker: workerNames);
     vendorList.add(v);
   } else {
     Vendor v = find.first;
-    if(!v.worker.contains(face.autoid) ) {
-      v.worker.add(face.autoid!);
+    if(!v.worker.contains(autoid) ) {
+      v.worker.add(autoid);
     }
-    vendorList[vendorList.indexWhere((element) => element.faceTypeId == face.typeId)] = v;
+    vendorList[vendorList.indexWhere((element) => element.faceTypeId == typeId)] = v;
   }
   vendorList.sort((a, b) => b.worker.length.compareTo(a.worker.length));
-  print('art 0523 find vendor  sorted ${jsonEncode(vendorList)}' );
-
-  //String company = face.company?? "" ;
-  // if(company.isEmpty) {
-  //   //vendorCount2[ vendorCount2.length-1 ] = vendorCount2[ vendorCount2.length-1 ]+1; //other
-  //   List<String> ll =  vendorCount2[ vendorCount2.length-1 ];
-  //   ll.add(profile.name);
-  //   vendorCount2[ vendorCount2.length-1 ] = addUnique(ll);
-  //   return;
-  // }
-  // if(vendorTitle2.contains(company)) {
-  //   for (int i = 0; i <vendorTitle2.length ; i++) {
-  //     //print("art find company  name=${vendorTitle2[i]}");
-  //     if(vendorTitle2[i]==company) {
-  //       //vendorCount2[i] = vendorCount2[i]+1;
-  //       List<String> ll =  vendorCount2[i];
-  //       ll.add(profile.name);
-  //       vendorCount2[i] = addUnique(ll);
-  //       break;
-  //     }
-  //   }
-  // } else {
-  //   //find first no default name
-  //   for (int i = 0; i <vendorTitle2.length ; i++) {
-  //     print("art find first no default name=${vendorTitle2[i]}");
-  //     if(vendorTitle2[i]==DEFAULT_VENDOR_NAME) {
-  //       vendorTitle2[i]=company; //該company首次紀錄到
-  //       //vendorCount2[i] = vendorCount2[i]+1;
-  //       List<String> ll =  vendorCount2[i];
-  //       ll.add(profile.name);
-  //       vendorCount2[i] = addUnique(ll);
-  //       break;
-  //     }
-  //   }
-  // }
+  //print('art 0526 find vendor  sorted ${jsonEncode(vendorList)}' );
 
 }
 
@@ -569,7 +587,7 @@ void playMP3(String filename) {
 
 extension BoolParsing on String {
   bool parseBool() {
-    print("art 0419 check=${toLowerCase()}");
+    //print("art 0419 check=${toLowerCase()}");
     return toLowerCase() == 'true';
   }
 }
