@@ -481,7 +481,7 @@ wind_speed(風速(m/sec))、
   Widget getMiddleLeft(double h) {
     Widget bigNumber = getBigNumberRow();
 
-    double rowHeight = heightRowBody / 5;
+
 
     List<int> vendorFaceTypeId = [];
     for(int i=0; i<12; i++) {
@@ -542,6 +542,7 @@ wind_speed(風速(m/sec))、
     // vendorCount2[11] = "5";
 
 
+    double rowHeight = heightRowBody / 5;
     List<List<String>> dataList = List.generate(4, (index) =>
     [vendorTitle2[index],
       vendorCount2[index].toString(),

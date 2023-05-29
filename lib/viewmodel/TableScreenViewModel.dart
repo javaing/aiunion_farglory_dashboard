@@ -345,18 +345,18 @@ class TableScreenViewModel {
         }
       }
 
-      // Future<String?> checkHelmet(String imgBase64Str) async {
-      //   final String checkUrl = "http://" + HOST + "/image_in";
-      //   var map = new Map<String, dynamic>();
-      //   map['img'] = imgBase64Str;
-      //   var response = await http.post(Uri.parse(checkUrl), body: map);
-      //   if (response.statusCode == 200) {
-      //     return response.body;
-      //   } else {
-      //     print('art call $checkUrl fail! code: $response.statusCode');
-      //     return null;
-      //   }
-      // }
+      Future<String?> checkHelmet(String imgBase64Str) async {
+        final String checkUrl = "http://" + HOST + "/image_in";
+        var map = new Map<String, dynamic>();
+        map['img'] = imgBase64Str;
+        var response = await http.post(Uri.parse(checkUrl), body: map);
+        if (response.statusCode == 200) {
+          return response.body;
+        } else {
+          print('art call $checkUrl fail! code: $response.statusCode');
+          return null;
+        }
+      }
 
       //snapshot_uri
       //final imgBase64Str = await networkImageToBase64(imageUrl.toString());
@@ -374,41 +374,34 @@ class TableScreenViewModel {
         } else {
           //imgBase64Str = msg.snapshot_uri; // is already image string
           imagePath = snapshotUrl;
-          print('art img2 url=$imagePath');
         }
 
       }
-    //   print('art img3');
-    //   if (imgBase64Str != null) {
-    //     /*
-    //     art post fetch and set catch error
-    //     StackTrace #0      IOClient.send (package:http/src/io_client.dart:94:7)
-    //      <asynchronous suspension>
-    //     #3      TableScreenViewModel.genProfile2 (package:far_glory_construction_dashboard/viewmodel/TableScreenViewModel.dart:412:24)
-    //   <asynchronous suspension>
-    //      */
-    //       final String checkUrl = "http://" + HOST + "/image_in";
-    //       var map = new Map<String, dynamic>();
-    //       map['img'] = imgBase64Str;
-    //       var response = await http.post(Uri.parse(checkUrl), body: map);
-    //       print("art image_in=$response");
-    //       Map data = jsonDecode(response.toString());
-    //       if (data["code"] == 200) {
-    //         // print(boolList);
-    //         boolList[1] = data["helmet"];
-    //         boolList[2] = data["vest"];
-    //       } else {
-    //         print('art call $checkUrl fail! code: $response.statusCode');
-    //       }
-    //     //}
-    //     // var body = await checkHelmet(imgBase64Str);
-    //     // if (body != null) {
-    //     //   Map data = jsonDecode(body);
-    //     //   print("art image_in=$data");
-    //     //   boolList[1] = data["helmet"];
-    //     //   boolList[2] = data["vest"];
-    //     // }
-    //   }
+      print('art img2 url=$imagePath');
+      final imgBase64Str = await networkImageToBase64(imageUrl.toString());
+      if (imgBase64Str != null) {
+          // final String checkUrl = "http://" + HOST + "/image_in";
+          // var map = new Map<String, dynamic>();
+          // map['img'] = imgBase64Str;
+          // var response = await http.post(Uri.parse(checkUrl), body: map);
+          // print("art image_in=$response");
+          // Map data = jsonDecode(response.toString());
+          // if (data["code"] == 200) {
+          //   // print(boolList);
+          //   boolList[1] = data["helmet"];
+          //   boolList[2] = data["vest"];
+          // } else {
+          //   print('art call $checkUrl fail! code: $response.statusCode');
+          // }
+        //}
+        var body = await checkHelmet(imgBase64Str);
+        if (body != null) {
+          Map data = jsonDecode(body);
+          print("art image_in=$data");
+          boolList[1] = data["helmet"];
+          boolList[2] = data["vest"];
+        }
+      }
     //
     } catch (e, s) {
       print('art post fetch and set catch error');

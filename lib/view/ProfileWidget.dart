@@ -146,36 +146,36 @@ class ProfileWidget extends StatelessWidget {
 
   }
 
-
-  // Widget getCheckResult(List<bool> boolList) {
-  //   //print("art 0420 CheckResult [boolList]=" + boolList.toString());
-  //   return Column(children: [
-  //     //酒精
-  //     Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[0] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[0]), 30)],),
-  //     const SizedBox(height: 5,),
-  //     //工地帽
-  //     Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[1] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[1]), 30)],),
-  //     const SizedBox(height: 5,),
-  //     //背心
-  //     Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[2] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[2]), 30)],),
-  //   ],);
-  //
-  // }
-
-  ////2023-5-22 老闆指示工地帽先不判斷
+  //2023-5-29 老闆指示工地帽要判斷
   Widget getCheckResult(List<bool> boolList) {
+    //print("art 0420 CheckResult [boolList]=" + boolList.toString());
     return Column(children: [
       //酒精
-      getAssetImageSize(checkImages[0] ,30),
+      Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[0] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[0]), 30)],),
       const SizedBox(height: 5,),
       //工地帽
-      getAssetImageSize(checkImages[1] ,30),
+      Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[1] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[1]), 30)],),
       const SizedBox(height: 5,),
       //背心
-      getAssetImageSize(checkImages[2] ,30),
+      Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[2] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[2]), 30)],),
     ],);
 
   }
+
+  ////2023-5-22 老闆指示工地帽先不判斷
+  // Widget getCheckResult(List<bool> boolList) {
+  //   return Column(children: [
+  //     //酒精
+  //     getAssetImageSize(checkImages[0] ,30),
+  //     const SizedBox(height: 5,),
+  //     //工地帽
+  //     getAssetImageSize(checkImages[1] ,30),
+  //     const SizedBox(height: 5,),
+  //     //背心
+  //     getAssetImageSize(checkImages[2] ,30),
+  //   ],);
+  //
+  // }
 
 }
 
