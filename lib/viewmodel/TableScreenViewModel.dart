@@ -22,8 +22,7 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-//final List<String> headerInfo = ['GPT-4掀起AI界高潮，ChatGPT之父卻怕了：我設了一個終止開關    敬禮！張育成獲經典賽最佳一壘手    BLACKPINK七月再來台？「主辦方員工」洩消息',
-//  '            26°  大致晴朗'];
+
 final String headerNews = '進行高空作業前，一定要確認安全掛勾是否扣上     進入狹窄的空間前，進入狹窄的空間前，    進入工地戴安全帽（安全帽區域）     確實配戴背負式安全帶（磨損的安全線束）';
 final String headerWeather = '26°\n大致晴朗';
 final List<String> leftRow1Title = ['進場人次','出場人次','現場人數'];
@@ -35,18 +34,23 @@ List<int> enterName = [];
 List<int> leaveName = [];
 const String EASY_READ_ENTER = '進場';
 const String EASY_READ_LEAVE = '出場';
+final String NAME = "姓名";
+final String UNIT = "單位";
+final String ENVIROMENT = "環境資訊";
+final String UPDATE = "更新";
+final List<String> environTitle = ['空氣品質指標', '空氣污染指標物', '狀態', "一氧化碳", "PM10", "PM2.5", "風速"];
+final String DEFAULT_VENDOR_NAME = '承包商';
+final String VENDOR_NAME_OTHER = '其他';
+
 
 String mClearTime = "";
 String mResetTime = "";
+String AIHost = "";
 
-//final List<String> workTypeTitle = ['點工', '板模', '水泥', '排水', '電氣', '吊臂', '砂石'];
 List<int> workTypeCount = [0, 0, 0, 0, 0, 0, 0];
 const Utf8Codec utf8 = Utf8Codec();
-final List<String> environTitle = ['空氣品質指標', '空氣污染指標物', '狀態', "一氧化碳", "PM10", "PM2.5", "風速"];
 List<String> environCount = ["", "", "", "", "", "", ""];
 List<String> environColor = ["green", "green", "green", "green", "green", "green", "green"];
-final String DEFAULT_VENDOR_NAME = '承包商';
-final String VENDOR_NAME_OTHER = '其他';
 List<Vendor> vendorList = [];
 
 
@@ -55,6 +59,19 @@ List<bool> DEFAULT_BOOLLIST = [true, true, true, true]; //酒測 工地帽 背�
 List<bool> boolListDrink = [false, true, true, true];
 List<bool> boolListBlack = [true, true, true, false];
 
+// final List<String> leftRow1Title = ['Enter Count','Exit Count','Present People'];
+// final List<String> clearupTitle = ['進場人次','出場人次','滯留人數'];
+// const String EASY_READ_ENTER = 'Enter';
+// const String EASY_READ_LEAVE = 'Exit';
+// final List<String> environTitle = ['Quality Index', 'Pollution object', 'State', "CO", "PM10", "PM2.5", "Windy"];
+// final String DEFAULT_VENDOR_NAME = 'Vendor';
+// final String VENDOR_NAME_OTHER = 'Other';
+// final String NAME = "name";
+// final String UNIT = "unit";
+// final String ENVIROMENT = "Enviroment";
+//final String headerNews = 'Before performing high-altitude operations, be sure to confirm whether the safety hook is buckled. Before entering a narrow space, before entering a narrow space, wear a safety helmet (hard hat area) on the construction site, and wear a backpack safety belt (worn security harness)';
+// final String UPDATE = "updated";
+final String CLEAR_ALL = "Clear All Data";
 
 List<Profile> profilesRemain = [
   //Profile(name: '黃 * 林', profession: rightRowTitle[3], imageUrl: workerImages[2], action: leaveStr, boolList: boolList, faceId: '0' ),
@@ -191,10 +208,6 @@ class TableScreenViewModel {
   }
 
   webSocketToPool(WebSocketFace face, String action) {
-    // Profile p = genProfile2(face, action);
-    // p.boolList = null;
-    // addToPool(p, action);
-    //print('art add from socket :' + (face.name ?? "") + ", " + face.type_id.toString());
     genProfile2(face, action).then((value) => {
       addToPool(value, action)
     });
@@ -328,7 +341,7 @@ class TableScreenViewModel {
     boolList[2] = false;
     try {
       final imageUrl = imagePath;
-      var HOST = "60.250.33.237:60105";
+      //var HOST = "60.250.33.237:60105";
       Future<String?> networkImageToBase64(String imageUrls) async {
         http.Response response = await http.get(Uri.parse(imageUrls));
         if (response.statusCode == 200) {
@@ -346,7 +359,8 @@ class TableScreenViewModel {
       }
 
       Future<String?> checkHelmet(String imgBase64Str) async {
-        final String checkUrl = "http://" + HOST + "/image_in";
+        final String checkUrl = "http://" + AIHost + "/image_in";
+        //print("art profile checkUrl=$checkUrl");
         var map = new Map<String, dynamic>();
         map['img'] = imgBase64Str;
         var response = await http.post(Uri.parse(checkUrl), body: map);
@@ -377,7 +391,7 @@ class TableScreenViewModel {
         }
 
       }
-      print('art img2 url=$imagePath');
+      //print('art img2 url=$imagePath');
       final imgBase64Str = await networkImageToBase64(imageUrl.toString());
       if (imgBase64Str != null) {
           // final String checkUrl = "http://" + HOST + "/image_in";
@@ -408,7 +422,7 @@ class TableScreenViewModel {
       print("Exception $e");
       print("StackTrace $s");
     }
-
+    //print("art genProfile $name=$boolList");
     // TODO check helmet, vest by api -- end
     return Profile(name: name, profession: vendor, imageUrl:imagePath, action: actionStr,  boolList: boolList, faceId: faceId, end_time: msg.end_time!, typeId: int.parse(msg.type_id??"-1") );
   }
@@ -513,7 +527,7 @@ Future<void> saveEnterLeave() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   prefs.setInt(PREF_KEY_ENTER_COUNT, enterCount);
   prefs.setInt(PREF_KEY_LEAVE_COUNT, leaveCount);
-  prefs.setString(PREF_KEY_PROFILE_REMAIN, jsonEncode(profilesRemain));
+  prefs.setString(PREF_KEY_PROFILE_POOL, jsonEncode(profilesPool));
   prefs.setString(PREF_KEY_VENDOR , jsonEncode(vendorList));
   prefs.setString(PREF_KEY_ENTER_UNIQUE_NAME , jsonEncode(enterName.toList()));
   prefs.setString(PREF_KEY_LEAVE_UNIQUE_NAME , jsonEncode(leaveName.toList()));
@@ -583,4 +597,17 @@ extension BoolParsing on String {
     //print("art 0419 check=${toLowerCase()}");
     return toLowerCase() == 'true';
   }
+}
+
+void resetData() {
+  //resetToday();
+  currentMode = DisplayMode.punch;
+  vendorList.clear();
+
+  profilesPool.clear();
+  profilesRemain.clear();
+  enterName.clear();
+  leaveName.clear();
+  enterCount = 0;
+  leaveCount = 0;
 }

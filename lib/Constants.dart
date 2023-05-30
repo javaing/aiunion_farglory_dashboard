@@ -12,6 +12,7 @@ final String DEFAULT_IN_DEVICEIDS = "5";
 final String DEFAULT_OUT_DEVICEIDS = "3";
 final String DEFAULT_CLEARUP_TIME = "18:00";
 final String DEFAULT_RESET_TIME = "00:01";
+final String DEFAULT_AI_SERVER = "60.250.33.237:60105";
 
 String Weather_APIKEY = "CWB-D203008C-2640-4F20-A839-CD3708D26517";
 String Weather_URL = "https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-D0047-005?Authorization=$Weather_APIKEY&format=JSON&locationName=%town&elementName=Wx,AT";
@@ -29,7 +30,8 @@ const String PREF_KEY_CLEARUP_TIME = 'CLEARUP_TIME';
 const String PREF_KEY_RESET_TIME = 'RESET_TIM';
 const String PREF_KEY_ENTER_COUNT = 'ENTER_COUNT';
 const String PREF_KEY_LEAVE_COUNT = 'LEAVE_COUNT';
-const String PREF_KEY_PROFILE_REMAIN = 'PROFILE_REMAIN';
+const String PREF_KEY_PROFILE_POOL = 'PROFILE_POOL';
+const String PREF_KEY_AI_SERVER = 'AI_SERVER';
 const String PREF_KEY_VENDOR = 'VENDOR';
 const String PREF_KEY_ENTER_UNIQUE_NAME = 'ENTER_UNIQUE_NAME';
 const String PREF_KEY_LEAVE_UNIQUE_NAME = 'LEAVE_UNIQUE_NAME';

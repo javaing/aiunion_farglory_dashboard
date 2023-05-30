@@ -135,8 +135,11 @@ class _TableScreenState extends State<TableScreen> {
         if(environCount[2]=="普通") {
           environColor[2] = "yellow";
         }
+        // if(environCount[2]=="良好") {
+        //   environCount[2]="Good";
+        // }
         environUpdateTime = find.first.publishtime ?? "";
-        environUpdateTime = "${environUpdateTime.replaceAll(":00:00", ":00")} 更新";
+        environUpdateTime = "${environUpdateTime.replaceAll(":00:00", ":00")} $UPDATE";
       }
       /*
       aqi(空氣品質指標)、
@@ -168,6 +171,7 @@ wind_speed(風速(m/sec))、
       HOST = prefs.getString(PREF_KEY_WS_SERVER) ?? DEFAULT_WS_SERVER;
       mClearTime = prefs.getString(PREF_KEY_CLEARUP_TIME) ?? DEFAULT_CLEARUP_TIME;
       mResetTime = prefs.getString(PREF_KEY_RESET_TIME) ?? DEFAULT_RESET_TIME;
+      AIHost = prefs.getString(PREF_KEY_AI_SERVER) ?? DEFAULT_AI_SERVER;
       //clearTime = "11:50";
       //resetTime = "12:50";
       //print("art 0511 loadPref OK WS_SERVER="+ WS_SERVER);
@@ -200,11 +204,12 @@ wind_speed(風速(m/sec))、
       }
       enterCount = prefs.getInt(PREF_KEY_ENTER_COUNT) ?? 0;
       leaveCount = prefs.getInt(PREF_KEY_LEAVE_COUNT) ?? 0;
-      String jsonStr = prefs.getString(PREF_KEY_PROFILE_REMAIN) ?? "";
+      String jsonStr = prefs.getString(PREF_KEY_PROFILE_POOL) ?? "";
+      profilesPool.clear();
       if(jsonStr!=null && jsonStr.isNotEmpty) {
         List<dynamic> dd = jsonDecode(jsonStr);
         for(int i=0; i<dd.length; i++) {
-          profilesRemain.add(Profile.fromJson(dd[i]));
+          profilesPool.add(Profile.fromJson(dd[i]));
         }
       }
 
@@ -246,7 +251,7 @@ wind_speed(風速(m/sec))、
       }
       prefs.setInt(PREF_KEY_ENTER_COUNT, 0) ;
       prefs.setInt(PREF_KEY_LEAVE_COUNT,0) ;
-      prefs.setString(PREF_KEY_PROFILE_REMAIN, "");
+      prefs.setString(PREF_KEY_PROFILE_POOL, "");
       prefs.setString(PREF_KEY_ENTER_UNIQUE_NAME , "");
       prefs.setString(PREF_KEY_LEAVE_UNIQUE_NAME , "");
     });
@@ -269,19 +274,7 @@ wind_speed(風速(m/sec))、
     }
   }
 
-  void resetData() {
-    askWeather(town);
-    resetToday();
-    currentMode = DisplayMode.punch;
-    vendorList.clear();
 
-    profilesPool.clear();
-    profilesRemain.clear();
-    enterName.clear();
-    leaveName.clear();
-    enterCount = 0;
-    leaveCount = 0;
-  }
 
   void _getMinutes() {
     setState(() {
@@ -290,6 +283,8 @@ wind_speed(風速(m/sec))、
       if(hhmm == mClearTime) { //清場
         currentMode = DisplayMode.clearup;
       } else if(hhmm == mResetTime){ //歸零
+        askWeather(town);
+        resetToday();
         resetData();
       }
     });
@@ -339,6 +334,10 @@ wind_speed(風速(m/sec))、
         //print('art 0511  AT =' + value );
       }
     }
+
+    // if(WxString.contains("雨")) {
+    //   WxString = "Short shower";
+    // }
 
     weatherText = "$WxString\n$ATString°C";
     setState(() {
@@ -594,7 +593,7 @@ wind_speed(風速(m/sec))、
         padding: const EdgeInsets.only(left:20, bottom: 0, right: 0, top:0),
         child: Column(
       children: [
-        textSetHeightBold2('環境資訊', 40, 200),
+        textSetHeightBold2('$ENVIROMENT', 40, 200),
         EnviromentTable(height: hh, data: dataList, fontSize: 32,),
         //textSetHeightBold2(environUpdateTime, 25, 200),
         Align(alignment: Alignment.centerRight, child: Text(
@@ -637,7 +636,6 @@ wind_speed(風速(m/sec))、
   }
 
   Widget getRowBottom() {
-    //print("art 0414 getRowBottom() size=${profiles.length}");
 
     Widget profileListView = ListView.builder(
       //shrinkWrap: true, //just set this property
@@ -645,6 +643,7 @@ wind_speed(風速(m/sec))、
       itemCount: profiles.length,
       itemBuilder: (BuildContext context, int index) {
         Profile pp = profiles[index];
+        //print("art 0530 getRowBottom() pp=${pp.name} ${pp.boolList}");
         return ProfileWidget(profile: pp);
       },
     );

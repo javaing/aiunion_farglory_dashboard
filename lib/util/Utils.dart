@@ -110,6 +110,7 @@ Image getAssetImageSize(String name, double size) {
 
 String getLocaleWeekDay(int weekday) {
   List<String> name = ['', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六','星期日'];
+  //List<String> name = ['', 'Mon', 'Tue', 'Wed', 'Thr', 'Fri', 'Sat','Sun'];
   return name[weekday % name.length];
 }
 

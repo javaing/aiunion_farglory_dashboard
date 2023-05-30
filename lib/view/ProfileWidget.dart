@@ -36,6 +36,8 @@ class ProfileWidget extends StatelessWidget {
 
   Widget getEnterProfile() {
 
+    //print("art 0530 CheckResult [boolList]=" + profile.name +" " + profile.boolList.toString() );
+
     Widget w = Row(
       children: [
         getAvatar(),
@@ -75,6 +77,7 @@ class ProfileWidget extends StatelessWidget {
   Widget getCheckList() {
     Widget check;
     if(profile.boolList==null) {
+      print("art 0530 profile.boolList==null");
       check = getCheckInit(DEFAULT_BOOLLIST);
     } else {
       check = getCheckResult(profile.boolList!);
@@ -123,8 +126,8 @@ class ProfileWidget extends StatelessWidget {
           backgroundImage: getImage(profile.imageUrl),
         ),
         SizedBox(height: 4,),
-        whiteText( "姓名: ${profile.name}", font1080p),
-        whiteText("單位: ${profile.profession}", font1080p),
+        whiteText( "$NAME: ${profile.name}", font1080p),
+        whiteText("$UNIT: ${profile.profession}", font1080p),
         SizedBox(height: 4,),
         whiteText(format.format(date) , 24),
       ],
@@ -148,7 +151,6 @@ class ProfileWidget extends StatelessWidget {
 
   //2023-5-29 老闆指示工地帽要判斷
   Widget getCheckResult(List<bool> boolList) {
-    //print("art 0420 CheckResult [boolList]=" + boolList.toString());
     return Column(children: [
       //酒精
       Row(children: [const SizedBox(width: 20,) , getAssetImageSize(checkImages[0] ,30), const SizedBox(width: 10,) ,  getAssetImageSize(getOKIConName(boolList[0]), 30)],),
@@ -206,8 +208,8 @@ class ClearUpProfile extends StatelessWidget {
           backgroundImage: getImage(profile.imageUrl),
         ),
         SizedBox(height: 4,),
-        whiteText( "姓名:${profile.name}", 20),
-        whiteText("單位:${profile.profession}", 20),
+        whiteText( "$NAME:${profile.name}", 20),
+        whiteText("$UNIT:${profile.profession}", 20),
       ],
     );
   }

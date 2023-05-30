@@ -36,11 +36,13 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
   final TextEditingController _controllerOut = TextEditingController();
   final TextEditingController _controllerClear = TextEditingController();
   final TextEditingController _controllerRest = TextEditingController();
+  final TextEditingController _controllerAIServer = TextEditingController();
   late SharedPreferences prefs;
   String inIDs = "";
   String outIDs = "";
   //String clearupTime = "";
   //String resetTime = "";
+
 
 
   @override
@@ -63,6 +65,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
     _controllerOut.text = await prefs.getString(PREF_KEY_OUT_DEVICEIDS )!;
     _controllerClear.text = await prefs.getString(PREF_KEY_CLEARUP_TIME)!;
     _controllerRest.text = await prefs.getString(PREF_KEY_RESET_TIME )!;
+    _controllerAIServer.text = await prefs.getString(PREF_KEY_AI_SERVER )!;
   }
 
   Future<void> _handleTap() async {
@@ -85,9 +88,11 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
       prefs.setString(PREF_KEY_OUT_DEVICEIDS , _controllerOut.text);
       prefs.setString(PREF_KEY_CLEARUP_TIME ,  _controllerClear.text);
       prefs.setString(PREF_KEY_RESET_TIME , _controllerRest.text);
+      prefs.setString(PREF_KEY_AI_SERVER , _controllerAIServer.text);
       
       mClearTime = _controllerClear.text;
       mResetTime = _controllerRest.text;
+      AIHost = _controllerAIServer.text;
 
       showMsg(_context, "Save OK");
     });
@@ -96,6 +101,11 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
     //Navigator.pop(context,true);
     //Navigator.of(context).pop();
   }
+
+  Future<void> _handleTapClearUp() async {
+      resetData();
+  }
+
 
   late BuildContext _context;
 
@@ -119,7 +129,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
       //mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Text(
-          'WebSocket Host:',
+          'WebSocket Server:',
           style: TextStyle(fontSize: 24),
         ),
         const SizedBox(width: 20),
@@ -220,6 +230,38 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
       ],
     );
 
+    Widget row7 = Row(
+      //mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          'AI Server: ',
+          style: TextStyle(fontSize: 24),
+        ),
+        const SizedBox(width: 20),
+        Flexible(
+          child: TextField(
+            controller: _controllerAIServer,
+            decoration: InputDecoration(
+              labelText: (mResetTime),
+              border: const OutlineInputBorder(),
+            ),
+          ),
+        ),
+        const SizedBox(width: 36),
+      ],
+    );
+
+    Widget row8 = Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        const SizedBox(width: 10),
+        ElevatedButton(
+          onPressed: _handleTapClearUp,
+          child: Text("$CLEAR_ALL"),
+        ),
+
+      ],
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -241,6 +283,10 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
             row5,
             const SizedBox(height: 20),
             row6,
+            const SizedBox(height: 20),
+            row7,
+            const SizedBox(height: 20),
+            row8,
           ],
         ),
       ),

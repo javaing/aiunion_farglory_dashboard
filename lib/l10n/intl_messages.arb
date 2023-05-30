@@ -1,0 +1,20 @@
+{
+  "@@last_modified": "2023-05-30T13:53:37.145140",
+  "Workout": "Workout",
+  "@Workout": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "Minute": "Minute",
+  "@Minute": {
+    "description": "The singular form of minute",
+    "type": "text",
+    "placeholders": {}
+  },
+  "unitMinutes": "Minutes",
+  "@unitMinutes": {
+    "description": "The plural form of minute",
+    "type": "text",
+    "placeholders": {}
+  }
+}
