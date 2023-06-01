@@ -39,15 +39,19 @@ class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
-  String get workout {
-    return Intl.message('Workout');
+  String get enter {
+    return Intl.message('Enter', name: 'enter', desc: '');
   }
 
-  String get unitMinute {
-    return Intl.message('Minute', desc: 'The singular form of minute');
+  String get exit {
+    return Intl.message('Exit', name: 'exit', desc: '');
   }
 
-  String get unitMinutes {
-    return Intl.message('Minutes', name: 'unitMinutes', desc: 'The plural form of minute');
+  String get name {
+    return Intl.message('Name', name: 'name', desc: '');
+  }
+
+  String get unit {
+    return Intl.message('Unit', name: 'unit', desc: '');
   }
 }

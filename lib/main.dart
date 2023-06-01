@@ -1,11 +1,7 @@
 
 import 'package:far_glory_construction_dashboard/Constants.dart';
-import 'package:far_glory_construction_dashboard/service/mqtt_service.dart';
-import 'package:far_glory_construction_dashboard/service/service_locator.dart';
-import 'package:far_glory_construction_dashboard/util/Utils.dart';
 import 'package:far_glory_construction_dashboard/view/TableScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 // Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
@@ -14,6 +10,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 // ignore_for_file: public_member_api_docs
 import 'package:shared_preferences/shared_preferences.dart';
 import 'DemoMain1.dart';
+import 'l10n/app_localizations.dart';
 
 
 void main() {
@@ -38,6 +35,17 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      localizationsDelegates: const [
+        AppLocalizationsDelegate(),
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+
+      supportedLocales: [
+        const Locale('en'),
+        const Locale('zh'),
+      ],
+
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -60,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void loadPref() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    //setState(() {
+    setState(() {
       //若無給初始值
       String setting = prefs.getString(PREF_KEY_WS_SERVER)??"";
       //print('art 05111 a ' + setting);
@@ -88,7 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if(setting.isEmpty) {
         prefs.setString(PREF_KEY_RESET_TIME, DEFAULT_RESET_TIME);
       }
-    //});
+    });
   }
 
   @override

@@ -25,8 +25,7 @@ class MessageLookup extends MessageLookupByLibrary {
   final Map<String, dynamic> messages = _notInlinedMessages(_notInlinedMessages);
 
   static Map<String, dynamic> _notInlinedMessages(_) => {
-      'Minute': MessageLookupByLibrary.simpleMessage('Minute'),
-    'Workout': MessageLookupByLibrary.simpleMessage('Workout'),
-    'unitMinutes': MessageLookupByLibrary.simpleMessage('Minutes')
+      'name': MessageLookupByLibrary.simpleMessage('姓名'),
+    'unit': MessageLookupByLibrary.simpleMessage('單位')
   };
 }

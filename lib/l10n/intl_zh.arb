@@ -1,19 +1,27 @@
 {
-  "@@last_modified": "2023-05-30T13:53:37.145140",
-  "Workout": "Workout",
-  "@Workout": {
+  "@@locale": "zh",
+  "@@last_modified": "2020-05-01T22:44:50.183241",
+  "enterEasyRead": "進場",
+  "@enterEasyRead": {
+    "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "Minute": "Minute",
-  "@Minute": {
-    "description": "The singular form of minute",
+  "exitEasyRead": "出場",
+  "@exitEasyRead": {
+    "description": "",
     "type": "text",
     "placeholders": {}
   },
-  "unitMinutes": "Minutes",
-  "@unitMinutes": {
-    "description": "The plural form of minute",
+  "name": "姓名",
+  "@name": {
+    "description": "",
+    "type": "text",
+    "placeholders": {}
+  },
+  "unit": "單位",
+  "@unit": {
+    "description": "",
     "type": "text",
     "placeholders": {}
   }

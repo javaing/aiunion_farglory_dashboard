@@ -23,24 +23,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 
-final String headerNews = '進行高空作業前，一定要確認安全掛勾是否扣上     進入狹窄的空間前，進入狹窄的空間前，    進入工地戴安全帽（安全帽區域）     確實配戴背負式安全帶（磨損的安全線束）';
+//final String headerNews = '進行高空作業前，一定要確認安全掛勾是否扣上     進入狹窄的空間前，進入狹窄的空間前，    進入工地戴安全帽（安全帽區域）     確實配戴背負式安全帶（磨損的安全線束）';
 final String headerWeather = '26°\n大致晴朗';
-final List<String> leftRow1Title = ['進場人次','出場人次','現場人數'];
-final List<String> clearupTitle = ['進場人次','出場人次','滯留人數'];
+// final List<String> leftRow1Title = ['進場人次','出場人次','現場人數'];
+// final List<String> clearupTitle = ['進場人次','出場人次','滯留人數'];
 //List<String> leftRow1Count = ["99","0","99"];
 int leaveCount = 0;
 int enterCount = 0;
 List<int> enterName = [];
 List<int> leaveName = [];
-const String EASY_READ_ENTER = '進場';
-const String EASY_READ_LEAVE = '出場';
-final String NAME = "姓名";
-final String UNIT = "單位";
-final String ENVIROMENT = "環境資訊";
-final String UPDATE = "更新";
-final List<String> environTitle = ['空氣品質指標', '空氣污染指標物', '狀態', "一氧化碳", "PM10", "PM2.5", "風速"];
-final String DEFAULT_VENDOR_NAME = '承包商';
-final String VENDOR_NAME_OTHER = '其他';
+// const String EASY_READ_ENTER = '進場';
+// const String EASY_READ_LEAVE = '出場';
+// final String NAME = "姓名";
+// final String UNIT = "單位";
+// final String ENVIROMENT = "環境資訊";
+// final String UPDATE = "更新";
+// final List<String> environTitle = ['空氣品質指標', '空氣污染指標物', '狀態', "一氧化碳", "PM10", "PM2.5", "風速"];
+// final String DEFAULT_VENDOR_NAME = '承包商';
+// final String VENDOR_NAME_OTHER = '其他';
 
 
 String mClearTime = "";
@@ -59,18 +59,18 @@ List<bool> DEFAULT_BOOLLIST = [true, true, true, true]; //酒測 工地帽 背�
 List<bool> boolListDrink = [false, true, true, true];
 List<bool> boolListBlack = [true, true, true, false];
 
-// final List<String> leftRow1Title = ['Enter Count','Exit Count','Present People'];
-// final List<String> clearupTitle = ['進場人次','出場人次','滯留人數'];
-// const String EASY_READ_ENTER = 'Enter';
-// const String EASY_READ_LEAVE = 'Exit';
-// final List<String> environTitle = ['Quality Index', 'Pollution object', 'State', "CO", "PM10", "PM2.5", "Windy"];
-// final String DEFAULT_VENDOR_NAME = 'Vendor';
-// final String VENDOR_NAME_OTHER = 'Other';
-// final String NAME = "name";
-// final String UNIT = "unit";
-// final String ENVIROMENT = "Enviroment";
-//final String headerNews = 'Before performing high-altitude operations, be sure to confirm whether the safety hook is buckled. Before entering a narrow space, before entering a narrow space, wear a safety helmet (hard hat area) on the construction site, and wear a backpack safety belt (worn security harness)';
-// final String UPDATE = "updated";
+final List<String> leftRow1Title = ['Enter Count','Exit Count','Present People'];
+final List<String> clearupTitle = ['進場人次','出場人次','滯留人數'];
+const String EASY_READ_ENTER = 'Enter';
+const String EASY_READ_LEAVE = 'Exit';
+final List<String> environTitle = ['Quality Index', 'Pollution object', 'State', "CO", "PM10", "PM2.5", "Windy"];
+final String DEFAULT_VENDOR_NAME = 'Vendor';
+final String VENDOR_NAME_OTHER = 'Other';
+final String NAME = "name";
+final String UNIT = "unit";
+final String ENVIROMENT = "Enviroment";
+final String headerNews = 'Before performing high-altitude operations, be sure to confirm whether the safety hook is buckled. Before entering a narrow space, before entering a narrow space, wear a safety helmet (hard hat area) on the construction site, and wear a backpack safety belt (worn security harness)';
+final String UPDATE = "updated";
 final String CLEAR_ALL = "Clear All Data";
 
 List<Profile> profilesRemain = [
@@ -192,16 +192,16 @@ class TableScreenViewModel {
   Future<void> onConnectCallback1(StompFrame connectFrame) async {
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String setting = prefs.getString(PREF_KEY_IN_DEVICEIDS)??"";
+    String setting = prefs.getString(PREF_KEY_IN_DEVICEIDS)?? DEFAULT_IN_DEVICEIDS ;
     List<String> ids = setting.split(",");
     ids.forEach((element) {addSubscribe(element);});
-    if(HOST == '192.168.0.109') {
-      addSubscribe('30'); //for test in 109
-      addLeaveSubscribe('31');
-    }
+    // if(HOST == '192.168.0.109') {
+    //   addSubscribe('30'); //for test in 109
+    //   addLeaveSubscribe('31');
+    // }
 
 
-    setting = prefs.getString(PREF_KEY_OUT_DEVICEIDS)??"";
+    setting = prefs.getString(PREF_KEY_OUT_DEVICEIDS)?? DEFAULT_OUT_DEVICEIDS;
     ids = setting.split(",");
     ids.forEach((element) {addLeaveSubscribe(element);});
 
@@ -528,6 +528,7 @@ Future<void> saveEnterLeave() async {
   prefs.setInt(PREF_KEY_ENTER_COUNT, enterCount);
   prefs.setInt(PREF_KEY_LEAVE_COUNT, leaveCount);
   prefs.setString(PREF_KEY_PROFILE_POOL, jsonEncode(profilesPool));
+  prefs.setString(PREF_KEY_PROFILE_REMAIN, jsonEncode(profilesRemain));
   prefs.setString(PREF_KEY_VENDOR , jsonEncode(vendorList));
   prefs.setString(PREF_KEY_ENTER_UNIQUE_NAME , jsonEncode(enterName.toList()));
   prefs.setString(PREF_KEY_LEAVE_UNIQUE_NAME , jsonEncode(leaveName.toList()));

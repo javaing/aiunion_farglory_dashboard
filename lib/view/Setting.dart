@@ -53,19 +53,15 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
 
   void loadPref() async {
     prefs = await SharedPreferences.getInstance() ;
-    // setState(() { //放setState() 會error
-    //   _controller.text = prefs.getString(PREF_KEY_WS_SERVER)!;
-    //   _controllerIn.text = prefs.getString(PREF_KEY_IN_DEVICEIDS)!;
-    //   _controllerOut.text = prefs.getString(PREF_KEY_OUT_DEVICEIDS )!;
-    //   _controllerClear.text = prefs.getString(PREF_KEY_CLEARUP_TIME)!;
-    //   _controllerRest.text = prefs.getString(PREF_KEY_RESET_TIME )!;
-    // });
-    _controller.text = await prefs.getString(PREF_KEY_WS_SERVER)!;
-    _controllerIn.text = await prefs.getString(PREF_KEY_IN_DEVICEIDS)!;
-    _controllerOut.text = await prefs.getString(PREF_KEY_OUT_DEVICEIDS )!;
-    _controllerClear.text = await prefs.getString(PREF_KEY_CLEARUP_TIME)!;
-    _controllerRest.text = await prefs.getString(PREF_KEY_RESET_TIME )!;
-    _controllerAIServer.text = await prefs.getString(PREF_KEY_AI_SERVER )!;
+     setState(() { //放setState() 會error
+       _controller.text = prefs.getString(PREF_KEY_WS_SERVER)!;
+       _controllerIn.text = prefs.getString(PREF_KEY_IN_DEVICEIDS)!;
+       _controllerOut.text = prefs.getString(PREF_KEY_OUT_DEVICEIDS )!;
+       _controllerClear.text = prefs.getString(PREF_KEY_CLEARUP_TIME)!;
+       _controllerRest.text = prefs.getString(PREF_KEY_RESET_TIME )!;
+       _controllerAIServer.text = prefs.getString(PREF_KEY_AI_SERVER )?? DEFAULT_AI_SERVER;
+     });
+
   }
 
   Future<void> _handleTap() async {

@@ -135,9 +135,9 @@ class _TableScreenState extends State<TableScreen> {
         if(environCount[2]=="普通") {
           environColor[2] = "yellow";
         }
-        // if(environCount[2]=="良好") {
-        //   environCount[2]="Good";
-        // }
+        if(environCount[2]=="良好") {
+          environCount[2]="Good";
+        }
         environUpdateTime = find.first.publishtime ?? "";
         environUpdateTime = "${environUpdateTime.replaceAll(":00:00", ":00")} $UPDATE";
       }
@@ -195,7 +195,7 @@ wind_speed(風速(m/sec))、
   void loadTodayProfile() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    playMP3('blacklist.mp3');
+    //playMP3('blacklist.mp3');
 
     setState(() {
       if(prefs==null) {
@@ -205,13 +205,24 @@ wind_speed(風速(m/sec))、
       enterCount = prefs.getInt(PREF_KEY_ENTER_COUNT) ?? 0;
       leaveCount = prefs.getInt(PREF_KEY_LEAVE_COUNT) ?? 0;
       String jsonStr = prefs.getString(PREF_KEY_PROFILE_POOL) ?? "";
+
       profilesPool.clear();
+      profilesRemain.clear();
       if(jsonStr!=null && jsonStr.isNotEmpty) {
         List<dynamic> dd = jsonDecode(jsonStr);
         for(int i=0; i<dd.length; i++) {
           profilesPool.add(Profile.fromJson(dd[i]));
         }
       }
+
+      jsonStr = prefs.getString(PREF_KEY_PROFILE_REMAIN) ?? "";
+      if(jsonStr!=null && jsonStr.isNotEmpty) {
+        List<dynamic> dd = jsonDecode(jsonStr);
+        for(int i=0; i<dd.length; i++) {
+          profilesRemain.add(Profile.fromJson(dd[i]));
+        }
+      }
+
 
       jsonStr = prefs.getString(PREF_KEY_VENDOR) ?? "";
       if(jsonStr!=null && jsonStr.isNotEmpty) {
@@ -252,6 +263,7 @@ wind_speed(風速(m/sec))、
       prefs.setInt(PREF_KEY_ENTER_COUNT, 0) ;
       prefs.setInt(PREF_KEY_LEAVE_COUNT,0) ;
       prefs.setString(PREF_KEY_PROFILE_POOL, "");
+      prefs.setString(PREF_KEY_PROFILE_REMAIN, "");
       prefs.setString(PREF_KEY_ENTER_UNIQUE_NAME , "");
       prefs.setString(PREF_KEY_LEAVE_UNIQUE_NAME , "");
     });
@@ -335,9 +347,9 @@ wind_speed(風速(m/sec))、
       }
     }
 
-    // if(WxString.contains("雨")) {
-    //   WxString = "Short shower";
-    // }
+    if(WxString.contains("雨")) {
+      WxString = "Short shower";
+    }
 
     weatherText = "$WxString\n$ATString°C";
     setState(() {
@@ -648,9 +660,21 @@ wind_speed(風速(m/sec))、
       },
     );
 
+    Widget overlap = Stack(
+      alignment: Alignment.centerLeft,
+      children: [
+        profileListView,
+        Positioned(
+            bottom:-15,
+            right: -10,
+            child: Image.asset('images/logo_screen_white.png' , width:120, height:90),
+        ),
+
+      ],);
+
     Widget p = Padding(
         padding: EdgeInsets.only(top: 24.0, left: 15.0),
-        child: profileListView
+        child: overlap
     );
 
     // Widget w = Padding(

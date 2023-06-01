@@ -117,7 +117,7 @@ class ProfileWidget extends StatelessWidget {
   // }
 
   Widget avatarW() {
-    var format = new DateFormat('HH:mm a');
+    var format = new DateFormat('HH:mm');
     var date = DateTime.fromMillisecondsSinceEpoch(profile.end_time);
     return Column(
       children: [

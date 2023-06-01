@@ -17,7 +17,7 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
-            android:name=".MainActivity"
+            android:name="com.aiunion.far_glory_construction_dashboard.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/LaunchTheme"
@@ -47,7 +47,7 @@
        <receiver
            android:enabled="true"
            android:exported="true"
-           android:name=".BootBroadcastReceiver" >
+           android:name="com.aiunion.far_glory_construction_dashboard.BootBroadcastReceiver" >
            <intent-filter
                android:priority="2147483647">
                <action android:name="android.intent.action.BOOT_COMPLETED" />
