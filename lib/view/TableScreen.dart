@@ -135,9 +135,9 @@ class _TableScreenState extends State<TableScreen> {
         if(environCount[2]=="普通") {
           environColor[2] = "yellow";
         }
-        if(environCount[2]=="良好") {
-          environCount[2]="Good";
-        }
+        // if(environCount[2]=="良好") {
+        //   environCount[2]="Good";
+        // }
         environUpdateTime = find.first.publishtime ?? "";
         environUpdateTime = "${environUpdateTime.replaceAll(":00:00", ":00")} $UPDATE";
       }
@@ -232,15 +232,15 @@ wind_speed(風速(m/sec))、
         }
       }
 
-      jsonStr = prefs.getString(PREF_KEY_ENTER_UNIQUE_NAME) ?? "";
+      jsonStr = prefs.getString(PREF_KEY_ENTER_UNIQUE_FACEID) ?? "";
       if(jsonStr!=null && jsonStr.isNotEmpty) {
-        enterName = dynamicToListInt( jsonDecode(jsonStr) );
+        enterFaceId = dynamicToListInt( jsonDecode(jsonStr) );
         //print("art 0511 load enterName=$enterName");
       }
 
-      jsonStr = prefs.getString(PREF_KEY_LEAVE_UNIQUE_NAME) ?? "";
+      jsonStr = prefs.getString(PREF_KEY_LEAVE_UNIQUE_FACEID) ?? "";
       if(jsonStr!=null && jsonStr.isNotEmpty) {
-        leaveName = dynamicToListInt( jsonDecode(jsonStr) );
+        leaveFaceId = dynamicToListInt( jsonDecode(jsonStr) );
         //print("art 0511 load leaveName=$leaveName");
       }
 
@@ -264,8 +264,8 @@ wind_speed(風速(m/sec))、
       prefs.setInt(PREF_KEY_LEAVE_COUNT,0) ;
       prefs.setString(PREF_KEY_PROFILE_POOL, "");
       prefs.setString(PREF_KEY_PROFILE_REMAIN, "");
-      prefs.setString(PREF_KEY_ENTER_UNIQUE_NAME , "");
-      prefs.setString(PREF_KEY_LEAVE_UNIQUE_NAME , "");
+      prefs.setString(PREF_KEY_ENTER_UNIQUE_FACEID , "");
+      prefs.setString(PREF_KEY_LEAVE_UNIQUE_FACEID , "");
     });
 
   }
@@ -347,9 +347,9 @@ wind_speed(風速(m/sec))、
       }
     }
 
-    if(WxString.contains("雨")) {
-      WxString = "Short shower";
-    }
+    // if(WxString.contains("雨")) {
+    //   WxString = "Short shower";
+    // }
 
     weatherText = "$WxString\n$ATString°C";
     setState(() {
@@ -407,7 +407,7 @@ wind_speed(風速(m/sec))、
 
 
     int remainNum = profilesRemain.where((element) => element.typeId>0).length;
-    List<String> leftRow1CountNew = [ "$enterCount (${enterName.length})", "$leaveCount (${leaveName.length})",  remainNum.toString() ];
+    List<String> leftRow1CountNew = [ "$enterCount (${enterFaceId.length})", "$leaveCount (${leaveFaceId.length})",  remainNum.toString() ];
 
     return Table(
         border: TableBorder.all(
@@ -431,7 +431,7 @@ wind_speed(風速(m/sec))、
     }
     //leaveCount = sum.toInt() - profilesRemain.length;
     //List<int> leftRow1Count = [ sum, leaveCount,  profilesRemain.length];
-    List<String> leftRow1CountNew = [ "$sum/${enterName.length}", "$leaveCount/${leaveName.length}",  profilesRemain.length.toString() ];
+    List<String> leftRow1CountNew = [ "$sum/${enterFaceId.length}", "$leaveCount/${leaveFaceId.length}",  profilesRemain.length.toString() ];
 
 
     Widget title =  Table(

@@ -23,24 +23,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 
-//final String headerNews = '進行高空作業前，一定要確認安全掛勾是否扣上     進入狹窄的空間前，進入狹窄的空間前，    進入工地戴安全帽（安全帽區域）     確實配戴背負式安全帶（磨損的安全線束）';
+final String headerNews = '進行高空作業前，一定要確認安全掛勾是否扣上     進入狹窄的空間前，進入狹窄的空間前，    進入工地戴安全帽（安全帽區域）     確實配戴背負式安全帶（磨損的安全線束）';
 final String headerWeather = '26°\n大致晴朗';
-// final List<String> leftRow1Title = ['進場人次','出場人次','現場人數'];
-// final List<String> clearupTitle = ['進場人次','出場人次','滯留人數'];
+final List<String> leftRow1Title = ['進場人次','出場人次','現場人數'];
+final List<String> clearupTitle = ['進場人次','出場人次','滯留人數'];
 //List<String> leftRow1Count = ["99","0","99"];
 int leaveCount = 0;
 int enterCount = 0;
-List<int> enterName = [];
-List<int> leaveName = [];
-// const String EASY_READ_ENTER = '進場';
-// const String EASY_READ_LEAVE = '出場';
-// final String NAME = "姓名";
-// final String UNIT = "單位";
-// final String ENVIROMENT = "環境資訊";
-// final String UPDATE = "更新";
-// final List<String> environTitle = ['空氣品質指標', '空氣污染指標物', '狀態', "一氧化碳", "PM10", "PM2.5", "風速"];
-// final String DEFAULT_VENDOR_NAME = '承包商';
-// final String VENDOR_NAME_OTHER = '其他';
+List<int> enterFaceId = [];
+List<int> leaveFaceId = [];
+const String EASY_READ_ENTER = '進場';
+const String EASY_READ_LEAVE = '出場';
+final String NAME = "姓名";
+final String UNIT = "單位";
+final String ENVIROMENT = "環境資訊";
+final String UPDATE = "更新";
+final List<String> environTitle = ['空氣品質指標', '空氣污染指標物', '狀態', "一氧化碳", "PM10", "PM2.5", "風速"];
+final String DEFAULT_VENDOR_NAME = '承包商';
+final String VENDOR_NAME_OTHER = '其他';
 
 
 String mClearTime = "";
@@ -58,20 +58,21 @@ List<Vendor> vendorList = [];
 List<bool> DEFAULT_BOOLLIST = [true, true, true, true]; //酒測 工地帽 背心 效期內,非黑名單
 List<bool> boolListDrink = [false, true, true, true];
 List<bool> boolListBlack = [true, true, true, false];
-
-final List<String> leftRow1Title = ['Enter Count','Exit Count','Present People'];
-final List<String> clearupTitle = ['進場人次','出場人次','滯留人數'];
-const String EASY_READ_ENTER = 'Enter';
-const String EASY_READ_LEAVE = 'Exit';
-final List<String> environTitle = ['Quality Index', 'Pollution object', 'State', "CO", "PM10", "PM2.5", "Windy"];
-final String DEFAULT_VENDOR_NAME = 'Vendor';
-final String VENDOR_NAME_OTHER = 'Other';
-final String NAME = "name";
-final String UNIT = "unit";
-final String ENVIROMENT = "Enviroment";
-final String headerNews = 'Before performing high-altitude operations, be sure to confirm whether the safety hook is buckled. Before entering a narrow space, before entering a narrow space, wear a safety helmet (hard hat area) on the construction site, and wear a backpack safety belt (worn security harness)';
-final String UPDATE = "updated";
 final String CLEAR_ALL = "Clear All Data";
+
+// final List<String> leftRow1Title = ['Enter Count','Exit Count','Present People'];
+// final List<String> clearupTitle = ['進場人次','出場人次','滯留人數'];
+// const String EASY_READ_ENTER = 'Enter';
+// const String EASY_READ_LEAVE = 'Exit';
+// final List<String> environTitle = ['Quality Index', 'Pollution object', 'State', "CO", "PM10", "PM2.5", "Windy"];
+// final String DEFAULT_VENDOR_NAME = 'Vendor';
+// final String VENDOR_NAME_OTHER = 'Other';
+// final String NAME = "name";
+// final String UNIT = "unit";
+// final String ENVIROMENT = "Enviroment";
+// final String headerNews = 'Before performing high-altitude operations, be sure to confirm whether the safety hook is buckled. Before entering a narrow space, before entering a narrow space, wear a safety helmet (hard hat area) on the construction site, and wear a backpack safety belt (worn security harness)';
+// final String UPDATE = "updated";
+
 
 List<Profile> profilesRemain = [
   //Profile(name: '黃 * 林', profession: rightRowTitle[3], imageUrl: workerImages[2], action: leaveStr, boolList: boolList, faceId: '0' ),
@@ -264,8 +265,8 @@ class TableScreenViewModel {
           print('art check remove p.faceId=' + p.faceId.toString() + " name=" + p.name + " ll size=" + ll.length.toString());
             if(ll.length>0) {
               leaveCount = leaveCount+1;
-              if(!leaveName.contains(p.faceId)) {
-                leaveName.add(p.faceId);
+              if(!leaveFaceId.contains(p.faceId)) {
+                leaveFaceId.add(p.faceId);
               }
               Profile find = ll.first;
               var isSuiccess = profilesRemain.remove(find);
@@ -530,8 +531,8 @@ Future<void> saveEnterLeave() async {
   prefs.setString(PREF_KEY_PROFILE_POOL, jsonEncode(profilesPool));
   prefs.setString(PREF_KEY_PROFILE_REMAIN, jsonEncode(profilesRemain));
   prefs.setString(PREF_KEY_VENDOR , jsonEncode(vendorList));
-  prefs.setString(PREF_KEY_ENTER_UNIQUE_NAME , jsonEncode(enterName.toList()));
-  prefs.setString(PREF_KEY_LEAVE_UNIQUE_NAME , jsonEncode(leaveName.toList()));
+  prefs.setString(PREF_KEY_ENTER_UNIQUE_FACEID , jsonEncode(enterFaceId.toList()));
+  prefs.setString(PREF_KEY_LEAVE_UNIQUE_FACEID , jsonEncode(leaveFaceId.toList()));
   //print('art jsonEncode=' + jsonEncode(profilesRemain));
 }
 
@@ -557,8 +558,8 @@ void updateVendorList(String company, Profile profile) {
     return;
   }
   enterCount++;
-  if(!enterName.contains(autoid)) {
-    enterName.add(autoid);
+  if(!enterFaceId.contains(autoid)) {
+    enterFaceId.add(autoid);
   }
 
   profilesRemain.add(profile);
@@ -607,8 +608,8 @@ void resetData() {
 
   profilesPool.clear();
   profilesRemain.clear();
-  enterName.clear();
-  leaveName.clear();
+  enterFaceId.clear();
+  leaveFaceId.clear();
   enterCount = 0;
   leaveCount = 0;
 }
