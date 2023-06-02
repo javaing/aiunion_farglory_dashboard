@@ -9,6 +9,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../Constants.dart';
 import '../datamodel/ServerFaceType.dart';
 import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+
+import '../datamodel/WebSocketFace.dart';
 
 
 void showMsg(BuildContext context,String msg) {
@@ -33,8 +36,13 @@ void showMsg(BuildContext context,String msg) {
   );
 }
 
+String getYYYYMMDD() {
+  final DateTime now = DateTime.now();
+  return DateFormat('yyyyMMdd').format(now);
+}
+
 String formatDateTime(DateTime dateTime) {
-  return DateFormat('yyyy/MM/dd hh:mm:ss').format(dateTime);
+  return DateFormat('yyyy/MM/dd HH:mm:ss').format(dateTime);
 }
 
 String getformatNow() {
@@ -188,3 +196,29 @@ Future<Response> dioV2Get(Dio dio, String path) {
 }
 
 
+Future<String> getFilePath(String filename) async {
+  String dir = "";
+  // if(Platform.isAndroid) {
+  //   dir = "/storage/emulated/0/Download";
+  // } else if(Platform.isIOS) {
+  //   dir = (await getApplicationDocumentsDirectory()).path;
+  // }
+  dir = (await getApplicationDocumentsDirectory()).path;
+  String filePath = '$dir/$filename'; // 3
+  //String filePath = '$filename'; // 3
+  print('art filePath=' + filePath);
+  return filePath;
+}
+
+void writeFile(String str, String filename) async {
+  File file = File(await getFilePath(filename)); // 1
+  file.writeAsString(str, mode:FileMode.append); // 2
+}
+
+//Id	deviceId	faceId	faceTypeId	time
+extension Qoo on WebSocketFace {
+  String toString2() {
+    var date = DateTime.fromMillisecondsSinceEpoch(start_time!);
+    return "\"${identity!}\",\"${device_id!}\",\"${face_id!}\",\"${type_id ?? ""}\",\"${formatDateTime(date)}\"\n";
+  }
+}

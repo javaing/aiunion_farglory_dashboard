@@ -37,11 +37,10 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
   final TextEditingController _controllerClear = TextEditingController();
   final TextEditingController _controllerRest = TextEditingController();
   final TextEditingController _controllerAIServer = TextEditingController();
+  final TextEditingController _controllerDeduplicate = TextEditingController();
   late SharedPreferences prefs;
   String inIDs = "";
   String outIDs = "";
-  //String clearupTime = "";
-  //String resetTime = "";
 
 
 
@@ -60,6 +59,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
        _controllerClear.text = prefs.getString(PREF_KEY_CLEARUP_TIME)!;
        _controllerRest.text = prefs.getString(PREF_KEY_RESET_TIME )!;
        _controllerAIServer.text = prefs.getString(PREF_KEY_AI_SERVER )?? DEFAULT_AI_SERVER;
+       _controllerDeduplicate.text = prefs.getString(PREF_KEY_DEDUPLICATE_SECOND )?? "25";
      });
 
   }
@@ -85,10 +85,12 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
       prefs.setString(PREF_KEY_CLEARUP_TIME ,  _controllerClear.text);
       prefs.setString(PREF_KEY_RESET_TIME , _controllerRest.text);
       prefs.setString(PREF_KEY_AI_SERVER , _controllerAIServer.text);
+      prefs.setString(PREF_KEY_DEDUPLICATE_SECOND , _controllerDeduplicate.text);
       
       mClearTime = _controllerClear.text;
       mResetTime = _controllerRest.text;
       AIHost = _controllerAIServer.text;
+      mDeduplicate = _controllerDeduplicate.text;
 
       showMsg(_context, "Save OK");
     });
@@ -247,6 +249,27 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
       ],
     );
 
+    Widget row9 = Row(
+      //mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          '幾秒以內重複不計: ',
+          style: TextStyle(fontSize: 24),
+        ),
+        const SizedBox(width: 20),
+        Flexible(
+          child: TextField(
+            controller: _controllerDeduplicate,
+            decoration: InputDecoration(
+              labelText: (mDeduplicate),
+              border: const OutlineInputBorder(),
+            ),
+          ),
+        ),
+        const SizedBox(width: 36),
+      ],
+    );
+
     Widget row8 = Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
@@ -263,6 +286,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
       appBar: AppBar(
         title: Text('Setting'),
       ),
+        resizeToAvoidBottomInset:false,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -281,6 +305,8 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
             row6,
             const SizedBox(height: 20),
             row7,
+            const SizedBox(height: 20),
+            row9,
             const SizedBox(height: 20),
             row8,
           ],

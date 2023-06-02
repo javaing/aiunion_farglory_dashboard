@@ -3,17 +3,16 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:core';
 
-//import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 
 
 import '../Constants.dart';
-import '../datamodel/FacesDetail.dart';
 import '../datamodel/FarGloryMsg.dart';
 import '../datamodel/Profile.dart';
 import '../datamodel/ServerFaceType.dart';
 import '../datamodel/WebSocketFace.dart';
+import '../util/DBHelper.dart';
 import '../util/Utils.dart';
 import 'package:stomp_dart_client/stomp.dart';
 import 'package:stomp_dart_client/stomp_config.dart';
@@ -32,6 +31,8 @@ int leaveCount = 0;
 int enterCount = 0;
 List<int> enterFaceId = [];
 List<int> leaveFaceId = [];
+Set<int> enterWebSocket = {};
+Set<int> leaveWebSocket = {};
 const String EASY_READ_ENTER = '進場';
 const String EASY_READ_LEAVE = '出場';
 final String NAME = "姓名";
@@ -46,6 +47,7 @@ final String VENDOR_NAME_OTHER = '其他';
 String mClearTime = "";
 String mResetTime = "";
 String AIHost = "";
+String mDeduplicate = "25";
 
 List<int> workTypeCount = [0, 0, 0, 0, 0, 0, 0];
 const Utf8Codec utf8 = Utf8Codec();
@@ -72,6 +74,13 @@ final String CLEAR_ALL = "Clear All Data";
 // final String ENVIROMENT = "Enviroment";
 // final String headerNews = 'Before performing high-altitude operations, be sure to confirm whether the safety hook is buckled. Before entering a narrow space, before entering a narrow space, wear a safety helmet (hard hat area) on the construction site, and wear a backpack safety belt (worn security harness)';
 // final String UPDATE = "updated";
+
+//Log
+//deviceId	in_out	faceId	FaceTypeId	time	OK	IN_TOTAL	IN_DEDUPLICATE	OUT_TOTAL	OUT_DEDUPLICATE + 5  大屏五項資料
+List<String> dailyLOG = [];
+DBHelper deHelper = DBHelper();
+
+
 
 
 List<Profile> profilesRemain = [
@@ -109,7 +118,7 @@ class TableScreenViewModel {
           print('art onWebSocketError e=$e'),
           onStompError: (d) => print('art error stomp'),
           onDisconnect: (f) => print('art disconnected'),
-          //onDebugMessage: (f) => print('art debug $f'),
+          onDebugMessage: (f) => print('art debug $f'),
         )
     );
     stomp.activate();
@@ -122,20 +131,39 @@ class TableScreenViewModel {
     stomp.deactivate();
   }
 
+  void inLog(String deviceId, WebSocketFace face) {
+    //deviceId	in_out	faceId	FaceTypeId	time	OK	IN_TOTAL	IN_DEDUPLICATE	OUT_TOTAL	OUT_DEDUPLICATE + 5  大屏五項資料
+    //String log = deviceId + ",in," + face.face_id!.toString() + "," + face.type_id!.toString()
+    var date = DateTime.fromMillisecondsSinceEpoch(face.start_time!);
+    var time = formatDateTime(date);
+    deHelper.inserLog(deviceId, "IN", face.face_id!.toString(), face.type_id!.toString() , time, "X",
+        null, null, null, null, enterCount.toString(), enterWebSocket.length.toString(),
+        leaveCount.toString(), leaveWebSocket.toString(), profilesRemain.length.toString());
+  }
+
+  void outLog(String deviceId, WebSocketFace face) {
+    //deviceId	in_out	faceId	FaceTypeId	time	OK	IN_TOTAL	IN_DEDUPLICATE	OUT_TOTAL	OUT_DEDUPLICATE + 5  大屏五項資料
+    //String log = deviceId + ",in," + face.face_id!.toString() + "," + face.type_id!.toString()
+    var date = DateTime.fromMillisecondsSinceEpoch(face.start_time!);
+    var time = formatDateTime(date);
+    deHelper.inserLog(deviceId, "OUT", face.face_id!.toString(), face.type_id!.toString() , time, "X",
+        null, null, null, null, enterCount.toString(), enterWebSocket.length.toString(),
+        leaveCount.toString(), leaveWebSocket.toString(), profilesRemain.length.toString());
+  }
+
   void addSubscribe(String deviceID) {
     stomp.subscribe(destination: "/topic/capture/$deviceID", headers: {}, callback: (frame) {
 
       WebSocketFace face=  webSocketFaceFromJson(frame.body.toString());
-      //print("art face " + face.name! + ", " + face.type_id! + "");
+      //writeFile(face.toString2(), 'farglory_in_${getYYYYMMDD()}.txt');
+      inLog(deviceID, face);
       if(face.enabled!=null && face.enabled!) {
         if( isDuplicate(face) ) {
           print("art face 去重 ${face.name!} , id=${face.face_id}");
           return;
         }
-        // if(isExistRemain(face.face_id!)) {
-        //   print("art 還未離場又進場的人不用加pool");
-        //   return;
-        // }
+        //writeFile(face.toString2(), 'farglory_in_de_${getYYYYMMDD()}.txt');
+        enterWebSocket.add(face.face_id?? 0);
         webSocketToPool(face, "enter");
       }
 
@@ -157,14 +185,15 @@ class TableScreenViewModel {
       print('art isDuplicate face.end_time==0');
       return false;
     }
+    int deduplicate = int.parse(mDeduplicate) * 1000;
     for(int i=0; i<profilesRemain.length; i++) {
       if(profilesRemain[i].faceId == face.face_id) {
         var diff = face.end_time! - profilesRemain[i].end_time;
         print('art isDuplicate ' + face.name! + " time diff=" + diff.toString() +" , 更新 profilesRemain[i].end_time");
         profilesRemain[i].end_time = face.end_time!;
-        if (diff< 25000) {
+        if (diff< deduplicate) {
           //but need update end_time
-          print('art isDuplicate 15秒內 不給離場或新增');
+          print("art isDuplicate "+ mDeduplicate +"秒內 不給離場或新增");
           return true;
         }
       }
@@ -177,12 +206,15 @@ class TableScreenViewModel {
     stomp.subscribe(destination: "/topic/capture/$deviceID", headers: {}, callback: (frame) {
 
       WebSocketFace face=  webSocketFaceFromJson(frame.body.toString());
-      //print("art face " + face.name! + ", " + face.type_id! + "");
+      //writeFile(face.toString2(), 'farglory_out_${getYYYYMMDD()}.txt');
+      inLog(deviceID, face);
       if(face.enabled!=null && face.enabled!) {
         if( isDuplicate(face) ) {
-          print("art face leave去重");
+          print("art websocket leave去重");
           return;
         }
+        //writeFile(face.toString2(), 'farglory_out_de_${getYYYYMMDD()}.txt');
+        leaveWebSocket.add(face.face_id?? 0);
         webSocketToPool(face, "leave");
       }
 
@@ -219,38 +251,19 @@ class TableScreenViewModel {
     return profile.faceId == face.face_id && profilesPool.last.action == EASY_READ_ENTER;
   }
 
-  cb(FarGloryMsg msg) {
-    Profile p = genProfile(msg);
-    p.boolList = null;
-
-    addToPool(p, msg.action!);
-  }
 
   void addToPool(Profile p, String action) {
     if(currentMode == DisplayMode.clearup) {
       leaveCount = leaveCount+1;
-      if(profilesRemain.length>0)
+      if(profilesRemain.isNotEmpty) {
         profilesRemain.removeLast();
+        saveEnterLeave();
+      }
     } else {
       switch(action) {
-        case "helmet":
-        // Update the age of each person in the list
-        //   for (int i = profilesPool.length-1; i >=0 ; i--) {
-        //     if(profilesPool[i].faceId == p.faceId && msg.company!=null) {
-        //       profilesPool[i].boolList= [true, msg.company!.parseBool(), msg.worktype!.parseBool(), true];
-        //       break;
-        //     }
-        //   }
-          break;
         case "enter":
           askFaceDetail(p.faceId, action, p);
           profilesPool.add(p);
-          // if(isExistRemain(p.faceId)) {
-          //   print("art 還未離場又進場的人不用加 remain");
-          //   break;
-          // }
-          // profilesRemain.add(p);
-          //playMP3('blacklist.mp3'); //for test
           break;
 
         case "leave":
@@ -260,19 +273,18 @@ class TableScreenViewModel {
 
           //playMP3('blacklist.mp3'); //for test
 
-          //if(isExistRemain(p.faceId)) {
           var ll = profilesRemain.where((element) => element.faceId==p.faceId);
           print('art check remove p.faceId=' + p.faceId.toString() + " name=" + p.name + " ll size=" + ll.length.toString());
-            if(ll.length>0) {
-              leaveCount = leaveCount+1;
-              if(!leaveFaceId.contains(p.faceId)) {
-                leaveFaceId.add(p.faceId);
-              }
-              Profile find = ll.first;
-              var isSuiccess = profilesRemain.remove(find);
-              print('art remove is success=$isSuiccess');
+          if(ll.length>0) {
+            leaveCount = leaveCount+1;
+            if(!leaveFaceId.contains(p.faceId)) {
+              leaveFaceId.add(p.faceId);
             }
-          //}
+            Profile find = ll.first;
+            var isSuiccess = profilesRemain.remove(find);
+            print('art remove is success=$isSuiccess');
+            saveEnterLeave();
+          }
           break;
 
         default:
@@ -392,7 +404,7 @@ class TableScreenViewModel {
         }
 
       }
-      //print('art img2 url=$imagePath');
+      print('art img2 url=$imagePath');
       final imgBase64Str = await networkImageToBase64(imageUrl.toString());
       if (imgBase64Str != null) {
           // final String checkUrl = "http://" + HOST + "/image_in";
@@ -534,6 +546,9 @@ Future<void> saveEnterLeave() async {
   prefs.setString(PREF_KEY_ENTER_UNIQUE_FACEID , jsonEncode(enterFaceId.toList()));
   prefs.setString(PREF_KEY_LEAVE_UNIQUE_FACEID , jsonEncode(leaveFaceId.toList()));
   //print('art jsonEncode=' + jsonEncode(profilesRemain));
+
+  Future<List<Map<String, Object?>>>?  allData = deHelper.getAllData();
+  writeFile(allData.toString(), 'IN_OUT_${getYYYYMMDD()}');
 }
 
 List<String> addUnique(List<String> list)  {

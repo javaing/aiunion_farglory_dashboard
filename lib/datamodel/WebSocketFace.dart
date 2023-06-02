@@ -5,6 +5,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'dart:convert';
 
+import '../util/Utils.dart';
+
 part 'WebSocketFace.freezed.dart';
 part 'WebSocketFace.g.dart';
 
@@ -33,6 +35,10 @@ class WebSocketFace with _$WebSocketFace {
     String? snapshot_uri,
   }) = _WebSocketFace;
 
+  // //Id	deviceId	faceId	faceTypeId	time
+  // String toString() {
+  //   return "\"${identity!}\",\"${device_id!}\",\"${face_id!}\",\"${type_id ?? ""}\",\"${formatDateTime(DateTime(start_time!))  }\"\n";
+  // }
 
   factory WebSocketFace.fromJson(Map<String, dynamic> json) => _$WebSocketFaceFromJson(json);
 }

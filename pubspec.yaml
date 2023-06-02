@@ -60,6 +60,8 @@ dev_dependencies:
   json_serializable: ^6.6.1
   flutter_svg: ^2.0.5
   intl_translation: ^0.18.2
+  path: ^1.8.0
+  sqflite: ^2.2.8+4
 
 
 

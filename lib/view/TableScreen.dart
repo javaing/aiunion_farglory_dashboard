@@ -24,6 +24,7 @@ import 'EnviromentTable.dart';
 import 'ProfileWidget.dart';
 import 'TableScreenVideo.dart';
 import 'package:dio/dio.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class TableScreen extends StatefulWidget {
   const TableScreen({super.key});
@@ -80,7 +81,17 @@ class _TableScreenState extends State<TableScreen> {
     _timerMinute =
         Timer.periodic(const Duration(minutes: 1), (Timer t) => _getMinutes());
     _timerHours = Timer.periodic(const Duration(hours: 1), (Timer t) => _everHours());
+
+    //checkPermission();
   }
+
+  // Future<void> checkPermission() async {
+  //   var status = await Permission.storage.status;
+  //   if (status.isDenied) {
+  //     showMsg(context, '請開啟寫檔權限');
+  //     openAppSettings();
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -172,6 +183,7 @@ wind_speed(風速(m/sec))、
       mClearTime = prefs.getString(PREF_KEY_CLEARUP_TIME) ?? DEFAULT_CLEARUP_TIME;
       mResetTime = prefs.getString(PREF_KEY_RESET_TIME) ?? DEFAULT_RESET_TIME;
       AIHost = prefs.getString(PREF_KEY_AI_SERVER) ?? DEFAULT_AI_SERVER;
+      mDeduplicate = prefs.getString(PREF_KEY_DEDUPLICATE_SECOND) ?? DEFAULT_AI_SERVER;
       //clearTime = "11:50";
       //resetTime = "12:50";
       //print("art 0511 loadPref OK WS_SERVER="+ WS_SERVER);
@@ -664,6 +676,19 @@ wind_speed(風速(m/sec))、
       alignment: Alignment.centerLeft,
       children: [
         profileListView,
+
+        Positioned(
+          bottom:10,
+          right: 150,
+          child: whiteText(enterWebSocket.length.toString(), 15),
+        ),
+
+        Positioned(
+          bottom:10,
+          right: 125,
+          child: whiteText(leaveWebSocket.length.toString(), 15),
+        ),
+
         Positioned(
             bottom:-15,
             right: -10,
