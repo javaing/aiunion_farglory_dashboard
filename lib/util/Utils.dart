@@ -206,11 +206,12 @@ Future<String> getFilePath(String filename) async {
   dir = (await getApplicationDocumentsDirectory()).path;
   String filePath = '$dir/$filename'; // 3
   //String filePath = '$filename'; // 3
-  print('art filePath=' + filePath);
+  print('art filePath=$filePath');
   return filePath;
 }
 
 void writeFile(String str, String filename) async {
+  print('art DB filePath=$str');
   File file = File(await getFilePath(filename)); // 1
   file.writeAsString(str, mode:FileMode.append); // 2
 }

@@ -680,13 +680,13 @@ wind_speed(風速(m/sec))、
         Positioned(
           bottom:10,
           right: 150,
-          child: whiteText(enterWebSocket.length.toString(), 15),
+          child: whiteText(enterUniqueFace.length.toString(), 15),
         ),
 
         Positioned(
           bottom:10,
           right: 125,
-          child: whiteText(leaveWebSocket.length.toString(), 15),
+          child: whiteText(leaveUniqueFace.length.toString(), 15),
         ),
 
         Positioned(
