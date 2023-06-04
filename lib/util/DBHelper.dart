@@ -10,6 +10,8 @@ class DBHelper {
   static const String x = "X";
   static const String ok = "V";
 
+  static const String EnterChar = "\n";
+
   // make this a singleton class
   //DBHelper._privateConstructor();
   //static final DBHelper instance = DBHelper._privateConstructor();
@@ -43,7 +45,10 @@ class DBHelper {
   }
 
   Future<List<Map<String, Object?>>?>  getAllData()  async {
-    return await _database?.query(table);
+
+    return await _database?.rawQuery('SELECT * FROM $table');
+
+    //return await _database?.query(table);
     //Database db = await DatabaseHelper.instance.database;
 
     // get all rows
@@ -57,7 +62,7 @@ class DBHelper {
       int faceId,
       String faceTypeId,
       String time,
-      String OK,
+      String OKorNOT,
       int? IN_TOTAL,
       int? IN_DEDUPLICATE,
       int? OUT_TOTAL,
@@ -74,10 +79,10 @@ class DBHelper {
           'INSERT INTO $table (deviceId,	in_out,	faceId,	'
               'FaceTypeId,	time,	OK,	'
               'IN_TOTAL, IN_DEDUPLICATE, OUT_TOTAL, OUT_DEDUPLICATE, '
-              'BigIN, BigDeIN, BigOUT, BigDeOUT, Remain) VALUES($deviceId, "$in_out", $faceId, $faceTypeId, "$time", "$OK",'
+              'BigIN, BigDeIN, BigOUT, BigDeOUT, Remain) VALUES($deviceId, "$in_out", $faceId, $faceTypeId, "$time", "$OKorNOT",'
               '$IN_TOTAL, $IN_DEDUPLICATE, $OUT_TOTAL, $OUT_DEDUPLICATE, $bigIN, $bigDeIN , $bigOUT, $bigDeOUT,'
               '$Remain)');
-      print('art 0604 DB insert : $id1');
+      print('art 0604 DB insert $in_out $faceId $OKorNOT: $id1');
     });
   }
 
@@ -95,11 +100,11 @@ class DBHelper {
         where: whereString,
         whereArgs: whereArguments))?.cast<Map>();
 
-    print('art 0604 queryLast: $result');
+    //print('art 0604 queryLast: $result');
     if(result==null || result.isEmpty) return null;
     // print the results
     Map? map = result.last;
-    print('art 0604 queryLast: $map');
+    print('art 0604 queryLast last exist: $map');
     // {_id: 1, name: Bob, age: 23}
 
     return map;
@@ -108,6 +113,10 @@ class DBHelper {
   Future<int?> updateRecord(int id, String okNotOK) async {
     //UPDATE table set col = 1 WHERE id = (SELECT MAX(id) FROM table)
     // raw query
-    return await _database?.rawUpdate('UPDATE $table set OK = "$okNotOK" WHERE id = $id');
+    return await _database?.rawUpdate("UPDATE $table set OK = '$okNotOK' WHERE id = $id");
+  }
+
+  clearData() async {
+    return await _database?.rawDelete("DELETE FROM $table");
   }
 }

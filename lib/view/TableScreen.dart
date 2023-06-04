@@ -266,6 +266,7 @@ wind_speed(風速(m/sec))、
 
   void resetToday() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    deHelper.clearData();
 
     setState(() {
       if(prefs==null) {

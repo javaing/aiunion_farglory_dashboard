@@ -198,22 +198,23 @@ Future<Response> dioV2Get(Dio dio, String path) {
 
 Future<String> getFilePath(String filename) async {
   String dir = "";
-  // if(Platform.isAndroid) {
-  //   dir = "/storage/emulated/0/Download";
-  // } else if(Platform.isIOS) {
-  //   dir = (await getApplicationDocumentsDirectory()).path;
-  // }
-  dir = (await getApplicationDocumentsDirectory()).path;
+  if(Platform.isAndroid) {
+    dir = "/storage/emulated/0/Download";
+  } else if(Platform.isIOS) {
+    dir = (await getApplicationDocumentsDirectory()).path;
+  }
+  //dir = (await getApplicationDocumentsDirectory()).path;
   String filePath = '$dir/$filename'; // 3
   //String filePath = '$filename'; // 3
-  print('art filePath=$filePath');
+  //print('art filePath=$filePath');
   return filePath;
 }
 
 void writeFile(String str, String filename) async {
-  print('art DB filePath=$str');
+  print('art DB writeFile=$str');
   File file = File(await getFilePath(filename)); // 1
-  file.writeAsString(str, mode:FileMode.append); // 2
+  //file.writeAsString(str, mode:FileMode.append); // 2
+  file.writeAsString(str); // 2
 }
 
 //Id	deviceId	faceId	faceTypeId	time

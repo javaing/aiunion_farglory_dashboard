@@ -47,7 +47,7 @@ final String VENDOR_NAME_OTHER = '其他';
 String mClearTime = "";
 String mResetTime = "";
 String AIHost = "";
-String mDeduplicate = "25";
+String mDeduplicate = "15";
 
 List<int> workTypeCount = [0, 0, 0, 0, 0, 0, 0];
 const Utf8Codec utf8 = Utf8Codec();
@@ -157,34 +157,27 @@ Check dedup list is exist
     var date = DateTime.fromMillisecondsSinceEpoch(face.start_time!);
     var time = formatDateTime(date);
     var unique = enterUniqueFace.contains(face.face_id)? 1:null;
+
     deHelper.inserLog(deviceId, DBHelper.IN , face.face_id!, face.type_id! , time, DBHelper.x ,
         1, unique, null, null, enterCount, enterUniqueFace.length,
         leaveCount, leaveUniqueFace.length, profilesRemain.length);
   }
 
-  void addNewOUT(String deviceId, WebSocketFace face) {
+  void addNewOUT(String deviceId, WebSocketFace face, String okOrNot) {
     //deviceId	in_out	faceId	FaceTypeId	time	OK	IN_TOTAL	IN_DEDUPLICATE	OUT_TOTAL	OUT_DEDUPLICATE + 5  大屏五項資料
     var date = DateTime.fromMillisecondsSinceEpoch(face.start_time!);
     var time = formatDateTime(date);
     var unique = leaveUniqueFace.contains(face.face_id)? 1:null;
-    deHelper.inserLog(deviceId, DBHelper.OUT , face.face_id!, face.type_id! , time, DBHelper.x ,
+    deHelper.inserLog(deviceId, DBHelper.OUT , face.face_id!, face.type_id! , time, okOrNot ,
         null, null, 1, unique, enterCount, enterUniqueFace.length,
         leaveCount, leaveUniqueFace.length, profilesRemain.length);
   }
 
   Future<void> outLog(String deviceId, WebSocketFace face) async {
-    //deviceId	in_out	faceId	FaceTypeId	time	OK	IN_TOTAL	IN_DEDUPLICATE	OUT_TOTAL	OUT_DEDUPLICATE + 5  大屏五項資料
-    // var date = DateTime.fromMillisecondsSinceEpoch(face.start_time!);
-    // var time = formatDateTime(date);
-    // deHelper.inserLog(deviceId, DBHelper.OUT, face.face_id!, face.type_id! , time, DBHelper.x,
-    //     null, null, null, null, enterCount, enterWebSocket.length,
-    //     leaveCount, leaveWebSocket.length, profilesRemain.length);
-    //
-
     Map? map = await deHelper.queryLast(face.face_id!);
 
     if(map==null || map.isEmpty) {
-      addNewOUT(deviceId, face);
+      addNewOUT(deviceId, face, DBHelper.x);
     } else {
       if(map["in_out"]==DBHelper.OUT) { //same inout, mark wrong
         int? result = await deHelper.updateRecord(map["id"], DBHelper.x);
@@ -192,7 +185,7 @@ Check dedup list is exist
       } else {
         int? result = await deHelper.updateRecord(map["id"], DBHelper.ok);
         print('art 0604 update ${map["id"]} ok:${result ?? ""}' );
-        addNewOUT(deviceId, face);
+        addNewOUT(deviceId, face, DBHelper.ok);
       }
     }
   }
@@ -596,7 +589,12 @@ Future<void> saveEnterLeave() async {
   //print('art jsonEncode=' + jsonEncode(profilesRemain));
 
   List<Map<String, Object?>>?  allData = await deHelper.getAllData();
-  writeFile(allData.toString(), 'IN_OUT_${getYYYYMMDD()}');
+  final buffer = StringBuffer();
+  buffer.write("id,deviceId,in_out,faceId,FaceTypeId,time,OK,IN_TOTAL,IN_DEDUPLICATE,OUT_TOTAL,OUT_DEDUPLICATE,enterCount,enterUnique,leaveCount,leaveUnique,remain ${DBHelper.EnterChar}");
+  allData?.forEach((element) {
+    buffer.writeAll([element.values.toString().replaceAll('(', '').replaceAll(')', ''), DBHelper.EnterChar]);
+  });
+  writeFile(buffer.toString(), 'IN_OUT_${getYYYYMMDD()}.csv');
 }
 
 List<String> addUnique(List<String> list)  {
