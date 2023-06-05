@@ -26,13 +26,6 @@ final String headerNews = '進行高空作業前，一定要確認安全掛勾�
 final String headerWeather = '26°\n大致晴朗';
 final List<String> leftRow1Title = ['進場人次','出場人次','現場人數'];
 final List<String> clearupTitle = ['進場人次','出場人次','滯留人數'];
-//List<String> leftRow1Count = ["99","0","99"];
-int leaveCount = 0;
-int enterCount = 0;
-List<int> enterFaceId = [];
-List<int> leaveFaceId = [];
-Set<int> enterUniqueFace = {};
-Set<int> leaveUniqueFace = {};
 const String EASY_READ_ENTER = '進場';
 const String EASY_READ_LEAVE = '出場';
 final String NAME = "姓名";
@@ -42,6 +35,13 @@ final String UPDATE = "更新";
 final List<String> environTitle = ['空氣品質指標', '空氣污染指標物', '狀態', "一氧化碳", "PM10", "PM2.5", "風速"];
 final String DEFAULT_VENDOR_NAME = '承包商';
 final String VENDOR_NAME_OTHER = '其他';
+
+int leaveCount = 0;
+int enterCount = 0;
+List<int> enterFaceId = [];
+List<int> leaveFaceId = [];
+bool aiHealthy = false;
+bool socketHealthy = false;
 
 
 String mClearTime = "";
@@ -112,8 +112,8 @@ class TableScreenViewModel {
         config: StompConfig(
           url: webSocketUrl,
           onConnect: onConnectCallback1,
-          onWebSocketError: (e) => //showMsg(ctx, e.toString())
-          print('art onWebSocketError e=$e'),
+          onWebSocketError: (e) => socketHealthy=false,
+          //print('art onWebSocketError e=$e'),
           onStompError: (d) => print('art error stomp'),
           onDisconnect: (f) => print('art disconnected'),
           //onDebugMessage: (f) => print('art debug $f'),
@@ -139,38 +139,39 @@ Check dedup list is exist
     Map? map = await deHelper.queryLast(face.face_id!);
 
     if(map==null || map.isEmpty) {
-      addNewIN(deviceId, face);
+      addNewIN(deviceId, face, DBHelper.ok);
     } else {
       if(map["in_out"]==DBHelper.IN) {
         int? result = await deHelper.updateRecord(map["id"], DBHelper.x);
       } else {
         int? result = await deHelper.updateRecord(map["id"], DBHelper.ok);
         print('art 0604 update ${map["faceId"]} last row to ok:${result ?? ""}' );
-        addNewIN(deviceId, face);
+        addNewIN(deviceId, face, DBHelper.ok);
       }
     }
 
   }
 
-  void addNewIN(String deviceId, WebSocketFace face) {
+  void addNewIN(String deviceId, WebSocketFace face, String okOrNot) {
     //deviceId	in_out	faceId	FaceTypeId	time	OK	IN_TOTAL	IN_DEDUPLICATE	OUT_TOTAL	OUT_DEDUPLICATE + 5  大屏五項資料
     var date = DateTime.fromMillisecondsSinceEpoch(face.start_time!);
     var time = formatDateTime(date);
-    var unique = enterUniqueFace.contains(face.face_id)? 1:null;
+    var unique = enterFaceId.contains(face.face_id)? 1:null;
 
-    deHelper.inserLog(deviceId, DBHelper.IN , face.face_id!, face.type_id! , time, DBHelper.x ,
-        1, unique, null, null, enterCount, enterUniqueFace.length,
-        leaveCount, leaveUniqueFace.length, profilesRemain.length);
+    deHelper.inserLog(deviceId, DBHelper.IN , face.face_id!, face.type_id! , time, okOrNot ,
+        1, unique, null, null, enterCount, enterFaceId.length,
+        leaveCount, leaveFaceId.length, profilesRemain.length);
   }
 
   void addNewOUT(String deviceId, WebSocketFace face, String okOrNot) {
     //deviceId	in_out	faceId	FaceTypeId	time	OK	IN_TOTAL	IN_DEDUPLICATE	OUT_TOTAL	OUT_DEDUPLICATE + 5  大屏五項資料
     var date = DateTime.fromMillisecondsSinceEpoch(face.start_time!);
     var time = formatDateTime(date);
-    var unique = leaveUniqueFace.contains(face.face_id)? 1:null;
+    var unique = leaveFaceId.contains(face.face_id)? 1:null;
+
     deHelper.inserLog(deviceId, DBHelper.OUT , face.face_id!, face.type_id! , time, okOrNot ,
-        null, null, 1, unique, enterCount, enterUniqueFace.length,
-        leaveCount, leaveUniqueFace.length, profilesRemain.length);
+        null, null, 1, unique, enterCount, enterFaceId.length,
+        leaveCount, leaveFaceId.length, profilesRemain.length);
   }
 
   Future<void> outLog(String deviceId, WebSocketFace face) async {
@@ -181,10 +182,10 @@ Check dedup list is exist
     } else {
       if(map["in_out"]==DBHelper.OUT) { //same inout, mark wrong
         int? result = await deHelper.updateRecord(map["id"], DBHelper.x);
-        print('art 0604 update wrong ${map["id"]}:${result ?? ""}' );
+        //print('art 0604 update wrong ${map["id"]}:${result ?? ""}' );
       } else {
         int? result = await deHelper.updateRecord(map["id"], DBHelper.ok);
-        print('art 0604 update ${map["id"]} ok:${result ?? ""}' );
+        //print('art 0604 update ${map["id"]} ok:${result ?? ""}' );
         addNewOUT(deviceId, face, DBHelper.ok);
       }
     }
@@ -193,6 +194,7 @@ Check dedup list is exist
   void addSubscribe(String deviceID) {
     stomp.subscribe(destination: "/topic/capture/$deviceID", headers: {}, callback: (frame) {
 
+      socketHealthy = true;
       WebSocketFace face=  webSocketFaceFromJson(frame.body.toString());
       //writeFile(face.toString2(), 'farglory_in_${getYYYYMMDD()}.txt');
       if(face.enabled!=null && face.enabled!) {
@@ -201,7 +203,7 @@ Check dedup list is exist
         //   return;
         // }
         //writeFile(face.toString2(), 'farglory_in_de_${getYYYYMMDD()}.txt');
-        enterUniqueFace.add(face.face_id?? 0);
+        //smallLogEnter.add(face.face_id?? 0);
         inLog(deviceID, face);
         webSocketToPool(face, "enter");
       }
@@ -226,7 +228,7 @@ Check dedup list is exist
       print('art isDuplicate face.end_time==0');
       return false;
     }
-    int deduplicate = int.parse("5") * 1000;
+    int deduplicate = int.parse(mDeduplicate) * 1000;
     for(int i=0; i<profilesRemain.length; i++) {
       if(profilesRemain[i].faceId == face.face_id) {
         var diff = face.end_time! - profilesRemain[i].end_time;
@@ -246,15 +248,13 @@ Check dedup list is exist
   void addLeaveSubscribe(String deviceID) {
     stomp.subscribe(destination: "/topic/capture/$deviceID", headers: {}, callback: (frame) {
 
+      socketHealthy = true;
       WebSocketFace face=  webSocketFaceFromJson(frame.body.toString());
-      //writeFile(face.toString2(), 'farglory_out_${getYYYYMMDD()}.txt');
       if(face.enabled!=null && face.enabled!) {
         // if( isDuplicate(face) ) {
         //   print("art websocket leave去重");
         //   return;
         // }
-        //writeFile(face.toString2(), 'farglory_out_de_${getYYYYMMDD()}.txt');
-        leaveUniqueFace.add(face.face_id?? 0);
         outLog(deviceID, face);
         webSocketToPool(face, "leave");
       }
@@ -464,6 +464,7 @@ Check dedup list is exist
         //}
         var body = await checkHelmet(imgBase64Str);
         if (body != null) {
+          aiHealthy = true;
           Map data = jsonDecode(body);
           print("art image_in=$data");
           boolList[1] = data["helmet"];
@@ -472,6 +473,7 @@ Check dedup list is exist
       }
     //
     } catch (e, s) {
+      aiHealthy = false;
       print('art post fetch and set catch error');
       print("Exception $e");
       print("StackTrace $s");

@@ -3,8 +3,8 @@ import 'package:flutter/cupertino.dart';
 
 Widget smallCircle(Color cc) {
   return Container(
-    height: 12.0,
-    width: 12.0,
+    height: 9.0,
+    width: 9.0,
     decoration: BoxDecoration(
       color: cc,
       shape: BoxShape.circle,

@@ -673,21 +673,34 @@ wind_speed(風速(m/sec))、
       },
     );
 
+    Widget socketCheck;
+    if(socketHealthy) {
+      socketCheck = smallCircle(Colors.green);
+    } else {
+      socketCheck = smallCircle(Colors.red);
+    }
+    Widget aiCheck;
+    if(aiHealthy) {
+      aiCheck = smallCircle(Colors.green);
+    } else {
+      aiCheck = smallCircle(Colors.red);
+    }
+
     Widget overlap = Stack(
       alignment: Alignment.centerLeft,
       children: [
         profileListView,
 
         Positioned(
-          bottom:10,
-          right: 150,
-          child: whiteText(enterUniqueFace.length.toString(), 15),
+          bottom:50,
+          right: 35,
+          child: socketCheck,
         ),
 
         Positioned(
-          bottom:10,
-          right: 125,
-          child: whiteText(leaveUniqueFace.length.toString(), 15),
+          bottom:50,
+          right: 5,
+          child: aiCheck,
         ),
 
         Positioned(
