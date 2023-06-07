@@ -217,10 +217,21 @@ void writeFile(String str, String filename) async {
   file.writeAsString(str); // 2
 }
 
+void writeFileAppend(String str, String filename) async {
+  print('art DB writeFile=$str');
+  File file = File(await getFilePath(filename)); // 1
+  file.writeAsString(str, mode:FileMode.append); // 2
+}
+
+String unixtimeFormat(int unix) {
+  var date = DateTime.fromMillisecondsSinceEpoch(unix);
+  return formatDateTime(date);
+}
+
 //Id	deviceId	faceId	faceTypeId	time
 extension Qoo on WebSocketFace {
   String toString2() {
-    var date = DateTime.fromMillisecondsSinceEpoch(start_time!);
-    return "\"${identity!}\",\"${device_id!}\",\"${face_id!}\",\"${type_id ?? ""}\",\"${formatDateTime(date)}\"\n";
+    var time = unixtimeFormat( start_time!);
+    return "'${name!}','${device_id!}','${face_id!}','${type_id ?? ""}','$time'";
   }
 }

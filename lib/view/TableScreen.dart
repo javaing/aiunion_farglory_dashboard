@@ -83,6 +83,7 @@ class _TableScreenState extends State<TableScreen> {
     _timerHours = Timer.periodic(const Duration(hours: 1), (Timer t) => _everHours());
 
     //checkPermission();
+    dbToFile();
   }
 
   // Future<void> checkPermission() async {
@@ -553,6 +554,10 @@ wind_speed(風速(m/sec))、
     if(other_count.isNotEmpty) {
       vendorTitle2.add(VENDOR_NAME_OTHER);
       vendorCount2.add(other_count);
+    } else {
+      //print('art 0606 wired vendorFaceTypeId length=' +vendorFaceTypeId.length.toString());
+      vendorTitle2.add(DEFAULT_VENDOR_NAME);
+      vendorCount2.add("0");
     }
 
     //print('art 0524 bigNumber end');
