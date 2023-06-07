@@ -104,7 +104,7 @@ class DBHelper {
     if(result==null || result.isEmpty) return null;
     // print the results
     Map? map = result.last;
-    print('art 0604 queryLast last exist: $map');
+    //print('art 0604 queryLast last exist: $map');
     // {_id: 1, name: Bob, age: 23}
 
     return map;

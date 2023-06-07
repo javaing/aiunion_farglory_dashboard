@@ -26,6 +26,7 @@ dependencies:
   flutter_ringtone_player: ^3.2.0
   #flutter_tts: ^3.6.3
   #js: ^0.6.7
+  toggle_switch: ^2.1.0
   path:
 
 

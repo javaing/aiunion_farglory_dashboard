@@ -185,6 +185,7 @@ wind_speed(風速(m/sec))、
       mResetTime = prefs.getString(PREF_KEY_RESET_TIME) ?? DEFAULT_RESET_TIME;
       AIHost = prefs.getString(PREF_KEY_AI_SERVER) ?? DEFAULT_AI_SERVER;
       mDeduplicate = prefs.getString(PREF_KEY_DEDUPLICATE_SECOND) ?? DEFAULT_AI_SERVER;
+      mIsLogWebSocket = prefs.getBool(PREF_KEY_IS_LOGWEBSOCKET) ?? false;
       //clearTime = "11:50";
       //resetTime = "12:50";
       //print("art 0511 loadPref OK WS_SERVER="+ WS_SERVER);

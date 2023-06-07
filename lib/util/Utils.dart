@@ -218,7 +218,7 @@ void writeFile(String str, String filename) async {
 }
 
 void writeFileAppend(String str, String filename) async {
-  print('art DB writeFile=$str');
+  print('art DB write append=$str');
   File file = File(await getFilePath(filename)); // 1
   file.writeAsString(str, mode:FileMode.append); // 2
 }
@@ -230,8 +230,8 @@ String unixtimeFormat(int unix) {
 
 //Id	deviceId	faceId	faceTypeId	time
 extension Qoo on WebSocketFace {
-  String toString2() {
+  String toString2(String InOut) {
     var time = unixtimeFormat( start_time!);
-    return "'${name!}','${device_id!}','${face_id!}','${type_id ?? ""}','$time'";
+    return "'$InOut','${name!}','${device_id!}','${face_id!}','${type_id ?? ""}','$time'";
   }
 }

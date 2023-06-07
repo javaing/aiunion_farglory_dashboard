@@ -51,6 +51,7 @@ String mResetTime = "";
 String AIHost = "";
 String mDeduplicate = "15";
 
+
 List<int> workTypeCount = [0, 0, 0, 0, 0, 0, 0];
 const Utf8Codec utf8 = Utf8Codec();
 List<String> environCount = ["", "", "", "", "", "", ""];
@@ -78,7 +79,10 @@ final String CLEAR_ALL = "Clear All Data";
 // final String UPDATE = "updated";
 
 //Log
+//db path: /data/data/com.aiunion.far_glory_construction_dashboard/databases/my_db.db
+//file: /data/data/com.aiunion.far_glory_construction_dashboard/app_flutter/socket_20230607.txt
 //deviceId	in_out	faceId	FaceTypeId	time	OK	IN_TOTAL	IN_DEDUPLICATE	OUT_TOTAL	OUT_DEDUPLICATE + 5  大屏五項資料
+bool mIsLogWebSocket = false;
 List<String> dailyLOG = [];
 DBHelper deHelper = DBHelper();
 
@@ -192,17 +196,13 @@ class TableScreenViewModel {
   }
 
   Future<void> processIn(String deviceID, WebSocketFace face) async {
-    //writeFileAppend(face.toString2()+DBHelper.EnterChar, 'socket_${getYYYYMMDD()}.txt');
-    if(face.enabled!=null && face.enabled!) {
-      // if( isDuplicate(face) ) {
-      //   print("art face 去重 ${face.name!} , id=${face.face_id}");
-      //   return;
-      // }
-      //writeFile(face.toString2(), 'farglory_in_de_${getYYYYMMDD()}.txt');
 
+    if(mIsLogWebSocket) {
+      writeFileAppend(face.toString2(DBHelper.IN)+DBHelper.EnterChar, 'socket_${getYYYYMMDD()}.txt');
       await inLog(deviceID, face);
-      webSocketToPool(face, "enter");
     }
+    webSocketToPool(face, "enter");
+
   }
 
   // bool isDuplicate(WebSocketFace face) {
@@ -250,15 +250,13 @@ class TableScreenViewModel {
   }
 
   Future<void> processOUT(String deviceID, WebSocketFace face) async {
-    //writeFileAppend(face.toString2()+DBHelper.EnterChar, 'socket_${getYYYYMMDD()}.txt');
-    if(face.enabled!=null && face.enabled!) {
-      // if( isDuplicate(face) ) {
-      //   print("art websocket leave去重");
-      //   return;
-      // }
+
+    if(mIsLogWebSocket) {
+      writeFileAppend(face.toString2(DBHelper.OUT)+DBHelper.EnterChar, 'socket_${getYYYYMMDD()}.txt');
       await outLog(deviceID, face);
-      webSocketToPool(face, "leave");
     }
+    webSocketToPool(face, "leave");
+
   }
 
 

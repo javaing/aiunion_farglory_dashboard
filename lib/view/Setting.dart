@@ -1,6 +1,7 @@
 import 'package:far_glory_construction_dashboard/viewmodel/TableScreenViewModel.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 
 import '../Constants.dart';
 import '../util/Utils.dart';
@@ -38,6 +39,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
   final TextEditingController _controllerRest = TextEditingController();
   final TextEditingController _controllerAIServer = TextEditingController();
   final TextEditingController _controllerDeduplicate = TextEditingController();
+  final TextEditingController _controllerLogWebSocket = TextEditingController();
   late SharedPreferences prefs;
   String inIDs = "";
   String outIDs = "";
@@ -86,6 +88,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
       prefs.setString(PREF_KEY_RESET_TIME , _controllerRest.text);
       prefs.setString(PREF_KEY_AI_SERVER , _controllerAIServer.text);
       prefs.setString(PREF_KEY_DEDUPLICATE_SECOND , _controllerDeduplicate.text);
+      prefs.setBool(PREF_KEY_IS_LOGWEBSOCKET , mIsLogWebSocket);
       
       mClearTime = _controllerClear.text;
       mResetTime = _controllerRest.text;
@@ -282,6 +285,31 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
       ],
     );
 
+    Widget row10 = Row(
+      //mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          'Log WebSocket: ',
+          style: TextStyle(fontSize: 24),
+        ),
+        const SizedBox(width: 20),
+        ToggleSwitch(
+          initialLabelIndex: mIsLogWebSocket ? 1:0,
+          totalSwitches: 2,
+          labels: const ['OFF', 'ON'],
+          onToggle: (index) {
+            if(index==0) {
+              mIsLogWebSocket = false;
+            } else {
+              mIsLogWebSocket = true;
+            }
+            print('art IsLogWebSocket:$mIsLogWebSocket, index: $index');
+          },
+        ),
+        const SizedBox(width: 36),
+      ],
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Setting'),
@@ -307,7 +335,9 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
             row7,
             const SizedBox(height: 20),
             row9,
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
+            row10,
+            const SizedBox(height: 30),
             row8,
           ],
         ),
