@@ -17,6 +17,8 @@ String webSocketFaceToJson(WebSocketFace data) => json.encode(data.toJson());
 @freezed
 class WebSocketFace with _$WebSocketFace {
   const factory WebSocketFace({
+    int? id,
+    int? cid,
     String? name,
     String? photo,
     String? type_id,

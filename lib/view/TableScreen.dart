@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:collection';
+import 'dart:io';
 
 import 'package:far_glory_construction_dashboard/datamodel/AirCondition.dart';
 import 'package:far_glory_construction_dashboard/util/UIUtil.dart';
 import 'package:far_glory_construction_dashboard/view/Setting.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async' show Future;
 import 'package:flutter/services.dart' show rootBundle;
@@ -56,7 +58,7 @@ class _TableScreenState extends State<TableScreen> {
   int demoType = 0;
   late TableScreenViewModel viewModel;
 
-  List<dynamic>? data;
+  List<dynamic>? weatherIcons;
   //var data = new List(Map<String, String>);
   String weatherText = "";
   String WxString="", ATString = "";
@@ -64,16 +66,9 @@ class _TableScreenState extends State<TableScreen> {
 
   @override
   void initState() {
-
-    _pic = Image.asset('images/weather1.png', width:100, height:100);
     super.initState();
-    loadPref();
-    loadFaceType(dio);
-    loadWeatherPicData();
-    askWeather(town);
-    loadAirReport();
-    loadTodayProfile();
-    
+    _pic = Image.asset('images/weather1.png', width:100, height:100);
+
 
     _timeString = formatDateTime(DateTime.now());
     _timerSecond =
@@ -82,8 +77,18 @@ class _TableScreenState extends State<TableScreen> {
         Timer.periodic(const Duration(minutes: 1), (Timer t) => _getMinutes());
     _timerHours = Timer.periodic(const Duration(hours: 1), (Timer t) => _everHours());
 
+
+    // if(mIsLogWebSocket) {
+    //   dbToFile();
+    // }
+    loadFaceType();
+    loadPref();
+    loadWeatherPicData();
+    askWeather(town);
+    loadAirReport();
+    loadTodayProfile();
+
     //checkPermission();
-    dbToFile();
   }
 
   // Future<void> checkPermission() async {
@@ -126,8 +131,9 @@ class _TableScreenState extends State<TableScreen> {
 
   String environUpdateTime = "";
   void loadAirReport() async {
+    var myDio = Dio();
     var url = "https://data.epa.gov.tw/api/v2/aqx_p_432?api_key=e8dd42e6-9b8b-43f8-991e-b3dee723a52d&limit=1000&sort=ImportDate%20desc&format=JSON";
-    var response = await dio.get(url);
+    var response = await myDio.get(url);
     setState(() {
       var str = response.toString().replaceAll("pm2.5", "pm25");
       AirCondition airCondition = airConditionFromJson(str);
@@ -167,10 +173,10 @@ wind_speed(風速(m/sec))、
 
   }
 
-  Future<void> loadFaceLib() async {
-    loadFaceType(dio);
-    print('art 0526 facelib aa=' + faceTypes.toString());
-  }
+  // Future<void> loadFaceLib() async {
+  //   loadFaceType(dio);
+  //   print('art 0526 facelib aa=' + faceTypes.toString());
+  // }
 
   void loadPref() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -183,26 +189,43 @@ wind_speed(風速(m/sec))、
       HOST = prefs.getString(PREF_KEY_WS_SERVER) ?? DEFAULT_WS_SERVER;
       mClearTime = prefs.getString(PREF_KEY_CLEARUP_TIME) ?? DEFAULT_CLEARUP_TIME;
       mResetTime = prefs.getString(PREF_KEY_RESET_TIME) ?? DEFAULT_RESET_TIME;
-      AIHost = prefs.getString(PREF_KEY_AI_SERVER) ?? DEFAULT_AI_SERVER;
-      mDeduplicate = prefs.getString(PREF_KEY_DEDUPLICATE_SECOND) ?? DEFAULT_AI_SERVER;
-      mIsLogWebSocket = prefs.getBool(PREF_KEY_IS_LOGWEBSOCKET) ?? false;
+      mAIHost = prefs.getString(PREF_KEY_AI_SERVER) ?? DEFAULT_AI_SERVER;
+      mDeduplicate = prefs.getString(PREF_KEY_DEDUPLICATE_SECOND) ?? DEFAULT_DEDUP_SEC;
+      mIsLogWebSocket = prefs.getBool(PREF_KEY_IS_LOGWEBSOCKET) ?? true;
       //clearTime = "11:50";
       //resetTime = "12:50";
-      //print("art 0511 loadPref OK WS_SERVER="+ WS_SERVER);
+
+
+      print("art 0609 loadPref OK mClearTime="+ mClearTime);
+      print("art 0609 loadPref OK mResetTime="+ mResetTime);
+      print("art 0609 loadPref OK mAIHost="+ mAIHost);
+      print("art 0609 loadPref OK mDeduplicate="+ mDeduplicate);
 
       viewModel = TableScreenViewModel(context);
     });
 
   }
 
-  Future<void> loadFaceType(Dio dio) async {
-    var response = await dioV2Get(dio, "/api/v2/face-types?pageSize=1000");
-    //print('art find face ' + response.toString() );
+  Future<void> loadFaceType() async {
+    var myDio = Dio();
+    var response = await dioV2Get(myDio, "/api/v2/face-types?pageSize=1000");
     ServerFaceType setting = serverFaceTypeFromJson(response.toString()) ;
-    //print('art find face setting= ' + setting.result!.toString());
-    if(setting!=null) {
+    print('art find facetype 1');
+    if(setting.result!=null) {
       faceTypes = setting.result!;
-      print('art find face faceTypes.length= ' + faceTypes.length.toString() );
+      print('art find face2 faceTypes.length= ' + faceTypes.length.toString() );
+
+      int startTime = 0;
+      int endTime = 0;
+
+      DateTime date1 = DateTime.now();
+      date1 = date1.subtract(Duration(hours:  date1.hour, minutes: date1.minute));
+      //print(date1);
+      startTime = date1.millisecondsSinceEpoch;
+      date1 = date1.add(Duration( hours: 23));
+      //print(date1);
+      endTime = date1.millisecondsSinceEpoch;
+      viewModel.afterReloadData(startTime, endTime);
     }
   }
 
@@ -259,6 +282,19 @@ wind_speed(風速(m/sec))、
       }
 
       //_speak();
+      isLoadProfileFinish = true;
+      
+      int startTime = 0;
+      int endTime = 0;
+
+      DateTime date1 = DateTime.now();
+      date1 = date1.subtract(Duration(hours:  date1.hour, minutes: date1.minute));
+      //print(date1);
+      startTime = date1.millisecondsSinceEpoch;
+      date1 = date1.add(Duration( hours: 23));
+      //print(date1);
+      endTime = date1.millisecondsSinceEpoch;
+      viewModel.afterReloadData(startTime, endTime);
     });
 
     // for(int i=0; i<profilesRemain.length; i++) {
@@ -322,19 +358,20 @@ wind_speed(風速(m/sec))、
       print("art _everHours askWeather");
       askWeather(town);
       loadAirReport();
-      loadFaceLib();
+      loadFaceType();
     });
   }
 
   Future<String> loadWeatherPicData() async {
     var jsonText = await rootBundle.loadString('assets/weather.json');
-    setState(() => data = json.decode(jsonText));
+    setState(() => weatherIcons = json.decode(jsonText));
     return 'success';
   }
 
 
   Future<void> askWeather(String town) async {
-    final response = await dio.get(Weather_URL.replaceFirst("%town", town));
+    Dio mydio = Dio();
+    final response = await mydio.get(Weather_URL.replaceFirst("%town", town));
 
     Weather36Hr weather = weather36HrFromJson(response.toString()) ;
     //int length = weather.records?.locations?.length ?? 0;
@@ -368,8 +405,8 @@ wind_speed(風速(m/sec))、
 
     weatherText = "$WxString\n$ATString°C";
     setState(() {
-      if(data!=null) {
-        var ll = data!.where((element) => element["description"]== WxString);
+      if(weatherIcons!=null) {
+        var ll = weatherIcons!.where((element) => element["description"]== WxString);
         if(ll.isNotEmpty) {
           var element = ll.first;
           //print("art 0511 data[]=" +element["description"] + ", " + element["day"]);
@@ -392,6 +429,23 @@ wind_speed(風速(m/sec))、
             getRowBottom(),
           ],
         );
+
+        // if(mPrecent!=1) {
+        //   wig = Stack(children: [
+        //     //wig,
+        //     Center(
+        //       child: Column(
+        //         mainAxisAlignment: MainAxisAlignment.center,
+        //         children: [
+        //           CircularProgressIndicator(value: mPrecent),
+        //           SizedBox(height: 16.0),
+        //           Text('${(mPrecent * 100).toStringAsFixed(0)}%'),
+        //         ],
+        //       ),
+        //     ),
+        //   ],);
+        // }
+
         break;
 
       case DisplayMode.clearup:
@@ -508,58 +562,70 @@ wind_speed(風速(m/sec))、
     Widget bigNumber = getBigNumberRow();
 
 
-
+    List<String> vendorTitle2 = [];
+    List<String> vendorCount2 = [];
     List<int> vendorFaceTypeId = [];
-    for(int i=0; i<12; i++) {
+
+
+    for(int i=0; i < 12; i++) {
       vendorFaceTypeId.add(-1);
+      vendorTitle2.add(DEFAULT_VENDOR_NAME);
+      vendorCount2.add("0");
     }
+
+
     for(int i=0; i<vendorList.length; i++) {
+      if(i>=12) vendorFaceTypeId.add(vendorList[i].faceTypeId);
       vendorFaceTypeId[i] = vendorList[i].faceTypeId;
     }
 
-    List<String> vendorTitle2 = [];
-    List<String> vendorCount2 = [];
+
     String other_count = "";
     int sum_filter = 0;
     int other_sum = 0;
 
     //print('art 0524 bigNumber start');
 
-    for(int i=0; i<vendorFaceTypeId.length; i++) {
+    for(int i=0; i<vendorList.length; i++) {
       var name = "";
       var countStr = "";
       if(vendorFaceTypeId[i] == -1) {
         name = DEFAULT_VENDOR_NAME;
         countStr = "0";
       } else {
-        var filter = profilesRemain.where((element) => element.typeId==vendorFaceTypeId[i]);
+        var uniqueFace = profilesRemain.where((element) => element.typeId==vendorFaceTypeId[i]);
          // for(int filterI=0; filterI< filter.length; filterI++) {
          //   print('art 0525 filter ['+ i.toString()  +']=' + filter.toList()[filterI].name + ", " + filter.toList()[filterI].typeId.toString());
          // }
 
         name = vendorList[i].name;
-        countStr = " ${filter.length} (${vendorList[i].worker.toSet().length})";
+        if(i>=12) {
+          name = VENDOR_NAME_OTHER;
+        }
+        countStr = " ${uniqueFace.length} (${vendorList[i].worker.toSet().length})";
         if(name.isEmpty) name = VENDOR_NAME_OTHER;
         if(name == VENDOR_NAME_OTHER) {
-          sum_filter += filter.length;
+          sum_filter += uniqueFace.length;
           other_sum += vendorList[i].worker.toSet().length;
           other_count =  " $sum_filter (${other_sum})";
           continue;
         }
 
       }
-      vendorTitle2.add(name);
-      vendorCount2.add(countStr);
+      vendorTitle2[i]=name;
+      vendorCount2[i]=countStr;
     }
     //若有 '其他' 放最後
     if(other_count.isNotEmpty) {
-      vendorTitle2.add(VENDOR_NAME_OTHER);
-      vendorCount2.add(other_count);
+      vendorTitle2[vendorTitle2.length-1]=VENDOR_NAME_OTHER;
+      vendorCount2[vendorCount2.length-1]= other_count;
     } else {
       //print('art 0606 wired vendorFaceTypeId length=' +vendorFaceTypeId.length.toString());
-      vendorTitle2.add(DEFAULT_VENDOR_NAME);
-      vendorCount2.add("0");
+      //vendorTitle2.add(DEFAULT_VENDOR_NAME);
+      //vendorCount2.add("0");
     }
+
+    //print('art 0609 vendorTitle2 len:' + vendorTitle2.length.toString());
 
     //print('art 0524 bigNumber end');
     // vendorCount2[0] = "20";

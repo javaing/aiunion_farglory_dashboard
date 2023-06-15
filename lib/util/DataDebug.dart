@@ -3,7 +3,7 @@ import '../viewmodel/TableScreenViewModel.dart';
 import 'DBHelper.dart';
 import 'Utils.dart';
 
-Future<void> inLog(String deviceId, WebSocketFace face) async {
+Future<void> dbLogIn(String deviceId, WebSocketFace face) async {
   Map? map = await deHelper.queryLast(face.face_id!);
 
   if(map==null || map.isEmpty) {
@@ -27,10 +27,12 @@ Future<void> addNewIN(String deviceId, WebSocketFace face, String okOrNot) async
   var unique = enterFaceId.contains(face.face_id)? 0:1;
 
 
-  await deHelper.inserLog(deviceId, DBHelper.IN , face.face_id!, face.type_id! , time, okOrNot ,
+  await deHelper.inserLog(face.getCID() , deviceId, DBHelper.IN , face.face_id!, face.type_id! , time, okOrNot ,
       isAdd, unique, 0, 0, enterCount, enterFaceId.length,
-      leaveCount, leaveFaceId.length, profilesRemain.length);
+      leaveCount, leaveFaceId.length, blockCount);
 }
+
+
 
 Future<void> addNewOUT(String deviceId, WebSocketFace face, String okOrNot) async {
   var time = unixtimeFormat( face.start_time!);
@@ -38,12 +40,12 @@ Future<void> addNewOUT(String deviceId, WebSocketFace face, String okOrNot) asyn
   if(okOrNot == DBHelper.x) isLeave = 0;
   var unique = leaveFaceId.contains(face.face_id)? 0:1;
 
-  await deHelper.inserLog(deviceId, DBHelper.OUT , face.face_id!, face.type_id! , time, okOrNot ,
+  await deHelper.inserLog(face.getCID() , deviceId, DBHelper.OUT , face.face_id!, face.type_id! , time, okOrNot ,
       0, 0, isLeave, unique, enterCount, enterFaceId.length,
-      leaveCount, leaveFaceId.length, profilesRemain.length);
+      leaveCount, leaveFaceId.length, blockCount);
 }
 
-Future<void> outLog(String deviceId, WebSocketFace face) async {
+Future<void> dbLogOut(String deviceId, WebSocketFace face) async {
   Map? map = await deHelper.queryLast(face.face_id!);
 
   if(map==null || map.isEmpty) {

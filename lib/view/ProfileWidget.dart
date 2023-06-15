@@ -49,6 +49,7 @@ class ProfileWidget extends StatelessWidget {
     //   child: w);
 
     return Container(
+      //color: Colors.redAccent.shade400,
       width: width1080p,
       padding: const EdgeInsets.fromLTRB(10,20, 0,0),
       child: w,

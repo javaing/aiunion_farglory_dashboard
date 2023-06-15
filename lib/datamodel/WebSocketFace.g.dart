@@ -8,6 +8,8 @@ part of 'WebSocketFace.dart';
 
 _$_WebSocketFace _$$_WebSocketFaceFromJson(Map<String, dynamic> json) =>
     _$_WebSocketFace(
+      id: json['id'] as int?,
+      cid: json['cid'] as int?,
       name: json['name'] as String?,
       photo: json['photo'] as String?,
       type_id: json['type_id'] as String?,
@@ -28,6 +30,8 @@ _$_WebSocketFace _$$_WebSocketFaceFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$_WebSocketFaceToJson(_$_WebSocketFace instance) =>
     <String, dynamic>{
+      'id': instance.id,
+      'cid': instance.cid,
       'name': instance.name,
       'photo': instance.photo,
       'type_id': instance.type_id,

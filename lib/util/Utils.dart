@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -117,8 +118,8 @@ Image getAssetImageSize(String name, double size) {
 }
 
 String getLocaleWeekDay(int weekday) {
-  //List<String> name = ['', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六','星期日'];
-  List<String> name = ['', 'Mon', 'Tue', 'Wed', 'Thr', 'Fri', 'Sat','Sun'];
+  List<String> name = ['', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六','星期日'];
+  //List<String> name = ['', 'Mon', 'Tue', 'Wed', 'Thr', 'Fri', 'Sat','Sun'];
   return name[weekday % name.length];
 }
 
@@ -218,7 +219,7 @@ void writeFile(String str, String filename) async {
 }
 
 void writeFileAppend(String str, String filename) async {
-  print('art DB write append=$str');
+  //print('art DB write append=$str');
   File file = File(await getFilePath(filename)); // 1
   file.writeAsString(str, mode:FileMode.append); // 2
 }
@@ -228,10 +229,30 @@ String unixtimeFormat(int unix) {
   return formatDateTime(date);
 }
 
+Future<void> sendEmail(String subject, String content, String receiver) async {
+  final Email email = Email(
+    body: content,
+    subject: subject,
+    recipients: [receiver],
+    isHTML: false,
+  );
+  print('art send email: AI API:' + content);
+  await FlutterEmailSender.send(email);
+}
+
 //Id	deviceId	faceId	faceTypeId	time
 extension Qoo on WebSocketFace {
   String toString2(String InOut) {
     var time = unixtimeFormat( start_time!);
     return "'$InOut','${name!}','${device_id!}','${face_id!}','${type_id ?? ""}','$time'";
+  }
+
+  int getCID() {
+    if(cid==null) {
+      return id ?? 0;
+    } else {
+      return cid!;
+    }
+
   }
 }

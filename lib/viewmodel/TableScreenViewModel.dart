@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:intl/intl.dart';
 
 
 import '../Constants.dart';
@@ -40,16 +41,17 @@ final String VENDOR_NAME_OTHER = '其他';
 
 int leaveCount = 0;
 int enterCount = 0;
+int blockCount = 0;
 List<int> enterFaceId = [];
 List<int> leaveFaceId = [];
 bool aiHealthy = false;
 bool socketHealthy = false;
 
 
-String mClearTime = "";
-String mResetTime = "";
-String AIHost = "";
-String mDeduplicate = "15";
+String mClearTime = DEFAULT_CLEARUP_TIME;
+String mResetTime = DEFAULT_RESET_TIME;
+String mAIHost = DEFAULT_AI_SERVER;
+String mDeduplicate = DEFAULT_DEDUP_SEC;
 
 
 List<int> workTypeCount = [0, 0, 0, 0, 0, 0, 0];
@@ -82,7 +84,7 @@ final String CLEAR_ALL = "Clear All Data";
 //db path: /data/data/com.aiunion.far_glory_construction_dashboard/databases/my_db.db
 //file: /data/data/com.aiunion.far_glory_construction_dashboard/app_flutter/socket_20230607.txt
 //deviceId	in_out	faceId	FaceTypeId	time	OK	IN_TOTAL	IN_DEDUPLICATE	OUT_TOTAL	OUT_DEDUPLICATE + 5  大屏五項資料
-bool mIsLogWebSocket = false;
+bool mIsLogWebSocket = true;
 List<String> dailyLOG = [];
 DBHelper deHelper = DBHelper();
 
@@ -106,6 +108,15 @@ late StompClient stomp;
 final dio = Dio();
 List<FaceType> faceTypes = [];
 
+var mPrecent = 0.0;
+var mPrecent2 = 0.0;
+bool isLoadProfileFinish=false;
+int disconnectTimeStamp = 0;
+String aiAPIAlertSubject = "AI Check Helmet API Status";
+String aiAPIAlertFail = "API is not working";
+String aiAPIAlertOK = "API is OK";
+String aiAPIAlertReciver = "t108360228@ntut.org.tw,paul.liao@aiunion.com.tw,arttseng@pm.me";
+
 
 class TableScreenViewModel {
 
@@ -116,13 +127,15 @@ class TableScreenViewModel {
 
     stomp = StompClient(
         config: StompConfig(
+          //heartbeatOutgoing: const Duration(milliseconds: 500),
+          //heartbeatIncoming: const Duration(milliseconds: 500),
           url: webSocketUrl,
           onConnect: onConnectCallback1,
           onWebSocketError: (e) => socketHealthy=false,
           //print('art onWebSocketError e=$e'),
           onStompError: (d) => print('art error stomp'),
-          onDisconnect: (f) => print('art disconnected'),
-          //onDebugMessage: (f) => print('art debug $f'),
+          onDisconnect: (f) => onDisconnect,
+          onDebugMessage: (f) => print('art debug $f'),
         )
     );
     stomp.activate();
@@ -130,24 +143,72 @@ class TableScreenViewModel {
 
     //TODO: arttseng
     //debugCaptures();
+
   }
 
+  //網路斷線紀錄時間 重連後,補資料
+  void onDisconnect() {
+    print('art 0615 disconnected');
+    if(disconnectTimeStamp==0) {
+      disconnectTimeStamp = DateTime.now().millisecondsSinceEpoch;
+    }
+  }
 
-  Future<void> debugCaptures() async {
-    // 6/5 String captureUrl = "http://60.250.33.237/api/captures?capturedAtBegin=1685894439000&capturedAtEnd=1685978139000&deviceIds=5,3&isWhitelist=true&pageSize=1000";
-    // 6/4 String captureUrl = "http://60.250.33.237/api/captures?capturedAtBegin=1685808017000&capturedAtEnd=1685894357000&deviceIds=5,3&isWhitelist=true&pageSize=1000";
-    // 6/3 same
-    String captureUrl = "http://60.250.33.237/api/captures?capturedAtBegin=1685721617000&capturedAtEnd=1685807957000&deviceIds=5,3&isWhitelist=true&pageSize=1000";
+  //補資料作法 查詢captures, 比對目前最後 一筆資料時間, 補完之後再去訂閱
+  Future<void> afterReloadData(int startTime, int endTime) async {
+    if(faceTypes.isEmpty) {
+      print('reload socket return! faceTypes.isEmpty');
+      return;
+    }
+    if(!isLoadProfileFinish) {
+      print('reload socket return! isLoadTodayProfileFinish=false');
+      return;
+    }
+    //var mPrecent = 0.0;
+    if(mPrecent==1 && mPrecent2 ==1) {
+      print('reload socket return! mPrecent==1 && mPrecent2 ==1');
+      return;
+    }
+    if(mPrecent==0) {
+      print('reload socket return! Run 1');
+    }
+    if(mPrecent==1) {
+      print('reload socket return! Run 2');
+    }
+
+    var format = new DateFormat('HH:mm:ss');
+    var ss = DateTime.fromMillisecondsSinceEpoch(startTime);
+    var ee = DateTime.fromMillisecondsSinceEpoch(endTime);
+    print('art afterReloadData ' + format.format(ss) + ", end=" + format.format(ee));
+    
+    String captureUrl = "http://$HOST/api/captures?capturedAtBegin=$startTime&capturedAtEnd=$endTime&deviceIds=5,3&isWhitelist=true&pageSize=1000";
 
     var response = await http.get(Uri.parse(captureUrl));
     if (response.statusCode == 200) {
       Map<String, dynamic> map = jsonDecode(response.body);
       List result = map['result'];
       var reversedList = List.from(result.reversed);
-      for(int i=0; i<reversedList.length; i++) {
-        var each = reversedList[i];
+      //比對目前最後一筆資料時間,
+      int patchStart=0;
+      if(profilesPool.isNotEmpty) {
+        for(int i=0; i<reversedList.length; i++) {
+          var each = reversedList[i];
+          var end_time = each['capturedAt'];
+          int poolLastTime = profilesPool[profilesPool.length-1].end_time;
+          if(end_time>poolLastTime) {
+            patchStart = i+1;
+            break;
+          }
+        }
+      }
+      print(captureUrl);
+      print('art total=${reversedList.length-patchStart} 比對目前最後一筆資料 patchStart:$patchStart' );
 
+      double total = reversedList.length - patchStart + 0.0;
+      for(int i=patchStart; i<reversedList.length; i++) {
+        var each = reversedList[i];
         WebSocketFace face = WebSocketFace(
+          cid: each['cid'],
           name: each['person'],
           photo: each['photo'],
           type_id: each['faceTypeId'].toString(),
@@ -158,24 +219,87 @@ class TableScreenViewModel {
           face_id: each['faceId'],
           start_time: each['capturedAt'],
           end_time: each['createdAt'],
-          enabled: true,
+          enabled: each['isWhitelist']==1,
           snapshot_uri: each['filePath'],
         );
         String deviceID = face.device_id!;
-        print('art debugCaptures [$i] ' + face.name! + ", start_time=" + face.start_time!.toString());
+        print('art debugCaptures [$i] ' + face.name! + ", end_time=" + face.start_time!.toString());
+        bool isNeedLoad = false;
+        if((reversedList.length-i) < 10) {
+          isNeedLoad = true;
+        }
         if(deviceID=="5") {
-          await processIn(deviceID, face);
+          await processIn(deviceID, face, isNeedLoad);
         } else {
-          await processOUT(deviceID, face);
+          await processOUT(deviceID, face, isNeedLoad);
         }
 
-        sleep(const Duration(milliseconds: 600));
+        if((reversedList.length-i) < 10) {
+          sleep(const Duration(milliseconds: 600));
+        }
       }
 
+      if(mPrecent==1) {
+        mPrecent2==1;
+        stomp.activate();
+      } else {
+        mPrecent=1;
+        afterReloadData(startTime, endTime);
+      }
     } else {
       print('art get fail ');
+      stomp.activate();
     }
+
   }
+
+
+
+  // Future<void> debugCaptures() async {
+  //   // 6/5 String captureUrl = "http://60.250.33.237/api/captures?capturedAtBegin=1685894439000&capturedAtEnd=1685978139000&deviceIds=5,3&isWhitelist=true&pageSize=1000";
+  //   // 6/4 String captureUrl = "http://60.250.33.237/api/captures?capturedAtBegin=1685808017000&capturedAtEnd=1685894357000&deviceIds=5,3&isWhitelist=true&pageSize=1000";
+  //   // 6/3 same
+  //   String captureUrl = "http://60.250.33.237/api/captures?capturedAtBegin=1685721617000&capturedAtEnd=1685807957000&deviceIds=5,3&isWhitelist=true&pageSize=1000";
+  //
+  //
+  //   var response = await http.get(Uri.parse(captureUrl));
+  //   if (response.statusCode == 200) {
+  //     Map<String, dynamic> map = jsonDecode(response.body);
+  //     List result = map['result'];
+  //     var reversedList = List.from(result.reversed);
+  //     for(int i=0; i<reversedList.length; i++) {
+  //       var each = reversedList[i];
+  //
+  //       WebSocketFace face = WebSocketFace(
+  //         cid: each['cid'],
+  //         name: each['person'],
+  //         photo: each['photo'],
+  //         type_id: each['faceTypeId'].toString(),
+  //         identity: each['identity'],
+  //         serialNo: each['serialNo'],
+  //         cardSerialNo: each['cardSerialNo'],
+  //         device_id: each['deviceId'].toString(),
+  //         face_id: each['faceId'],
+  //         start_time: each['capturedAt'],
+  //         end_time: each['createdAt'],
+  //         enabled: each['isWhitelist']==1,
+  //         snapshot_uri: each['filePath'],
+  //       );
+  //       String deviceID = face.device_id!;
+  //       print('art debugCaptures [$i] ' + face.name! + ", start_time=" + face.start_time!.toString());
+  //       if(deviceID=="5") {
+  //         await processIn(deviceID, face);
+  //       } else {
+  //         await processOUT(deviceID, face);
+  //       }
+  //
+  //       sleep(const Duration(milliseconds: 600));
+  //     }
+  //
+  //   } else {
+  //     print('art get fail ');
+  //   }
+  // }
 
 
 
@@ -190,18 +314,24 @@ class TableScreenViewModel {
 
       socketHealthy = true;
       WebSocketFace face=  webSocketFaceFromJson(frame.body.toString());
-      processIn(deviceID, face);
+      processIn(deviceID, face, true);
 
     });
   }
 
-  Future<void> processIn(String deviceID, WebSocketFace face) async {
-
-    if(mIsLogWebSocket) {
-      writeFileAppend(face.toString2(DBHelper.IN)+DBHelper.EnterChar, 'socket_${getYYYYMMDD()}.txt');
-      await inLog(deviceID, face);
+  Future<void> processIn(String deviceID, WebSocketFace face, bool isNeedLoadImage) async {
+    //check id exist
+    bool isExist = await deHelper.isDataExist(face.getCID() );
+    if(isExist) {
+      print("art 0612 DataExist! id:${face.getCID()}" );
+      return;
     }
-    webSocketToPool(face, "enter");
+
+    writeFileAppend(face.toString2(DBHelper.IN)+DBHelper.EnterChar, 'socket_${getYYYYMMDD()}.txt');
+    if(mIsLogWebSocket) {
+      await dbLogIn(deviceID, face);
+    }
+    webSocketToPool(face, "enter", isNeedLoadImage);
 
   }
 
@@ -213,30 +343,30 @@ class TableScreenViewModel {
 
 
   //與Remain比對，如果存在一樣faceid且15秒內 則不給離場或新增
-  bool isDuplicate(WebSocketFace face) {
-    //print("art isDuplicate currentMode=${currentMode.name}");
-    if(currentMode != DisplayMode.punch) {
-      return false;
-    }
-    if(face.end_time==0) {
-      print('art isDuplicate face.end_time==0');
-      return false;
-    }
-    int deduplicate = int.parse(mDeduplicate) * 1000;
-    for(int i=0; i<profilesRemain.length; i++) {
-      if(profilesRemain[i].faceId == face.face_id) {
-        var diff = face.end_time! - profilesRemain[i].end_time;
-        print('art isDuplicate ' + face.name! + " time diff=" + diff.toString() +" , 更新 profilesRemain[i].end_time");
-        profilesRemain[i].end_time = face.end_time!;
-        if (diff< deduplicate) {
-          //but need update end_time
-          print("art isDuplicate $mDeduplicate秒內 不給離場或新增");
-          return true;
-        }
-      }
-    }
-    return false;
-  }
+  // bool isDuplicate(WebSocketFace face) {
+  //   //print("art isDuplicate currentMode=${currentMode.name}");
+  //   if(currentMode != DisplayMode.punch) {
+  //     return false;
+  //   }
+  //   if(face.end_time==0) {
+  //     print('art isDuplicate face.end_time==0');
+  //     return false;
+  //   }
+  //   int deduplicate = int.parse(mDeduplicate) * 1000;
+  //   for(int i=0; i<profilesRemain.length; i++) {
+  //     if(profilesRemain[i].faceId == face.face_id) {
+  //       var diff = face.end_time! - profilesRemain[i].end_time;
+  //       print('art isDuplicate ' + face.name! + " time diff=" + diff.toString() +" , 更新 profilesRemain[i].end_time");
+  //       profilesRemain[i].end_time = face.end_time!;
+  //       if (diff< deduplicate) {
+  //         //but need update end_time
+  //         print("art isDuplicate $mDeduplicate秒內 不給離場或新增");
+  //         return true;
+  //       }
+  //     }
+  //   }
+  //   return false;
+  // }
 
 
   void addLeaveSubscribe(String deviceID) {
@@ -244,42 +374,57 @@ class TableScreenViewModel {
 
       socketHealthy = true;
       WebSocketFace face=  webSocketFaceFromJson(frame.body.toString());
-      processOUT(deviceID, face);
+      processOUT(deviceID, face, true);
 
     });
   }
 
-  Future<void> processOUT(String deviceID, WebSocketFace face) async {
-
-    if(mIsLogWebSocket) {
-      writeFileAppend(face.toString2(DBHelper.OUT)+DBHelper.EnterChar, 'socket_${getYYYYMMDD()}.txt');
-      await outLog(deviceID, face);
+  Future<void> processOUT(String deviceID, WebSocketFace face, bool isNeedLoadImage) async {
+    //check id exist
+    bool isExist = await deHelper.isDataExist(face.getCID() );
+    if(isExist) {
+      print("art 0612 DataExist! id:${face.getCID()}" );
+      return;
     }
-    webSocketToPool(face, "leave");
+
+    writeFileAppend(face.toString2(DBHelper.OUT)+DBHelper.EnterChar, 'socket_${getYYYYMMDD()}.txt');
+    if(mIsLogWebSocket) {
+      await dbLogOut(deviceID, face);
+    }
+    webSocketToPool(face, "leave", isNeedLoadImage);
 
   }
 
-
-  Future<void> onConnectCallback1(StompFrame connectFrame) async {
-
+  Future<void> goSubscribe() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String setting = prefs.getString(PREF_KEY_IN_DEVICEIDS)?? DEFAULT_IN_DEVICEIDS ;
     List<String> ids = setting.split(",");
     ids.forEach((element) {addSubscribe(element);});
-    // if(HOST == '192.168.0.109') {
-    //   addSubscribe('30'); //for test in 109
-    //   addLeaveSubscribe('31');
-    // }
 
 
     setting = prefs.getString(PREF_KEY_OUT_DEVICEIDS)?? DEFAULT_OUT_DEVICEIDS;
     ids = setting.split(",");
     ids.forEach((element) {addLeaveSubscribe(element);});
-
   }
 
-  webSocketToPool(WebSocketFace face, String action) {
-    genProfile2(face, action).then((value) => {
+
+  void onConnectCallback1(StompFrame connectFrame) {
+    if(disconnectTimeStamp>0) {
+      //網路斷線紀錄時間 重連後,補資料
+      int endTime = DateTime.now().millisecondsSinceEpoch;
+      afterReloadData(disconnectTimeStamp, endTime);
+      disconnectTimeStamp = 0; //reset
+    }
+
+    if(!socketHealthy) {
+      goSubscribe();
+    }
+    socketHealthy = true;
+  }
+
+  webSocketToPool(WebSocketFace face, String action, bool isNeedLoadImage) {
+    print('art genProfile2 isNeedLoadImage:$isNeedLoadImage');
+    genProfile2(face, action, isNeedLoadImage).then((value) => {
       addToPool(value, action)
     });
 
@@ -359,10 +504,11 @@ class TableScreenViewModel {
     //String vendor = "${randomListItem(vendorTitle2)}-${randomListItem(workTypeTitle)}";
     String vendor = VENDOR_NAME_OTHER;
     List<bool> boolList = [true, false, false, true]; //酒測 工地帽 背心 效期內,非黑名單
-    return Profile(name: name, profession: vendor, imageUrl:msg.imgUrl!, action: actionStr,  boolList: boolList, faceId: int.parse(msg.id!), end_time: 0, typeId:-1 );
+    return Profile(name: name, profession: vendor, imageUrl:msg.imgUrl!, action: actionStr,  boolList: boolList, faceId: int.parse(msg.id!), end_time: 0, typeId:-1, isOK: true );
   }
 
-  Future<Profile> genProfile2(WebSocketFace msg, String action) async {
+  Future<Profile> genProfile2(WebSocketFace msg, String action, bool isNeedLoadImage) async {
+
     List<bool> boolList = [true, false, false, true]; //酒測 工地帽 背心 效期內,非黑名單
 
     //轉成好讀
@@ -383,8 +529,7 @@ class TableScreenViewModel {
     String vendor = getFacelibName(int.parse(msg.type_id!) );
     int faceId = msg.face_id ?? 0;
     String imagePath = getFullImageUrl(msg.photo!);
-    //imagePath = msg.photo_string!;
-    print("art profile path=$imagePath");
+
 
     //2023-5-22 老闆指示工地帽先不判斷, 但要用抓拍照
     // TODO check helmet, vest by api -- start
@@ -405,13 +550,13 @@ class TableScreenViewModel {
             return null;
           }
         } else {
-          print('art call $imageUrl fail! code: $response.statusCode');
+          print('art call $imageUrl fail! code: ${response.statusCode}');
           return null;
         }
       }
 
       Future<String?> checkHelmet(String imgBase64Str) async {
-        final String checkUrl = "http://$AIHost/image_in";
+        final String checkUrl = "http://$mAIHost/image_in";
         //print("art profile checkUrl=$checkUrl");
         var map = new Map<String, dynamic>();
         map['img'] = imgBase64Str;
@@ -419,61 +564,44 @@ class TableScreenViewModel {
         if (response.statusCode == 200) {
           return response.body;
         } else {
-          print('art call $checkUrl fail! code: $response.statusCode');
+          print('art call $checkUrl fail! code: ${response.statusCode}');
           return null;
         }
       }
 
-      //snapshot_uri
-      //final imgBase64Str = await networkImageToBase64(imageUrl.toString());
-      String snapshotUrl = (msg.snapshot_uri ?? "");
-      //print('art snapshot=' + snapshotUrl );
-      //var imgBase64Str =msg.photo_string;
-      if(snapshotUrl!.isNotEmpty) {
-        if(snapshotUrl.startsWith("app/static")|| snapshotUrl.startsWith("/static")) {
-          //var path = snapshotUrl.replaceFirst("app/static", "/static");
-          //var url = "http://$WS_SERVER$path";
-          var url = getFullImageUrl(snapshotUrl);
-          //print('art img1 url=$url');
-          //imgBase64Str = await networkImageToBase64(url);
-          imagePath = url;
-        } else {
-          //imgBase64Str = msg.snapshot_uri; // is already image string
-          imagePath = snapshotUrl;
+      if(isNeedLoadImage) {
+        String snapshotUrl = (msg.snapshot_uri ?? "");
+        if(snapshotUrl!.isNotEmpty) {
+          if(snapshotUrl.startsWith("app/static")|| snapshotUrl.startsWith("/static")) {
+            var url = getFullImageUrl(snapshotUrl);
+            imagePath = url;
+          } else {
+            imagePath = snapshotUrl;
+          }
+
         }
-
-      }
-      //print('art img2 url=$imagePath');
-      final imgBase64Str = await networkImageToBase64(imageUrl.toString());
-      if (imgBase64Str != null) {
-          // final String checkUrl = "http://" + HOST + "/image_in";
-          // var map = new Map<String, dynamic>();
-          // map['img'] = imgBase64Str;
-          // var response = await http.post(Uri.parse(checkUrl), body: map);
-          // print("art image_in=$response");
-          // Map data = jsonDecode(response.toString());
-          // if (data["code"] == 200) {
-          //   // print(boolList);
-          //   boolList[1] = data["helmet"];
-          //   boolList[2] = data["vest"];
-          // } else {
-          //   print('art call $checkUrl fail! code: $response.statusCode');
-          // }
-        //}
-
-        // TODO : arttseng
-        var body = await checkHelmet(imgBase64Str);
-        if (body != null) {
-          aiHealthy = true;
-          Map data = jsonDecode(body);
-          print("art image_in=$data");
-          boolList[1] = data["helmet"];
-          boolList[2] = data["vest"];
+        //print('art img2 url=$imagePath');
+        final imgBase64Str = await networkImageToBase64(imageUrl.toString());
+        if (imgBase64Str != null) {
+          var body = await checkHelmet(imgBase64Str);
+          if (body != null) {
+            if(aiHealthy==false) {
+              sendEmail(aiAPIAlertSubject, aiAPIAlertOK, aiAPIAlertReciver);
+            }
+            aiHealthy = true;
+            Map data = jsonDecode(body);
+            print("art image_in=$data");
+            boolList[1] = data["helmet"];
+            boolList[2] = data["vest"];
+          }
         }
-
       }
+
     //
     } catch (e, s) {
+      if(aiHealthy==true) {
+        sendEmail(aiAPIAlertSubject, aiAPIAlertFail, aiAPIAlertReciver);
+      }
       aiHealthy = false;
       print('art post fetch and set catch error');
       print("Exception $e");
@@ -481,10 +609,23 @@ class TableScreenViewModel {
     }
     //print("art genProfile $name=$boolList");
     // TODO check helmet, vest by api -- end
-    return Profile(name: name, profession: vendor, imageUrl:imagePath, action: actionStr,  boolList: boolList, faceId: faceId, end_time: msg.end_time!, typeId: int.parse(msg.type_id??"-1") );
+    return Profile(name: name, profession: vendor, imageUrl:imagePath, action: actionStr,  boolList: boolList, faceId: faceId, end_time: msg.start_time!, typeId: int.parse(msg.type_id??"-1"), isOK:true  );
   }
 
 }
+
+// bool isInReloadData() {
+//   if(mPrecent==0 || mPrecent2==0) {
+//     print('art 0615 isInReload:mPrecent==0 || mPrecent2==0 ');
+//     return true;
+//   }
+//   if(!stomp.isActive) {
+//     print('art 0615 isInReload:mPrecent==0 || mPrecent2==0 ');
+//     return true;
+//   }
+//   print('art 0615 isInReload: true');
+//   return false;
+// }
 
 String getFacelibName(int typeid) {
   //print('art 0526 getFacelibName id='+ typeid.toString() + ", faceTypes len=" + faceTypes.length.toString());
@@ -594,15 +735,15 @@ Future<void> saveEnterLeave() async {
   //dbToFile();
 }
 
-Future<void> dbToFile() async {
-  List<Map<String, Object?>>?  allData = await deHelper.getAllData();
-  final buffer = StringBuffer();
-  buffer.write("id,deviceId,in_out,faceId,FaceTypeId,time,OK,IN_TOTAL,IN_DEDUPLICATE,OUT_TOTAL,OUT_DEDUPLICATE,enterCount,enterUnique,leaveCount,leaveUnique,remain ${DBHelper.EnterChar}");
-  allData?.forEach((element) {
-    buffer.writeAll([element.values.toString().replaceAll('(', '').replaceAll(')', ''), DBHelper.EnterChar]);
-  });
-  writeFile(buffer.toString(), 'IN_OUT_${getYYYYMMDD()}.csv');
-}
+// Future<void> dbToFile() async {
+//   List<Map<String, Object?>>?  allData = await deHelper.getAllData();
+//   final buffer = StringBuffer();
+//   buffer.write("id,deviceId,in_out,faceId,FaceTypeId,time,OK,IN_TOTAL,IN_DEDUPLICATE,OUT_TOTAL,OUT_DEDUPLICATE,enterCount,enterUnique,leaveCount,leaveUnique,remain ${DBHelper.EnterChar}");
+//   allData?.forEach((element) {
+//     buffer.writeAll([element.values.toString().replaceAll('(', '').replaceAll(')', ''), DBHelper.EnterChar]);
+//   });
+//   writeFile(buffer.toString(), 'IN_OUT_${getYYYYMMDD()}.csv');
+// }
 
 List<String> addUnique(List<String> list)  {
   var seen = Set<String>();
@@ -620,8 +761,10 @@ List<String> addUnique(List<String> list)  {
 void updateVendorList(String company, Profile profile) {
   int autoid = profile.faceId;
   int typeId = profile.typeId;
-  if(isExistRemain(autoid!)) {
+  if(isExistRemain(autoid)) {
+    blockCount++;
     print("art 還未離場又進場的人不用加1");
+    profile.isOK = false;
     //playMP3('blacklist.mp3');
     return;
   }
@@ -633,7 +776,7 @@ void updateVendorList(String company, Profile profile) {
   profilesRemain.add(profile);
   saveEnterLeave();
 
-  print('art 0526 find vendor typeid:' + typeId.toString() + ", company="+ company! );
+  print('art 0526 find vendor typeid:' + typeId.toString() + ", company="+ company);
   var find = vendorList.where((f) => f.faceTypeId==typeId).toList();
   if(find.isEmpty) {
     //print('art 0523 find vendor  add new');
@@ -680,4 +823,5 @@ void resetData() {
   leaveFaceId.clear();
   enterCount = 0;
   leaveCount = 0;
+  blockCount = 0;
 }

@@ -39,7 +39,6 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
   final TextEditingController _controllerRest = TextEditingController();
   final TextEditingController _controllerAIServer = TextEditingController();
   final TextEditingController _controllerDeduplicate = TextEditingController();
-  final TextEditingController _controllerLogWebSocket = TextEditingController();
   late SharedPreferences prefs;
   String inIDs = "";
   String outIDs = "";
@@ -54,15 +53,15 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
 
   void loadPref() async {
     prefs = await SharedPreferences.getInstance() ;
-     setState(() { //放setState() 會error
-       _controller.text = prefs.getString(PREF_KEY_WS_SERVER)!;
-       _controllerIn.text = prefs.getString(PREF_KEY_IN_DEVICEIDS)!;
-       _controllerOut.text = prefs.getString(PREF_KEY_OUT_DEVICEIDS )!;
+     //setState(() { //放setState() 會error
+       _controller.text = HOST;
+       _controllerIn.text = DEFAULT_IN_DEVICEIDS;
+       _controllerOut.text = DEFAULT_OUT_DEVICEIDS;
        _controllerClear.text = prefs.getString(PREF_KEY_CLEARUP_TIME)!;
        _controllerRest.text = prefs.getString(PREF_KEY_RESET_TIME )!;
        _controllerAIServer.text = prefs.getString(PREF_KEY_AI_SERVER )?? DEFAULT_AI_SERVER;
        _controllerDeduplicate.text = prefs.getString(PREF_KEY_DEDUPLICATE_SECOND )?? "25";
-     });
+     //});
 
   }
 
@@ -89,13 +88,17 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
       prefs.setString(PREF_KEY_AI_SERVER , _controllerAIServer.text);
       prefs.setString(PREF_KEY_DEDUPLICATE_SECOND , _controllerDeduplicate.text);
       prefs.setBool(PREF_KEY_IS_LOGWEBSOCKET , mIsLogWebSocket);
-      
+
+      HOST = _controller.text;
       mClearTime = _controllerClear.text;
       mResetTime = _controllerRest.text;
-      AIHost = _controllerAIServer.text;
+      mAIHost = _controllerAIServer.text;
       mDeduplicate = _controllerDeduplicate.text;
 
       showMsg(_context, "Save OK");
+
+      stomp.deactivate();
+      stomp.activate();
     });
 
 

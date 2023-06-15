@@ -20,6 +20,8 @@ WebSocketFace _$WebSocketFaceFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$WebSocketFace {
+  int? get id => throw _privateConstructorUsedError;
+  int? get cid => throw _privateConstructorUsedError;
   String? get name => throw _privateConstructorUsedError;
   String? get photo => throw _privateConstructorUsedError;
   String? get type_id => throw _privateConstructorUsedError;
@@ -50,7 +52,9 @@ abstract class $WebSocketFaceCopyWith<$Res> {
       _$WebSocketFaceCopyWithImpl<$Res, WebSocketFace>;
   @useResult
   $Res call(
-      {String? name,
+      {int? id,
+      int? cid,
+      String? name,
       String? photo,
       String? type_id,
       String? identity,
@@ -81,6 +85,8 @@ class _$WebSocketFaceCopyWithImpl<$Res, $Val extends WebSocketFace>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = freezed,
+    Object? cid = freezed,
     Object? name = freezed,
     Object? photo = freezed,
     Object? type_id = freezed,
@@ -99,6 +105,14 @@ class _$WebSocketFaceCopyWithImpl<$Res, $Val extends WebSocketFace>
     Object? snapshot_uri = freezed,
   }) {
     return _then(_value.copyWith(
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int?,
+      cid: freezed == cid
+          ? _value.cid
+          : cid // ignore: cast_nullable_to_non_nullable
+              as int?,
       name: freezed == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
@@ -176,7 +190,9 @@ abstract class _$$_WebSocketFaceCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String? name,
+      {int? id,
+      int? cid,
+      String? name,
       String? photo,
       String? type_id,
       String? identity,
@@ -205,6 +221,8 @@ class __$$_WebSocketFaceCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? id = freezed,
+    Object? cid = freezed,
     Object? name = freezed,
     Object? photo = freezed,
     Object? type_id = freezed,
@@ -223,6 +241,14 @@ class __$$_WebSocketFaceCopyWithImpl<$Res>
     Object? snapshot_uri = freezed,
   }) {
     return _then(_$_WebSocketFace(
+      id: freezed == id
+          ? _value.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as int?,
+      cid: freezed == cid
+          ? _value.cid
+          : cid // ignore: cast_nullable_to_non_nullable
+              as int?,
       name: freezed == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
@@ -295,7 +321,9 @@ class __$$_WebSocketFaceCopyWithImpl<$Res>
 @JsonSerializable()
 class _$_WebSocketFace implements _WebSocketFace {
   const _$_WebSocketFace(
-      {this.name,
+      {this.id,
+      this.cid,
+      this.name,
       this.photo,
       this.type_id,
       this.identity,
@@ -315,6 +343,10 @@ class _$_WebSocketFace implements _WebSocketFace {
   factory _$_WebSocketFace.fromJson(Map<String, dynamic> json) =>
       _$$_WebSocketFaceFromJson(json);
 
+  @override
+  final int? id;
+  @override
+  final int? cid;
   @override
   final String? name;
   @override
@@ -350,7 +382,7 @@ class _$_WebSocketFace implements _WebSocketFace {
 
   @override
   String toString() {
-    return 'WebSocketFace(name: $name, photo: $photo, type_id: $type_id, identity: $identity, serialNo: $serialNo, cardSerialNo: $cardSerialNo, device_id: $device_id, temperature: $temperature, face_id: $face_id, start_time: $start_time, end_time: $end_time, enabled: $enabled, fever: $fever, last_update: $last_update, photo_string: $photo_string, snapshot_uri: $snapshot_uri)';
+    return 'WebSocketFace(id: $id, cid: $cid, name: $name, photo: $photo, type_id: $type_id, identity: $identity, serialNo: $serialNo, cardSerialNo: $cardSerialNo, device_id: $device_id, temperature: $temperature, face_id: $face_id, start_time: $start_time, end_time: $end_time, enabled: $enabled, fever: $fever, last_update: $last_update, photo_string: $photo_string, snapshot_uri: $snapshot_uri)';
   }
 
   @override
@@ -358,6 +390,8 @@ class _$_WebSocketFace implements _WebSocketFace {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$_WebSocketFace &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.cid, cid) || other.cid == cid) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.photo, photo) || other.photo == photo) &&
             (identical(other.type_id, type_id) || other.type_id == type_id) &&
@@ -390,6 +424,8 @@ class _$_WebSocketFace implements _WebSocketFace {
   @override
   int get hashCode => Object.hash(
       runtimeType,
+      id,
+      cid,
       name,
       photo,
       type_id,
@@ -423,7 +459,9 @@ class _$_WebSocketFace implements _WebSocketFace {
 
 abstract class _WebSocketFace implements WebSocketFace {
   const factory _WebSocketFace(
-      {final String? name,
+      {final int? id,
+      final int? cid,
+      final String? name,
       final String? photo,
       final String? type_id,
       final String? identity,
@@ -443,6 +481,10 @@ abstract class _WebSocketFace implements WebSocketFace {
   factory _WebSocketFace.fromJson(Map<String, dynamic> json) =
       _$_WebSocketFace.fromJson;
 
+  @override
+  int? get id;
+  @override
+  int? get cid;
   @override
   String? get name;
   @override
