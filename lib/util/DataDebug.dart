@@ -12,8 +12,8 @@ Future<void> dbLogIn(String deviceId, WebSocketFace face) async {
     if(map["in_out"]==DBHelper.IN) {
       await addNewIN(deviceId, face, DBHelper.x);
     } else {
-      int? result = await deHelper.updateRecord(map["id"], DBHelper.ok);
-      print('art 0604 update ${map["faceId"]} last row to ok:${result ?? ""}' );
+      //int? result = await deHelper.updateRecord(map["id"], DBHelper.ok);
+      //print('art 0604 update record ${map["faceId"]}' );
       await addNewIN(deviceId, face, DBHelper.ok);
     }
   }
@@ -54,7 +54,7 @@ Future<void> dbLogOut(String deviceId, WebSocketFace face) async {
     if(map["in_out"]==DBHelper.OUT) { //same inout, add a record
       await addNewOUT(deviceId, face, DBHelper.x);
     } else {
-      int? result = await deHelper.updateRecord(map["id"], DBHelper.ok);
+      //int? result = await deHelper.updateRecord(map["id"], DBHelper.ok);
       //print('art 0604 update ${map["id"]} ok:${result ?? ""}' );
       await addNewOUT(deviceId, face, DBHelper.ok);
     }

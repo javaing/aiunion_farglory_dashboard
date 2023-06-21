@@ -9,11 +9,11 @@ class Profile {
   late String imageUrl;
   late String action;
   List<bool>? boolList;
-  int end_time;
+  int start_time;
   int typeId;
-  bool isOK;
+  bool isValid;
 
-  Profile({required this.faceId, required this.name, required this.profession, required this.imageUrl, required this.action, required this.boolList, required this.end_time, required this.typeId, required this.isOK});
+  Profile({required this.faceId, required this.name, required this.profession, required this.imageUrl, required this.action, required this.boolList, required this.start_time, required this.typeId, required this.isValid});
 
   Map toJson() => {
     'faceId': faceId,
@@ -22,14 +22,14 @@ class Profile {
     'imageUrl': imageUrl,
     'action': action,
     'boolList': boolList,
-    'end_time': end_time,
+    'start_time': start_time,
     'typeId' : typeId,
-    'isOK' : isOK,
+    'isOK' : isValid,
   };
 
   factory Profile.fromJson(dynamic json) {
     List<bool> lb = dynamicToListBool(json['boolList']);
-    return Profile(faceId: json['faceId'] as int, name: json['name'] as String, profession:json['profession'] as String, imageUrl:json['imageUrl'] as String, action:json['action'] as String, boolList:lb, end_time:json['end_time'] as int, typeId:json['typeId'] ?? -1, isOK:json['enable'] ?? true);
+    return Profile(faceId: json['faceId'] as int, name: json['name'] as String, profession:json['profession'] as String, imageUrl:json['imageUrl'] as String, action:json['action'] as String, boolList:lb, start_time:json['start_time'] as int, typeId:json['typeId'] ?? -1, isValid:json['enable'] ?? true);
   }
 
 }

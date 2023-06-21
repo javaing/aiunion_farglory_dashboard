@@ -32,6 +32,7 @@ class ProfileWidget extends StatelessWidget {
   double avatarSize1080p = 100;
   double font720p = 15;
   double font1080p = 28;
+  Color notValidColor = Colors.redAccent.shade700;
 
 
   Widget getEnterProfile() {
@@ -44,9 +45,6 @@ class ProfileWidget extends StatelessWidget {
         getCheckList()
       ], );
 
-    // Widget p = Padding(
-    //   padding: EdgeInsets.only(top: 10.0, left: 10.0),
-    //   child: w);
 
     return Container(
       //color: Colors.redAccent.shade400,
@@ -118,19 +116,36 @@ class ProfileWidget extends StatelessWidget {
   // }
 
   Widget avatarW() {
-    var format = new DateFormat('HH:mm:ss');
-    var date = DateTime.fromMillisecondsSinceEpoch(profile.end_time);
-    return Column(
-      children: [
-        CircleAvatar(
+    var format = DateFormat('HH:mm:ss');
+    var date = DateTime.fromMillisecondsSinceEpoch(profile.start_time);
+    Color textColor = Colors.white;
+    Widget w;
+
+    if(profile.isValid) {
+      w = CircleAvatar(
+        radius: avatarSize1080p,
+        backgroundImage: getImage(profile.imageUrl),
+      );
+    } else {
+      textColor = notValidColor;
+      w = CircleAvatar(
+        radius: avatarSize1080p+3,
+        backgroundColor: notValidColor,
+        child: CircleAvatar(
           radius: avatarSize1080p,
           backgroundImage: getImage(profile.imageUrl),
         ),
-        SizedBox(height: 4,),
-        whiteText( "$NAME: ${profile.name}", font1080p),
-        whiteText("$UNIT: ${profile.profession}", font1080p),
-        SizedBox(height: 4,),
-        whiteText(format.format(date) , 24),
+      );
+    }
+
+    return Column(
+      children: [
+      w,
+        const SizedBox(height: 4,),
+        textWithColor( "$NAME: ${profile.name}", font1080p, textColor),
+        textWithColor("$UNIT: ${profile.profession}", font1080p, textColor),
+        const SizedBox(height: 4,),
+        textWithColor(format.format(date) , 24, textColor),
       ],
     );
   }
@@ -230,9 +245,13 @@ ImageProvider getImage(String path) {
 }
 
 Widget whiteText(String txt, double size) {
+  return textWithColor(txt, size, Colors.white);
+}
+
+Widget textWithColor(String txt, double size, Color color) {
   return Center(child: Text(txt,
     style: TextStyle(
       fontSize: size,
-      color: Colors.white,
+      color: color,
     ),));
 }

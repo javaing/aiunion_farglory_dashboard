@@ -1,24 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:collection';
-import 'dart:io';
 
 import 'package:far_glory_construction_dashboard/datamodel/AirCondition.dart';
 import 'package:far_glory_construction_dashboard/util/UIUtil.dart';
 import 'package:far_glory_construction_dashboard/view/Setting.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async' show Future;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/services.dart';
-
 import '../Constants.dart';
 import '../datamodel/Profile.dart';
 import '../datamodel/ServerFaceType.dart';
 import '../datamodel/Weather36Hr.dart';
-import '../datamodel/WebSocketFace.dart';
 import '../util/MarqueeWidget.dart';
 import '../util/Utils.dart';
 import '../viewmodel/TableScreenViewModel.dart';
@@ -26,7 +20,6 @@ import 'EnviromentTable.dart';
 import 'ProfileWidget.dart';
 import 'TableScreenVideo.dart';
 import 'package:dio/dio.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class TableScreen extends StatefulWidget {
   const TableScreen({super.key});
@@ -86,7 +79,7 @@ class _TableScreenState extends State<TableScreen> {
     loadWeatherPicData();
     askWeather(town);
     loadAirReport();
-    loadTodayProfile();
+    //loadTodayProfile();
 
     //checkPermission();
   }
@@ -191,7 +184,7 @@ wind_speed(風速(m/sec))、
       mResetTime = prefs.getString(PREF_KEY_RESET_TIME) ?? DEFAULT_RESET_TIME;
       mAIHost = prefs.getString(PREF_KEY_AI_SERVER) ?? DEFAULT_AI_SERVER;
       mDeduplicate = prefs.getString(PREF_KEY_DEDUPLICATE_SECOND) ?? DEFAULT_DEDUP_SEC;
-      mIsLogWebSocket = prefs.getBool(PREF_KEY_IS_LOGWEBSOCKET) ?? true;
+      mIsNeedLog = prefs.getBool(PREF_KEY_IS_LOGWEBSOCKET) ?? true;
       //clearTime = "11:50";
       //resetTime = "12:50";
 
@@ -225,82 +218,82 @@ wind_speed(風速(m/sec))、
       date1 = date1.add(Duration( hours: 23));
       //print(date1);
       endTime = date1.millisecondsSinceEpoch;
-      viewModel.afterReloadData(startTime, endTime);
+      var result = viewModel.syncCaptures(startTime, endTime);
     }
   }
 
-  void loadTodayProfile() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    //playMP3('blacklist.mp3');
-
-    setState(() {
-      if(prefs==null) {
-        print("art 0511 loadPref not ready");
-        return;
-      }
-      enterCount = prefs.getInt(PREF_KEY_ENTER_COUNT) ?? 0;
-      leaveCount = prefs.getInt(PREF_KEY_LEAVE_COUNT) ?? 0;
-      String jsonStr = prefs.getString(PREF_KEY_PROFILE_POOL) ?? "";
-
-      profilesPool.clear();
-      profilesRemain.clear();
-      if(jsonStr!=null && jsonStr.isNotEmpty) {
-        List<dynamic> dd = jsonDecode(jsonStr);
-        for(int i=0; i<dd.length; i++) {
-          profilesPool.add(Profile.fromJson(dd[i]));
-        }
-      }
-
-      jsonStr = prefs.getString(PREF_KEY_PROFILE_REMAIN) ?? "";
-      if(jsonStr!=null && jsonStr.isNotEmpty) {
-        List<dynamic> dd = jsonDecode(jsonStr);
-        for(int i=0; i<dd.length; i++) {
-          profilesRemain.add(Profile.fromJson(dd[i]));
-        }
-      }
-
-
-      jsonStr = prefs.getString(PREF_KEY_VENDOR) ?? "";
-      if(jsonStr!=null && jsonStr.isNotEmpty) {
-        List<dynamic> dd = jsonDecode(jsonStr);
-        for(int i=0; i<dd.length; i++) {
-          vendorList.add(Vendor.fromJson(dd[i]));
-        }
-      }
-
-      jsonStr = prefs.getString(PREF_KEY_ENTER_UNIQUE_FACEID) ?? "";
-      if(jsonStr!=null && jsonStr.isNotEmpty) {
-        enterFaceId = dynamicToListInt( jsonDecode(jsonStr) );
-        //print("art 0511 load enterName=$enterName");
-      }
-
-      jsonStr = prefs.getString(PREF_KEY_LEAVE_UNIQUE_FACEID) ?? "";
-      if(jsonStr!=null && jsonStr.isNotEmpty) {
-        leaveFaceId = dynamicToListInt( jsonDecode(jsonStr) );
-        //print("art 0511 load leaveName=$leaveName");
-      }
-
-      //_speak();
-      isLoadProfileFinish = true;
-      
-      int startTime = 0;
-      int endTime = 0;
-
-      DateTime date1 = DateTime.now();
-      date1 = date1.subtract(Duration(hours:  date1.hour, minutes: date1.minute));
-      //print(date1);
-      startTime = date1.millisecondsSinceEpoch;
-      date1 = date1.add(Duration( hours: 23));
-      //print(date1);
-      endTime = date1.millisecondsSinceEpoch;
-      viewModel.afterReloadData(startTime, endTime);
-    });
-
-    // for(int i=0; i<profilesRemain.length; i++) {
-    //   print('art 0524 Remain ' +profilesRemain[i].name + " " + profilesRemain[i].typeId.toString());
-    // }
-  }
+  // void loadTodayProfile() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //
+  //   //playMP3('blacklist.mp3');
+  //
+  //   setState(() {
+  //     if(prefs==null) {
+  //       print("art 0511 loadPref not ready");
+  //       return;
+  //     }
+  //     enterCount = prefs.getInt(PREF_KEY_ENTER_COUNT) ?? 0;
+  //     leaveCount = prefs.getInt(PREF_KEY_LEAVE_COUNT) ?? 0;
+  //     String jsonStr = prefs.getString(PREF_KEY_PROFILE_POOL) ?? "";
+  //
+  //     profilesPool.clear();
+  //     profilesRemain.clear();
+  //     if(jsonStr!=null && jsonStr.isNotEmpty) {
+  //       List<dynamic> dd = jsonDecode(jsonStr);
+  //       for(int i=0; i<dd.length; i++) {
+  //         profilesPool.add(Profile.fromJson(dd[i]));
+  //       }
+  //     }
+  //
+  //     jsonStr = prefs.getString(PREF_KEY_PROFILE_REMAIN) ?? "";
+  //     if(jsonStr!=null && jsonStr.isNotEmpty) {
+  //       List<dynamic> dd = jsonDecode(jsonStr);
+  //       for(int i=0; i<dd.length; i++) {
+  //         profilesRemain.add(Profile.fromJson(dd[i]));
+  //       }
+  //     }
+  //
+  //
+  //     jsonStr = prefs.getString(PREF_KEY_VENDOR) ?? "";
+  //     if(jsonStr!=null && jsonStr.isNotEmpty) {
+  //       List<dynamic> dd = jsonDecode(jsonStr);
+  //       for(int i=0; i<dd.length; i++) {
+  //         vendorList.add(Vendor.fromJson(dd[i]));
+  //       }
+  //     }
+  //
+  //     jsonStr = prefs.getString(PREF_KEY_ENTER_UNIQUE_FACEID) ?? "";
+  //     if(jsonStr!=null && jsonStr.isNotEmpty) {
+  //       enterFaceId = dynamicToListInt( jsonDecode(jsonStr) );
+  //       //print("art 0511 load enterName=$enterName");
+  //     }
+  //
+  //     jsonStr = prefs.getString(PREF_KEY_LEAVE_UNIQUE_FACEID) ?? "";
+  //     if(jsonStr!=null && jsonStr.isNotEmpty) {
+  //       leaveFaceId = dynamicToListInt( jsonDecode(jsonStr) );
+  //       //print("art 0511 load leaveName=$leaveName");
+  //     }
+  //
+  //     //_speak();
+  //     isLoadProfileFinish = true;
+  //
+  //     int startTime = 0;
+  //     int endTime = 0;
+  //
+  //     DateTime date1 = DateTime.now();
+  //     date1 = date1.subtract(Duration(hours:  date1.hour, minutes: date1.minute));
+  //     //print(date1);
+  //     startTime = date1.millisecondsSinceEpoch;
+  //     date1 = date1.add(Duration( hours: 23));
+  //     //print(date1);
+  //     endTime = date1.millisecondsSinceEpoch;
+  //     var result = viewModel.loadRemoteCaptures(startTime, endTime);
+  //   });
+  //
+  //   // for(int i=0; i<profilesRemain.length; i++) {
+  //   //   print('art 0524 Remain ' +profilesRemain[i].name + " " + profilesRemain[i].typeId.toString());
+  //   // }
+  // }
 
   void resetToday() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -493,15 +486,7 @@ wind_speed(風速(m/sec))、
 
   Widget getClearuTitle() {
     List<Color> fieldColors = [enterCountColor , leaveCountColor, resideCountColor];
-    //var sum = vendorCount2.reduce((value, element) => value + element);
-    int sum =0;
-    for(int j=0; j<vendorList.length; j++) {
-      sum += vendorList[j].worker.length;
-    }
-    //leaveCount = sum.toInt() - profilesRemain.length;
-    //List<int> leftRow1Count = [ sum, leaveCount,  profilesRemain.length];
-    List<String> leftRow1CountNew = [ "$sum/${enterFaceId.length}", "$leaveCount/${leaveFaceId.length}",  profilesRemain.length.toString() ];
-
+    List<String> leftRow1CountNew = [ "$enterCount/${enterFaceId.length}", "$leaveCount/${leaveFaceId.length}",  profilesRemain.length.toString() ];
 
     Widget title =  Table(
         border: TableBorder.all(
@@ -565,9 +550,9 @@ wind_speed(風速(m/sec))、
     List<String> vendorTitle2 = [];
     List<String> vendorCount2 = [];
     List<int> vendorFaceTypeId = [];
+    const vendorDisplayMax = 12;
 
-
-    for(int i=0; i < 12; i++) {
+    for(int i=0; i < vendorDisplayMax; i++) {
       vendorFaceTypeId.add(-1);
       vendorTitle2.add(DEFAULT_VENDOR_NAME);
       vendorCount2.add("0");
@@ -575,14 +560,14 @@ wind_speed(風速(m/sec))、
 
 
     for(int i=0; i<vendorList.length; i++) {
-      if(i>=12) vendorFaceTypeId.add(vendorList[i].faceTypeId);
+      if(i >= vendorDisplayMax) vendorFaceTypeId.add(vendorList[i].faceTypeId);
       vendorFaceTypeId[i] = vendorList[i].faceTypeId;
     }
 
 
-    String other_count = "";
-    int sum_filter = 0;
-    int other_sum = 0;
+    String countStr_Other = "";
+    int remainFace_Other = 0;
+    int uniqueFace_Other = 0;
 
     //print('art 0524 bigNumber start');
 
@@ -593,32 +578,40 @@ wind_speed(風速(m/sec))、
         name = DEFAULT_VENDOR_NAME;
         countStr = "0";
       } else {
-        var uniqueFace = profilesRemain.where((element) => element.typeId==vendorFaceTypeId[i]);
+        var remainFace = profilesRemain.where((element) => element.typeId==vendorFaceTypeId[i]);
+        int remainFaceNum = remainFace.length;
+        int uniqueFaceNum = vendorList[i].worker.toSet().length;
          // for(int filterI=0; filterI< filter.length; filterI++) {
          //   print('art 0525 filter ['+ i.toString()  +']=' + filter.toList()[filterI].name + ", " + filter.toList()[filterI].typeId.toString());
          // }
 
         name = vendorList[i].name;
-        if(i>=12) {
+        if(i>=vendorDisplayMax) {
           name = VENDOR_NAME_OTHER;
+          if(i==vendorDisplayMax) { //把11加回來
+            remainFace_Other +=profilesRemain.where((element) => element.typeId==vendorFaceTypeId[ vendorDisplayMax-1 ]).length;
+            uniqueFace_Other += vendorList[ vendorDisplayMax-1 ].worker.toSet().length;
+          }
         }
-        countStr = " ${uniqueFace.length} (${vendorList[i].worker.toSet().length})";
+        countStr = " $remainFaceNum ($uniqueFaceNum)";
         if(name.isEmpty) name = VENDOR_NAME_OTHER;
         if(name == VENDOR_NAME_OTHER) {
-          sum_filter += uniqueFace.length;
-          other_sum += vendorList[i].worker.toSet().length;
-          other_count =  " $sum_filter (${other_sum})";
+          remainFace_Other +=remainFaceNum;
+          uniqueFace_Other += uniqueFaceNum;
+          countStr_Other =  " $remainFace_Other (${uniqueFace_Other})";
           continue;
         }
 
       }
-      vendorTitle2[i]=name;
-      vendorCount2[i]=countStr;
+      if(i<12) {
+        vendorTitle2[i]=name;
+        vendorCount2[i]=countStr;
+      }
     }
     //若有 '其他' 放最後
-    if(other_count.isNotEmpty) {
+    if(countStr_Other.isNotEmpty) {
       vendorTitle2[vendorTitle2.length-1]=VENDOR_NAME_OTHER;
-      vendorCount2[vendorCount2.length-1]= other_count;
+      vendorCount2[vendorCount2.length-1]= countStr_Other;
     } else {
       //print('art 0606 wired vendorFaceTypeId length=' +vendorFaceTypeId.length.toString());
       //vendorTitle2.add(DEFAULT_VENDOR_NAME);

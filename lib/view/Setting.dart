@@ -87,7 +87,7 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
       prefs.setString(PREF_KEY_RESET_TIME , _controllerRest.text);
       prefs.setString(PREF_KEY_AI_SERVER , _controllerAIServer.text);
       prefs.setString(PREF_KEY_DEDUPLICATE_SECOND , _controllerDeduplicate.text);
-      prefs.setBool(PREF_KEY_IS_LOGWEBSOCKET , mIsLogWebSocket);
+      prefs.setBool(PREF_KEY_IS_LOGWEBSOCKET , mIsNeedLog);
 
       HOST = _controller.text;
       mClearTime = _controllerClear.text;
@@ -297,16 +297,16 @@ class _TextAndInputFieldPageState extends State<TextAndInputFieldPage> {
         ),
         const SizedBox(width: 20),
         ToggleSwitch(
-          initialLabelIndex: mIsLogWebSocket ? 1:0,
+          initialLabelIndex: mIsNeedLog ? 1:0,
           totalSwitches: 2,
           labels: const ['OFF', 'ON'],
           onToggle: (index) {
             if(index==0) {
-              mIsLogWebSocket = false;
+              mIsNeedLog = false;
             } else {
-              mIsLogWebSocket = true;
+              mIsNeedLog = true;
             }
-            print('art IsLogWebSocket:$mIsLogWebSocket, index: $index');
+            print('art IsLogWebSocket:$mIsNeedLog, index: $index');
           },
         ),
         const SizedBox(width: 36),

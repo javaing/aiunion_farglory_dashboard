@@ -1,18 +1,15 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
 import '../Constants.dart';
-import '../datamodel/ServerFaceType.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
-
 import '../datamodel/WebSocketFace.dart';
+import 'package:http/http.dart' as http;
 
 
 void showMsg(BuildContext context,String msg) {
@@ -229,15 +226,65 @@ String unixtimeFormat(int unix) {
   return formatDateTime(date);
 }
 
-Future<void> sendEmail(String subject, String content, String receiver) async {
-  final Email email = Email(
-    body: content,
-    subject: subject,
-    recipients: [receiver],
-    isHTML: false,
-  );
-  print('art send email: AI API:' + content);
-  await FlutterEmailSender.send(email);
+// Future<void> sendEmail(String subject, String content, String receiver) async {
+//   final Email email = Email(
+//     body: content,
+//     subject: subject,
+//     recipients: [receiver],
+//     cc: [],
+//     bcc: [],
+//     isHTML: false,
+//   );
+//   print('art send email: AI API:' + content);
+//   await FlutterEmailSender.send(email);
+// }
+
+Future<String> printIps() async {
+  String ip = "";
+  for (var interface in await NetworkInterface.list()) {
+    //print('== Interface: ${interface.name} ==');
+    for (var addr in interface.addresses) {
+      //print('${addr.address} ${addr.host} ${addr.isLoopback} ${addr.rawAddress} ${addr.type.name}');
+      ip = addr.address;
+    }
+  }
+  return ip;
+}
+
+Future<String?> sendEmail(String subject, String content, String receiver ) async {
+  final String url = "http://$HOST/api/v2/email";
+  //final String url = "http://192.168.0.109/api/v2/email";
+  var map = new Map<String, dynamic>();
+  map['toEmail'] = receiver;
+  map['subject'] = subject;
+  map['body'] = content;
+
+  print("art sendEmail param=$map");
+  // if(1+1==2)
+  //   return null;
+
+  //.addHeader("Authorization", "Bearer " + SERVER_GIVE_TOKEN)
+  var response = await http.post(Uri.parse(url),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        //"Authorization": "Bearer $V2_TOKEN",
+      },
+      body: jsonEncode(map));
+  if (response.statusCode == 200) {
+    //print("art sendEmail success=$map");
+    return response.body;
+  } else {
+    print('art send email $url fail! code: ${response.statusCode}');
+    return null;
+  }
+
+}
+
+extension BoolParsing on String {
+  bool parseBool() {
+    //print("art 0419 check=${toLowerCase()}");
+    return toLowerCase() == 'true';
+  }
 }
 
 //Id	deviceId	faceId	faceTypeId	time

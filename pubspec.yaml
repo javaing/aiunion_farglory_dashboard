@@ -27,8 +27,8 @@ dependencies:
   #flutter_tts: ^3.6.3
   #js: ^0.6.7
   toggle_switch: ^2.1.0
-  percent_indicator: ^4.2.3
-  flutter_email_sender: ^6.0.0
+  mac_address: ^1.0.0
+  web_socket_channel: ^2.1.0
   path:
 
 

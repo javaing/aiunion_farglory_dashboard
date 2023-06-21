@@ -89,7 +89,7 @@ class DBHelper {
               'BigIN, BigDeIN, BigOUT, BigDeOUT, Remain) VALUES($id, $deviceId, "$in_out", $faceId, $faceTypeId, "$time", "$OKorNOT",'
               '$IN_TOTAL, $IN_DEDUPLICATE, $OUT_TOTAL, $OUT_DEDUPLICATE, $bigIN, $bigDeIN , $bigOUT, $bigDeOUT,'
               '$Remain)');
-      print('art 0604 DB insert $in_out $faceId $OKorNOT: $id1');
+      //print('art 0604 DB insert $in_out $faceId $OKorNOT: $id1');
     });
   }
 
@@ -128,7 +128,7 @@ class DBHelper {
 
     //print('art 0604 queryLast: $result');
     if(result==null || result.isEmpty) return false;
-    print('art 0612 isDataExist last exist: $result');
+    //print('art 0612 isDataExist last exist: $result');
 
     return true;
   }
